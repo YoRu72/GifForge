@@ -24,6 +24,32 @@ jobs:
           export ANDROID_NDK_HOME="${ANDROID_NDK_LATEST_HOME:-$ANDROID_NDK_ROOT}"
           echo "Using NDK: $ANDROID_NDK_HOME"
           cargo ndk -t arm64-v8a -t armeabi-v7a -t x86_64 -o ../app/src/main/jniLibs build --release
+      - name: Patch Kotlin sources
+        run: |
+          python3 - <<'PY'
+          import re
+          p = "app/src/main/java/com/gifforge/app/media/GifCropper.kt"
+          s = open(p).read()
+          i = s.find("fun copyUriToCache")
+          j = s.find("suspend fun readGifMeta")
+          if i != -1 and j != -1 and "return try" not in s[i:j]:
+              new = (
+                  "fun copyUriToCache(ctx: Context, uri: Uri, name: String): File? {\n"
+                  "    return try {\n"
+                  "        val f = File(ctx.cacheDir, name)\n"
+                  "        val input = ctx.contentResolver.openInputStream(uri) ?: return null\n"
+                  "        input.use { i -> f.outputStream().use { o -> i.copyTo(o) } }\n"
+                  "        f\n"
+                  "    } catch (e: Exception) {\n"
+                  "        null\n"
+                  "    }\n"
+                  "}\n\n"
+              )
+              open(p, "w").write(s[:i] + new + s[j:])
+              print("patched GifCropper.kt")
+          else:
+              print("GifCropper.kt already fine")
+          PY
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.7
