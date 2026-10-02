@@ -1,0 +1,21 @@
+[package]
+name = "gifforge-native"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "gifforge_native"
+crate-type = ["cdylib"]
+
+[dependencies]
+gifski = { version = "~1.14", default-features = false }
+imgref = "1"
+rgb = "0.8"
+jni = "0.21"
+gif = "0.13"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
