@@ -80,7 +80,7 @@ object ImageStore {
     }
 
     /** Decodes [uri] and stores it; null when the file is not a picture this device can read. Call off the main thread. */
-    fun import(ctx: Context, uri: Uri): ImportedImage? = try {
+    fun import(ctx: Context, uri: Uri): ImportedImage? { return try {
         val bmp = (if (isSvg(ctx, uri)) readSvg(ctx, uri) else readRaster(ctx, uri)) ?: return null
         val dir = File(ctx.filesDir, "images").apply { mkdirs() }
         val png = bmp.hasAlpha()
@@ -88,5 +88,5 @@ object ImageStore {
         f.outputStream().use { bmp.compress(if (png) Bitmap.CompressFormat.PNG else Bitmap.CompressFormat.JPEG, 95, it) }
         cache.put(f.absolutePath, bmp)
         ImportedImage(f.absolutePath, bmp.width, bmp.height)
-    } catch (e: Throwable) { null }
+    } catch (e: Throwable) { null } }
 }
