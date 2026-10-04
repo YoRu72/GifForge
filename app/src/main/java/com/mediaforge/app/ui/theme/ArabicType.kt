@@ -16,12 +16,14 @@ val UthmanFamily = FontFamily(Font(R.font.uthman_tn1, FontWeight.Normal))
  * Material's default styles carry spacing (0.1 to 0.5 sp). Without the lam-alef ligature the font draws the
  * joining stroke of lam toward alef, so "الا" showed as "الـا". Zero spacing keeps the ligature and also keeps
  * every Arabic word connected.
+ *
+ * Do NOT set fontFeatureSettings here. The font already shapes correctly with the default features, and forcing
+ * "init, medi, fina" (s18i) made it apply its joining forms twice: stray letters and broken, spaced-out words.
  */
 private fun TextStyle.ar(): TextStyle =
     copy(
         fontFamily = UthmanFamily,
         letterSpacing = 0.sp,
-        fontFeatureSettings = "liga, calt, init, medi, fina",
         lineHeight = if (lineHeight.isSp) lineHeight * 1.3f else lineHeight,
     )
 
@@ -34,5 +36,22 @@ fun arabicTypography(): Typography {
         titleLarge = t.titleLarge.ar(), titleMedium = t.titleMedium.ar(), titleSmall = t.titleSmall.ar(),
         bodyLarge = t.bodyLarge.ar(), bodyMedium = t.bodyMedium.ar(), bodySmall = t.bodySmall.ar(),
         labelLarge = t.labelLarge.ar(), labelMedium = t.labelMedium.ar(), labelSmall = t.labelSmall.ar(),
+    )
+}
+
+/**
+ * Same styles for the English UI, but with zero letter spacing. Arabic text still shows in an English UI (subtitles,
+ * font previews), and the supplied font keeps its lam-alef only under "liga", which Android switches off whenever
+ * spacing is not 0. Material's Latin spacing is 0.1 to 0.5 sp, so the visual cost is negligible.
+ */
+fun latinTypography(): Typography {
+    val t = Typography()
+    fun TextStyle.z() = copy(letterSpacing = 0.sp)
+    return Typography(
+        displayLarge = t.displayLarge.z(), displayMedium = t.displayMedium.z(), displaySmall = t.displaySmall.z(),
+        headlineLarge = t.headlineLarge.z(), headlineMedium = t.headlineMedium.z(), headlineSmall = t.headlineSmall.z(),
+        titleLarge = t.titleLarge.z(), titleMedium = t.titleMedium.z(), titleSmall = t.titleSmall.z(),
+        bodyLarge = t.bodyLarge.z(), bodyMedium = t.bodyMedium.z(), bodySmall = t.bodySmall.z(),
+        labelLarge = t.labelLarge.z(), labelMedium = t.labelMedium.z(), labelSmall = t.labelSmall.z(),
     )
 }

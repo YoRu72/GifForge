@@ -99,6 +99,11 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
         file = file.copy(events = file.events.mapIndexed { k, e -> if (k == i) f(e) else e }); dirty = true
     }
     fun targets(): Set<Int> = if (marked.isNotEmpty()) marked else if (active in events.indices) setOf(active) else emptySet()
+    /** Look changes go to every marked line (or the active one), so one tap can restyle many lines. */
+    fun editTargets(f: (AssEvent) -> AssEvent) {
+        val t = targets()
+        file = file.copy(events = file.events.mapIndexed { k, ev -> if (k in t) f(ev) else ev }); dirty = true
+    }
 
     val saver = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { u ->
         if (u != null) {
@@ -225,7 +230,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
             // ---------------------------------------------------------------- video + timing (A13)
             video?.let { v ->
                 SubVideoPane(
-                    uri = v, events = events, active = active, onActive = { active = it },
+                    uri = v, file = file, events = events, active = active, onActive = { active = it },
                     onSetStart = { t -> if (active in events.indices) edit(active) { it.copy(startMs = t, endMs = maxOf(it.endMs, t + 100L)) } },
                     onSetEnd = { t -> if (active in events.indices) edit(active) { it.copy(endMs = maxOf(t, it.startMs + 1L)) } },
                     onTapChain = { t ->
@@ -274,6 +279,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
             } else {
                 var settingsOpen by rememberSaveable(active) { mutableStateOf(false) }
                 var effectsOpen by rememberSaveable(active) { mutableStateOf(false) }
+                var lookOpen by rememberSaveable(active) { mutableStateOf(false) }
                 Column(Modifier.weight(if (video != null) 0.9f else 1.15f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 6.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(stringResource(R.string.sub_line_n, active + 1, events.size), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
@@ -304,6 +310,8 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                     }
                     SectionHeader(stringResource(R.string.sub_settings), settingsOpen) { settingsOpen = !settingsOpen }
                     AnimatedVisibility(settingsOpen) { SettingsFields(e) { f -> edit(active, f) } }
+                    SectionHeader(stringResource(R.string.sub_look), lookOpen) { lookOpen = !lookOpen }
+                    AnimatedVisibility(lookOpen) { LookPanel(file, e) { f -> editTargets(f) } }
                     val n = effectCount(e)
                     SectionHeader(if (n > 0) stringResource(R.string.sub_effects_count, n) else stringResource(R.string.sub_effects), effectsOpen) { effectsOpen = !effectsOpen }
                     AnimatedVisibility(effectsOpen) { EffectsPanel(e) { f -> edit(active, f) } }

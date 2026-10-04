@@ -40,6 +40,7 @@ import androidx.media3.ui.PlayerView
 import com.mediaforge.app.R
 import com.mediaforge.app.media.readVideoInfo
 import com.mediaforge.app.subs.AssEvent
+import com.mediaforge.app.subs.SubFile
 import kotlinx.coroutines.delay
 
 /** Controls the workspace needs from the video: the line timing buttons read the playhead and move the active line. */
@@ -49,19 +50,16 @@ class SubVideoControls(
     val frameMs: Float,
 )
 
-/** Removes override blocks and breaks so the overlay shows the line as plain text. */
-private fun overlayText(s: String): String =
-    s.replace(Regex("\\{[^}]*\\}"), "").replace("\\N", "\n").replace("\\n", "\n").replace("\\h", " ")
-
 /**
  * A13: video docked on top of the subtitle list. Shows the current line over the picture, a transport bar,
  * and the timing buttons: set start / set end from the playhead, nudges, "end + next start" tap timing,
  * play the active line, and follow-playhead (the grid selects the line that is on screen).
- * The overlay is a plain preview; the real ASS renderer arrives with A21.
+ * The overlay draws style, tags and effects (SubOverlay.kt); exact libass parity is A21.
  */
 @Composable
 fun SubVideoPane(
     uri: Uri,
+    file: SubFile,
     events: List<AssEvent>,
     active: Int,
     onActive: (Int) -> Unit,
@@ -80,9 +78,11 @@ fun SubVideoPane(
 
     var durationMs by remember(uri) { mutableLongStateOf(0L) }
     var frameMs by remember(uri) { mutableStateOf(1000f / 25f) }
+    var aspect by remember(uri) { mutableStateOf(0f) }
     LaunchedEffect(uri) {
         readVideoInfo(ctx, uri)?.let { i ->
             durationMs = i.durationMs
+            if (i.width > 0 && i.height > 0) aspect = i.width.toFloat() / i.height
             i.fps?.takeIf { it in 5f..240f }?.let { frameMs = 1000f / it }
         }
     }
@@ -117,14 +117,11 @@ fun SubVideoPane(
                     modifier = Modifier.fillMaxSize(),
                 )
                 val shown = events.filter { !it.comment && pos >= it.startMs && pos < it.endMs }
-                if (shown.isNotEmpty()) {
-                    Text(
-                        shown.joinToString("\n") { overlayText(it.text) },
-                        Modifier.padding(horizontal = 12.dp, vertical = 8.dp).background(Color(0x99000000)),
-                        color = Color.White, textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyLarge.copy(textDirection = TextDirection.Content),
-                    )
-                }
+                SubtitleOverlay(
+                    file = file, shown = shown, posMs = pos,
+                    aspect = if (aspect > 0f) aspect else file.playResX.toFloat() / file.playResY.coerceAtLeast(1),
+                    modifier = Modifier.fillMaxSize(),
+                )
             }
             TransportBar(player, durationMs.coerceAtLeast(1L), 0L, durationMs.coerceAtLeast(1L))
             Row(

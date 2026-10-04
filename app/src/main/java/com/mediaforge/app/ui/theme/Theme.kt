@@ -30,7 +30,7 @@ fun MediaForgeTheme(content: @Composable () -> Unit) {
     }
     MaterialTheme(
         colorScheme = scheme,
-        typography = if (AppLang.isArabic()) arabicTypography() else Typography(),
+        typography = if (AppLang.isArabic()) arabicTypography() else latinTypography(),
         content = content,
     )
 }

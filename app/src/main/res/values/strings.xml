@@ -360,4 +360,11 @@
     <string name="tr_next_untranslated">Next untranslated</string>
     <string name="tr_progress">%1$d of %2$d translated</string>
     <string name="tr_all_done">Every line is translated</string>
+    <string name="sub_look">Text look</string>
+    <string name="sub_pick_font">Choose font</string>
+    <string name="sub_italic">Italic</string>
+    <string name="sub_pos_auto">Auto position</string>
+    <string name="sub_look_reset">Reset look</string>
+    <string name="sub_font_sample">Sample 123</string>
+    <string name="sub_no_fonts">No fonts yet. Add one from the device.</string>
 </resources>

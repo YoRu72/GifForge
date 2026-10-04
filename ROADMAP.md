@@ -1,5 +1,5 @@
 # MediaForge (formerly GifForge) roadmap (source of truth - never drop a step)
-Last update: s18i (Arabic proofreading pass 1 + tools/AR_GLOSSARY.md). Before: s18h (A13.b translate mode). Before: s18g (A17 video export through FFmpeg wired: soft MKV/MP4, hard burn-in with fonts folder; roadmap gains tracks OPT, FEAT, AR-TR, AEG-S). Before: s18f (A17 export chooser UI + subtitle-file export; A19 part 2 Text/Shapes tabs). Before: s18e (A13 first part: video docked in the subtitle screen with real-time timing). Before: s18d (kashida bug 'الـا' fixed; A19 part 1: GIF host/editor/trim translated). Before: s18c (grid + collapsible line settings + keyframe effects with opacity fades). Before: s18b (Drop 2: A7 partly, A9 nav, A10, A11 delivered; Drops 3-6 planned as three tracks AR / AEG / SE).
+Last update: s18j (Arabic display fix: removed forced font features; zero letter spacing in every UI language + CI guard tools/check_arabic.sh; subtitler Step 2: styled live preview so blur/border/shadow/scale/rotation/fades are visible, new Look panel with font picker, size, bold/italic, alignment, 3x3 pad, X/Y position, colours). Before: s18i (Arabic proofreading pass 1 + tools/AR_GLOSSARY.md). Before: s18h (A13.b translate mode). Before: s18g (A17 video export through FFmpeg wired: soft MKV/MP4, hard burn-in with fonts folder; roadmap gains tracks OPT, FEAT, AR-TR, AEG-S). Before: s18f (A17 export chooser UI + subtitle-file export; A19 part 2 Text/Shapes tabs). Before: s18e (A13 first part: video docked in the subtitle screen with real-time timing). Before: s18d (kashida bug 'الـا' fixed; A19 part 1: GIF host/editor/trim translated). Before: s18c (grid + collapsible line settings + keyframe effects with opacity fades). Before: s18b (Drop 2: A7 partly, A9 nav, A10, A11 delivered; Drops 3-6 planned as three tracks AR / AEG / SE).
 Legend: [x] done, [~] partial, [ ] todo. Work in small parts so no tokens are wasted. Every reply ships the current zip.
 
 ## PRIORITY LEG A (ADDED by owner, s18): Arabic-first + UI + Videos section. Done BEFORE all other open steps. Delivered in drops 1 to 6 (see below).
@@ -73,7 +73,7 @@ Sources: github.com/Aegisub/Aegisub (and TypesettingTools fork), github.com/Subt
 - [ ] AR10 (AR) Arabic QA gate in CI: key parity values vs values-ar, plural categories complete, no hard-coded Latin literal in UI code (script in tools/)
 
 ### Bug and polish list (always open, fixed as found)
-- [x] B4 'الا' drawn as 'الـا': Material text styles carry letter spacing, and Android turns ligatures off when spacing is not 0, so lam-alef never formed. Arabic typography now forces letterSpacing 0 and liga/calt/init/medi/fina (ArabicType.kt). Verify on device; if any screen still shows it, search for Text(letterSpacing=...) there
+- [x] B4 'الا' drawn as 'الـا': Material text styles carry letter spacing, and Android turns ligatures off when spacing is not 0, so lam-alef never formed. Arabic typography now forces letterSpacing 0 (ArabicType.kt). s18j: the explicit liga/calt/init/medi/fina feature list was REMOVED, it broke the joining of the UthmanTN1 font (stray letters, split words); default shaping is correct, never set fontFeatureSettings for Arabic. Verify on device; if any screen still shows it, search for Text(letterSpacing=...) there
 - [ ] B1 Enum labels (PlayMode, LayerBlend) still English -> A19
 - [ ] B2 fmtTime and sizes use Western digits already; verify every other number path (export names, dialogs) after A19
 - [ ] B3 Arabic-Indic digits typed by the keyboard are converted to 1234567 in numeric fields
@@ -219,3 +219,13 @@ Sources: github.com/Aegisub/Aegisub (and TypesettingTools fork), github.com/Subt
 - [ ] AEG-S3 ASS renderer expectations (libass vs Aegisub's own use of libass; override tag parsing in libaegisub/ass): test corpus for A21
 - [ ] AEG-S4 Automation 4 Lua API + karaoke templater docs (feeds AEG-E)
 - [ ] AEG-S5 UI patterns: grid columns, edit box, audio display, hotkeys -> touch equivalents, what to drop on a phone
+
+
+## s18j (owner's Step 2: subtitler fonts, placement, effects that really show)
+- [x] Why effects looked like 'just a name': the video overlay stripped every {..} block and drew plain text. Now ui/SubOverlay.kt + media/AssPreview.kt draw style + tags + MF1 keyframes at the playhead (software bitmap so BlurMaskFilter works on every Android version).
+- [x] subs/AssLook.kt: reads/writes fn, fs, b, i, an, pos, c, 3c in the line's first non-effect block (the effect block stays first). Text edits and the video export (libass) therefore agree.
+- [x] ui/LookPanel.kt: font picker (library fonts by family, each in its own face, import a font from the dialog), size, bold/italic, alignment chips + 3x3 numpad pad + X/Y sliders (same controls as the GIF text tab), text/outline colour, auto position, reset. Applies to all marked lines, else the active line.
+- [x] B4 guard: Latin typography now also has letterSpacing 0 (Arabic text appears in English UI too; the font has lam-alef only under liga); tools/check_arabic.sh runs first in CI and fails on fontFeatureSettings or non-zero letterSpacing (mark a justified exception with 'ar-ok').
+- NOT bundled-font safe: the UthmanTN1 licence forbids modification, so the font file must never be patched (an rlig copy of liga would have fixed B4 at the root).
+- Known limits: spacing effect is not previewed on Arabic text (spacing switches ligatures off); mid-line tag changes and \t written by hand are not previewed (MediaForge keyframes are); exact libass parity stays A21; free-position drag on the video is still open.
+- NOT compiled in the authoring sandbox (no Kotlin/Gradle there): first CI run is the compile check.
