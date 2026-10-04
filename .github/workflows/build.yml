@@ -2,6 +2,8 @@ name: Build APK
 on:
   push:
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,11 +26,29 @@ jobs:
           export ANDROID_NDK_HOME="${ANDROID_NDK_LATEST_HOME:-$ANDROID_NDK_ROOT}"
           echo "Using NDK: $ANDROID_NDK_HOME"
           cargo ndk -t arm64-v8a -t armeabi-v7a -t x86_64 -o ../app/src/main/jniLibs build --release
+          ls -l ../app/src/main/jniLibs/*/
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.7
       - run: gradle assembleDebug --no-daemon
+      - name: Collect APK
+        run: |
+          APK=$(find . -path '*/build/outputs/apk/debug/*.apk' | head -1)
+          if [ -z "$APK" ]; then echo "No APK was produced:"; find . -name '*.apk'; exit 1; fi
+          mkdir -p dist
+          cp "$APK" dist/MediaForge-beta.apk
+          ls -l dist
       - uses: actions/upload-artifact@v4
         with:
           name: MediaForge-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: dist/MediaForge-beta.apk
+          if-no-files-found: error
+      - name: Publish APK to Releases (direct download link)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete beta --cleanup-tag -y --repo "$GITHUB_REPOSITORY" || true
+          gh release create beta dist/MediaForge-beta.apk --repo "$GITHUB_REPOSITORY" \
+            --prerelease --target "$GITHUB_SHA" \
+            --title "MediaForge beta (build ${{ github.run_number }})" \
+            --notes "Debug APK built from commit $GITHUB_SHA"
