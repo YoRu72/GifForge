@@ -96,6 +96,7 @@ private fun AppRoot(incomingFont: Uri?, onFontHandled: () -> Unit) {
     var browsing by rememberSaveable { mutableStateOf(false) }
     var subUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var newSub by rememberSaveable { mutableStateOf(false) }
+    var subVideo by rememberSaveable { mutableStateOf<Uri?>(null) }
     var tab by rememberSaveable { mutableStateOf(0) } // 0 home, 1 videos, 2 fonts, 3 settings
     LaunchedEffect(incomingFont) {
         val u = incomingFont ?: return@LaunchedEffect
@@ -106,7 +107,7 @@ private fun AppRoot(incomingFont: Uri?, onFontHandled: () -> Unit) {
             else -> ctx.getString(R.string.font_invalid)
         }
         Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show()
-        if (r.imported.isNotEmpty()) { video = null; gif = null; browsing = false; subUri = null; newSub = false; tab = 2 }
+        if (r.imported.isNotEmpty()) { video = null; gif = null; browsing = false; subUri = null; newSub = false; subVideo = null; tab = 2 }
         onFontHandled()
     }
     val v = video
@@ -121,8 +122,8 @@ private fun AppRoot(incomingFont: Uri?, onFontHandled: () -> Unit) {
             GifEditorHost(uri = g, onBack = { gif = null })
         }
         subUri != null || newSub -> {
-            BackHandler { subUri = null; newSub = false }
-            SubtitleHost(subUri) { subUri = null; newSub = false }
+            BackHandler { subUri = null; newSub = false; subVideo = null }
+            SubtitleHost(subUri, subVideo) { subUri = null; newSub = false; subVideo = null }
         }
         browsing -> MediaBrowserScreen(
             onVideo = { video = it },
@@ -141,6 +142,7 @@ private fun AppRoot(incomingFont: Uri?, onFontHandled: () -> Unit) {
                         1 -> VideosScreen(
                             onVideo = { video = it }, onGif = { gif = it }, onBrowse = { browsing = true },
                             onSubtitle = { subUri = it }, onNewSubtitle = { newSub = true },
+                            onSubtitleVideo = { subVideo = it; newSub = true },
                         )
                         2 -> FontScreen(onBack = { tab = 0 })
                         else -> SettingsScreen(onBack = { tab = 0 }, onFonts = { tab = 2 })
@@ -153,7 +155,7 @@ private fun AppRoot(incomingFont: Uri?, onFontHandled: () -> Unit) {
 
 /** Loads a subtitle file off the main thread, then shows the list editor. */
 @Composable
-private fun SubtitleHost(uri: Uri?, onBack: () -> Unit) {
+private fun SubtitleHost(uri: Uri?, videoUri: Uri?, onBack: () -> Unit) {
     val ctx = LocalContext.current
     val state = produceState<Any?>(null, uri) {
         value = withContext(Dispatchers.IO) {
@@ -161,7 +163,7 @@ private fun SubtitleHost(uri: Uri?, onBack: () -> Unit) {
         }
     }
     when (val d = state.value) {
-        is SubDoc -> SubtitleListScreen(d, onBack)
+        is SubDoc -> SubtitleListScreen(d, onBack, videoUri)
         false -> {
             LaunchedEffect(Unit) {
                 Toast.makeText(ctx, R.string.sub_unreadable, Toast.LENGTH_LONG).show()

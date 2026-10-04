@@ -44,4 +44,7 @@ dependencies {
     implementation("io.coil-kt:coil-gif:2.6.0")
     implementation("io.coil-kt:coil-video:2.6.0")
     implementation("androidx.documentfile:documentfile:1.0.1")
+    // A17: FFmpeg engine for video export. The artifact is a property so a bad coordinate never blocks the build:
+    // blank it in gradle.properties and the app builds without video export (VideoExporter.available() = false).
+    providers.gradleProperty("ffmpegKit").orNull?.takeIf { it.isNotBlank() }?.let { implementation(it) }
 }

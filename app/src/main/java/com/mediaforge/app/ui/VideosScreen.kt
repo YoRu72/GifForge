@@ -40,7 +40,7 @@ import com.mediaforge.app.R
 @Composable
 fun VideosScreen(
     onVideo: (Uri) -> Unit, onGif: (Uri) -> Unit, onBrowse: () -> Unit,
-    onSubtitle: (Uri) -> Unit, onNewSubtitle: () -> Unit,
+    onSubtitle: (Uri) -> Unit, onNewSubtitle: () -> Unit, onSubtitleVideo: (Uri) -> Unit = {},
 ) {
     val ctx = LocalContext.current
     val videoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { u ->
@@ -53,8 +53,12 @@ fun VideosScreen(
             onSubtitle(it)
         }
     }
+    val subVideoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { u -> u?.let(onSubtitleVideo) }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(stringResource(R.string.vid_title), style = MaterialTheme.typography.headlineSmall)
+        HubCard(Icons.Filled.Subtitles, stringResource(R.string.vid_sub_video), stringResource(R.string.vid_sub_video_sub)) {
+            subVideoPicker.launch(arrayOf("video/*"))
+        }
         HubCard(Icons.Filled.VideoLibrary, stringResource(R.string.vid_open_video), stringResource(R.string.vid_open_video_sub)) {
             videoPicker.launch(arrayOf("video/*", "image/gif"))
         }

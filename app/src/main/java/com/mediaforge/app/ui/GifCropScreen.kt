@@ -1,5 +1,7 @@
 package com.mediaforge.app.ui
 
+import androidx.compose.ui.res.stringResource
+import com.mediaforge.app.R
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.foundation.layout.Box
@@ -66,9 +68,9 @@ fun GifCropScreen(uri: Uri, onBack: () -> Unit) {
 
     LaunchedEffect(uri) {
         val f = withContext(Dispatchers.IO) { copyUriToCache(ctx, uri, "gifsrc_${System.currentTimeMillis()}.gif") }
-        if (f == null) { status = "Couldn't open this file"; return@LaunchedEffect }
+        if (f == null) { status = ctx.getString(R.string.gc_open_fail); return@LaunchedEffect }
         val m = readGifMeta(f)
-        if (m == null) { status = "Couldn't read this GIF"; f.delete(); return@LaunchedEffect }
+        if (m == null) { status = ctx.getString(R.string.gc_read_fail); f.delete(); return@LaunchedEffect }
         src = f
         meta = m
         startF = 0
@@ -97,7 +99,7 @@ fun GifCropScreen(uri: Uri, onBack: () -> Unit) {
                     BitmapFactory.decodeFile(f.absolutePath, b)
                     result = ExportResult(f, saved != null, b.outWidth, b.outHeight)
                 }
-                .onFailure { status = if (it.message == "Cancelled") "Cancelled" else "Failed: ${it.message}" }
+                .onFailure { status = if (it.message == "Cancelled") ctx.getString(R.string.gc_cancelled) else ctx.getString(R.string.gc_failed, it.message ?: "") }
             progress = null
         }
     }
@@ -108,9 +110,9 @@ fun GifCropScreen(uri: Uri, onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("GIF editor") },
+                title = { Text(stringResource(R.string.gc_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.gh_back)) }
                 },
                 actions = {
                     if (progress == null) {
@@ -118,12 +120,12 @@ fun GifCropScreen(uri: Uri, onBack: () -> Unit) {
                             onClick = { runCrop() },
                             enabled = meta != null && (!crop.rect.isFull || trimmed),
                             modifier = Modifier.padding(end = 8.dp),
-                        ) { Text("Export") }
+                        ) { Text(stringResource(R.string.gc_export)) }
                     } else {
                         OutlinedButton(
                             onClick = { GifskiNative.nativeCancelCrop() },
                             modifier = Modifier.padding(end = 8.dp),
-                        ) { Text("Cancel") }
+                        ) { Text(stringResource(R.string.gc_cancel)) }
                     }
                 },
             )
@@ -149,14 +151,14 @@ fun GifCropScreen(uri: Uri, onBack: () -> Unit) {
                 )
                 GifTrimPanel(m, f, startF, endF) { s, e -> startF = s; endF = e }
                 CropControls(crop, m.width, m.height)
-                LabeledSlider("Quality", "$quality", quality.toFloat(), 10f..100f, 0) {
+                LabeledSlider(stringResource(R.string.gc_quality), "$quality", quality.toFloat(), 10f..100f, 0) {
                     quality = it.toInt()
                 }
             } else if (status == null) {
-                Text("Loading GIF...", Modifier.padding(16.dp))
+                Text(stringResource(R.string.gc_loading), Modifier.padding(16.dp))
             }
             progress?.let {
-                Text("Working... ${(it * 100).toInt()}%", Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
+                Text(stringResource(R.string.gc_working, (it * 100).toInt()), Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
                 LinearProgressIndicator(progress = { it }, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp))
             }
             status?.let { Text(it, Modifier.padding(12.dp)) }

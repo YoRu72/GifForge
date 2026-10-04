@@ -8,7 +8,7 @@
     <string name="add">Add</string>
 
     <!-- home -->
-    <string name="home_tagline">Video to GIF, done right</string>
+    <string name="home_tagline">Video, GIF and subtitle tools</string>
     <string name="home_edit_title">Edit video or GIF</string>
     <string name="home_edit_sub">Trim, crop, text, shapes, captions, export as GIF</string>
     <string name="home_finder_title">Media finder</string>
@@ -229,4 +229,135 @@
     <string name="fx_curve">Curve to the next keyframe</string>
     <string name="fx_graph_hint">Tap the graph to add a keyframe; drag a point to move it.</string>
     <string name="fx_note">Saved as standard ASS tags, so Aegisub opens the line unchanged.</string>
+
+    <!-- A19 part 1: GIF editor host, GIF editor, GIF trim -->
+    <string name="gh_unknown_error">Unknown error</string>
+    <string name="gh_prepare_fail">Couldn\'t prepare this GIF for the full editor.</string>
+    <string name="gh_open_quick">Open the quick GIF editor (trim + crop)</string>
+    <string name="gh_back">Back</string>
+    <string name="gh_preparing">Preparing your GIF for editing...</string>
+    <string name="gc_open_fail">Couldn\'t open this file</string>
+    <string name="gc_read_fail">Couldn\'t read this GIF</string>
+    <string name="gc_cancelled">Cancelled</string>
+    <string name="gc_failed">Failed: %1$s</string>
+    <string name="gc_title">GIF editor</string>
+    <string name="gc_export">Export</string>
+    <string name="gc_cancel">Cancel</string>
+    <string name="gc_quality">Quality</string>
+    <string name="gc_loading">Loading GIF...</string>
+    <string name="gc_working">Working... %1$d%%</string>
+    <string name="gt_single">This GIF has a single frame, so there is nothing to trim.</string>
+    <string name="gt_title">Trim</string>
+    <string name="gt_hint">The preview above plays the whole GIF. Use the sliders and the stills below to choose the part to keep.</string>
+    <string name="gt_start_line">Start #%1$d  %2$s</string>
+    <string name="gt_end_line">End #%1$d  %2$s</string>
+    <string name="gt_keeping">Keeping %1$d of %2$d frames (%3$s)</string>
+    <string name="gt_start">Start</string>
+    <string name="gt_end">End</string>
+    <string name="gt_first">First kept frame</string>
+    <string name="gt_last">Last kept frame</string>
+    <string name="gt_reset">Reset trim</string>
+
+    <!-- A13: subtitling workspace -->
+    <string name="sv_set_start">Set start</string>
+    <string name="sv_set_end">Set end</string>
+    <string name="sv_tap_chain">End + next start</string>
+    <string name="sv_play_line">Play line</string>
+    <string name="sv_loop_line">Loop line</string>
+    <string name="sv_follow">Follow video</string>
+    <string name="sv_start">Start</string>
+    <string name="sv_end">End</string>
+    <string name="sv_frame_step">Frame</string>
+    <string name="sv_attach">Attach video</string>
+    <string name="sv_detach">Detach video</string>
+    <string name="vid_sub_video">Subtitle a video</string>
+    <string name="vid_sub_video_sub">Pick a video, then time and translate lines on it</string>
+
+    <!-- A17: export chooser -->
+    <string name="ex_title">Export</string>
+    <string name="ex_mode_file">Subtitle file only</string>
+    <string name="ex_mode_file_sub">Any format, any encoding</string>
+    <string name="ex_mode_soft">Video with soft subtitles</string>
+    <string name="ex_mode_soft_sub">A subtitle track inside the video; the picture is not changed</string>
+    <string name="ex_mode_hard">Video with burned-in subtitles</string>
+    <string name="ex_mode_hard_sub">The subtitles become part of the picture</string>
+    <string name="ex_format">Format</string>
+    <string name="ex_encoding">Encoding</string>
+    <string name="ex_lossy_note">This format may drop styles and effects. ASS keeps everything.</string>
+    <string name="ex_do_file">Export file</string>
+    <string name="ex_container">Container</string>
+    <string name="ex_soft_mkv_note">MKV keeps the full ASS styling and effects.</string>
+    <string name="ex_soft_mp4_note">MP4 keeps plain text only; styling and effects are lost.</string>
+    <string name="ex_codec">Video encoder</string>
+    <string name="ex_codec_copy">Copy (no re-encode)</string>
+    <string name="ex_quality">Quality (CRF %1$d, lower is better)</string>
+    <string name="ex_resolution">Resolution</string>
+    <string name="ex_original">Original</string>
+    <string name="ex_audio_copy">Copy audio unchanged</string>
+    <string name="ex_need_video">Attach a video first.</string>
+    <string name="ex_engine_note">The video engine (FFmpeg) is not in this build, so video export is unavailable.</string>
+    <string name="ex_do_video">Export video</string>
+    <string name="ex_video_pending">The video engine is unavailable. The subtitle file can be exported.</string>
+
+    <!-- A19 part 2: Text and Shapes tabs -->
+    <string name="tt_empty">Add a text layer, then drag it on the preview to place it.</string>
+    <string name="tt_text">Text</string>
+    <string name="tt_font">Font</string>
+    <string name="tt_default_font">Default font</string>
+    <string name="tt_browse">Browse fonts</string>
+    <string name="tt_default">Default</string>
+    <string name="tt_add_font">Add font from device</string>
+    <string name="tt_bold">Bold</string>
+    <string name="tt_align">Alignment</string>
+    <string name="tt_left">Left</string>
+    <string name="tt_center">Center</string>
+    <string name="tt_right">Right</string>
+    <string name="tt_snap">Snap position</string>
+    <string name="tt_size">Size</string>
+    <string name="tt_stroke">Stroke</string>
+    <string name="tt_posx">Position X</string>
+    <string name="tt_posy">Position Y</string>
+    <string name="tt_color">Text color</string>
+    <string name="tt_stroke_color">Stroke color</string>
+    <string name="tt_delete">Delete this text</string>
+    <string name="tt_axes">Variable font axes</string>
+    <string name="tt_axes_reset">Reset axes</string>
+    <string name="el_add_shape">Add shape</string>
+    <string name="el_add_emoji">Add emoji</string>
+    <string name="el_emoji_note">Emoji are text layers: move and resize them in the Text tab.</string>
+    <string name="el_yours">Your shapes</string>
+    <string name="el_empty">Add a shape, then drag it on the preview. Pinch to resize, twist to rotate.</string>
+    <string name="el_filled">Filled</string>
+    <string name="el_fill_color">Fill color</string>
+    <string name="el_fill_opacity">Fill opacity</string>
+    <string name="el_color">Color</string>
+    <string name="el_outline_color">Outline color</string>
+    <string name="el_thickness">Thickness</string>
+    <string name="el_outline_thick">Outline thickness</string>
+    <string name="el_width">Width</string>
+    <string name="el_arrow_head">Arrow head size</string>
+    <string name="el_height">Height</string>
+    <string name="el_rotation">Rotation</string>
+    <string name="el_duplicate">Duplicate</string>
+    <string name="el_delete">Delete</string>
+
+    <!-- A17.c/d -->
+    <string name="ex_sub_lang">Subtitle track language</string>
+    <string name="ex_lang_ar">Arabic</string>
+    <string name="ex_lang_en">English</string>
+    <string name="ex_lang_und">Undefined</string>
+    <string name="ex_exporting">Exporting video...</string>
+    <string name="ex_done">Video exported</string>
+    <string name="ex_failed">Export failed</string>
+    <string name="ex_engine_missing">The video engine is not in this build. Set ffmpegKit in gradle.properties and rebuild.</string>
+
+    <!-- A13.b translate mode -->
+    <string name="tr_mode">Translate mode</string>
+    <string name="tr_original">Original</string>
+    <string name="tr_translation">Translation</string>
+    <string name="tr_copy_original">Copy original</string>
+    <string name="tr_clear">Clear</string>
+    <string name="tr_next_untranslated">Next untranslated</string>
+    <string name="tr_progress">%1$d of %2$d translated</string>
+    <string name="tr_all_done">Every line is translated</string>
 </resources>

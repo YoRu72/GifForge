@@ -1,5 +1,7 @@
 package com.mediaforge.app.ui
 
+import com.mediaforge.app.R
+import androidx.compose.ui.res.stringResource
 import android.os.Build
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
@@ -70,8 +72,8 @@ fun TextTab(state: EditorState, player: Player, onBrowseFonts: () -> Unit) {
             val r = withContext(Dispatchers.IO) { FontStore.importUri(ctx, uri) }
             val f = r.imported.firstOrNull()
             if (f == null) {
-                msg = if (r.unsupported.isNotEmpty()) "Android can't render ${r.unsupported.joinToString(", ")} fonts."
-                else "That file isn't a usable font."
+                msg = if (r.unsupported.isNotEmpty()) ctx.getString(R.string.font_unsupported, r.unsupported.joinToString(", "))
+                else ctx.getString(R.string.font_invalid)
             } else {
                 msg = null
                 fonts = FontStore.list(ctx)
@@ -97,7 +99,7 @@ fun TextTab(state: EditorState, player: Player, onBrowseFonts: () -> Unit) {
 
         val sel = state.selected()
         if (sel == null) {
-            Text("Add a text layer, then drag it on the preview to place it.")
+            Text(stringResource(R.string.tt_empty))
             return@Column
         }
         fun edit(f: (com.mediaforge.app.media.TextOverlay) -> com.mediaforge.app.media.TextOverlay) =
@@ -106,24 +108,24 @@ fun TextTab(state: EditorState, player: Player, onBrowseFonts: () -> Unit) {
         OutlinedTextField(
             value = sel.text,
             onValueChange = { v -> edit { it.copy(text = v) } },
-            label = { Text("Text") },
+            label = { Text(stringResource(R.string.tt_text)) },
             modifier = Modifier.fillMaxWidth(),
         )
 
-        Text("Font", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.tt_font), style = MaterialTheme.typography.labelLarge)
         val face by produceState<FontFace?>(null, sel.fontPath) {
             value = sel.fontPath?.let { p -> withContext(Dispatchers.IO) { FontCatalog.face(p) } }
         }
         Text(
             face?.let { "${it.family} - ${it.style}" }
-                ?: sel.fontPath?.substringAfterLast('/')?.substringBeforeLast('.') ?: "Default font",
+                ?: sel.fontPath?.substringAfterLast('/')?.substringBeforeLast('.') ?: stringResource(R.string.tt_default_font),
             style = MaterialTheme.typography.bodyLarge,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = onBrowseFonts) { Text("Browse fonts") }
-            OutlinedButton(onClick = { edit { it.copy(fontPath = null) } }) { Text("Default") }
+            Button(onClick = onBrowseFonts) { Text(stringResource(R.string.tt_browse)) }
+            OutlinedButton(onClick = { edit { it.copy(fontPath = null) } }) { Text(stringResource(R.string.tt_default)) }
         }
-        OutlinedButton(onClick = { picker.launch(arrayOf("*/*")) }) { Text("Add font from device") }
+        OutlinedButton(onClick = { picker.launch(arrayOf("*/*")) }) { Text(stringResource(R.string.tt_add_font)) }
         face?.let { f ->
             if (f.isVariable && Build.VERSION.SDK_INT >= 26) {
                 VariationControls(f, sel.fontVars) { v -> edit { it.copy(fontVars = v) } }
@@ -132,18 +134,18 @@ fun TextTab(state: EditorState, player: Player, onBrowseFonts: () -> Unit) {
         msg?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
         if (sel.fontPath == null) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(selected = sel.bold, onClick = { edit { it.copy(bold = !it.bold) } }, label = { Text("Bold") })
+                FilterChip(selected = sel.bold, onClick = { edit { it.copy(bold = !it.bold) } }, label = { Text(stringResource(R.string.tt_bold)) })
             }
         }
 
-        Text("Alignment", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.tt_align), style = MaterialTheme.typography.labelLarge)
         ForceLtr { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf(ALIGN_LEFT to "Left", ALIGN_CENTER to "Center", ALIGN_RIGHT to "Right").forEach { (a, label) ->
+            listOf(ALIGN_LEFT to stringResource(R.string.tt_left), ALIGN_CENTER to stringResource(R.string.tt_center), ALIGN_RIGHT to stringResource(R.string.tt_right)).forEach { (a, label) ->
                 FilterChip(selected = sel.align == a, onClick = { edit { it.copy(align = a) } }, label = { Text(label) })
             }
         } }
 
-        Text("Snap position", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.tt_snap), style = MaterialTheme.typography.labelLarge)
         PositionPad(sel.posX, sel.posY) { x, y ->
             edit {
                 it.copy(
@@ -153,29 +155,29 @@ fun TextTab(state: EditorState, player: Player, onBrowseFonts: () -> Unit) {
             }
         }
 
-        LabeledSlider("Size", "${"%.1f".format(sel.sizePct)}%", sel.sizePct, 2f..30f, 0) { v ->
+        LabeledSlider(stringResource(R.string.tt_size), "${"%.1f".format(sel.sizePct)}%", sel.sizePct, 2f..30f, 0) { v ->
             edit { it.copy(sizePct = (v * 2).roundToInt() / 2f) }
         }
-        LabeledSlider("Stroke", "${(sel.strokeRatio * 100).roundToInt()}%", sel.strokeRatio, 0f..0.3f, 0) { v ->
+        LabeledSlider(stringResource(R.string.tt_stroke), "${(sel.strokeRatio * 100).roundToInt()}%", sel.strokeRatio, 0f..0.3f, 0) { v ->
             edit { it.copy(strokeRatio = (v * 100).roundToInt() / 100f) }
         }
-        LabeledSlider("Position X", "${(sel.posX * 100).roundToInt()}%", sel.posX, 0f..1f, 0) { v ->
+        LabeledSlider(stringResource(R.string.tt_posx), "${(sel.posX * 100).roundToInt()}%", sel.posX, 0f..1f, 0) { v ->
             edit { it.copy(posX = v) }
         }
-        LabeledSlider("Position Y", "${(sel.posY * 100).roundToInt()}%", sel.posY, 0f..1f, 0) { v ->
+        LabeledSlider(stringResource(R.string.tt_posy), "${(sel.posY * 100).roundToInt()}%", sel.posY, 0f..1f, 0) { v ->
             edit { it.copy(posY = v) }
         }
 
-        Text("Text color", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.tt_color), style = MaterialTheme.typography.labelLarge)
         Swatches(sel.color) { c -> edit { it.copy(color = c) } }
-        Text("Stroke color", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.tt_stroke_color), style = MaterialTheme.typography.labelLarge)
         Swatches(sel.strokeColor) { c -> edit { it.copy(strokeColor = c) } }
 
         TimingControls(sel.timed, sel.fromMs, sel.toMs, state, player) { t, f, e -> edit { it.copy(timed = t, fromMs = f, toMs = e) } }
 
         LayerLookControls(sel.opacity, sel.blend, { v -> edit { it.copy(opacity = v) } }, { b -> edit { it.copy(blend = b) } })
 
-        OutlinedButton(onClick = { state.removeSelected() }) { Text("Delete this text") }
+        OutlinedButton(onClick = { state.removeSelected() }) { Text(stringResource(R.string.tt_delete)) }
     }
 }
 
@@ -233,7 +235,7 @@ private fun PositionPad(posX: Float, posY: Float, onPick: (Float, Float) -> Unit
 @Composable
 private fun VariationControls(face: FontFace, vars: String?, onChange: (String?) -> Unit) {
     val current = remember(vars) { parseVars(vars) }
-    Text("Variable font axes", style = MaterialTheme.typography.labelLarge)
+    Text(stringResource(R.string.tt_axes), style = MaterialTheme.typography.labelLarge)
     face.axes.forEach { ax ->
         val v = (current[ax.tag] ?: ax.def).coerceIn(ax.min, ax.max)
         val shown = if (ax.max - ax.min >= 20f) "%.0f".format(Locale.US, v) else "%.2f".format(Locale.US, v)
@@ -241,7 +243,7 @@ private fun VariationControls(face: FontFace, vars: String?, onChange: (String?)
             onChange(buildVars(current + (ax.tag to nv)))
         }
     }
-    OutlinedButton(onClick = { onChange(null) }) { Text("Reset axes") }
+    OutlinedButton(onClick = { onChange(null) }) { Text(stringResource(R.string.tt_axes_reset)) }
 }
 
 private fun parseVars(s: String?): Map<String, Float> {

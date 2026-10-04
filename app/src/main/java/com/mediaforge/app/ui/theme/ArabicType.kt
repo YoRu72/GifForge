@@ -5,13 +5,25 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import com.mediaforge.app.R
 
 /** The font supplied for the app (KFGQPC Uthman Taha Naskh). It has no Latin letters; Android draws those from the system font. */
 val UthmanFamily = FontFamily(Font(R.font.uthman_tn1, FontWeight.Normal))
 
+/**
+ * Letter spacing MUST be zero for Arabic. Android switches ligatures off whenever letter spacing is not 0, and
+ * Material's default styles carry spacing (0.1 to 0.5 sp). Without the lam-alef ligature the font draws the
+ * joining stroke of lam toward alef, so "الا" showed as "الـا". Zero spacing keeps the ligature and also keeps
+ * every Arabic word connected.
+ */
 private fun TextStyle.ar(): TextStyle =
-    copy(fontFamily = UthmanFamily, lineHeight = if (lineHeight.isSp) lineHeight * 1.3f else lineHeight)
+    copy(
+        fontFamily = UthmanFamily,
+        letterSpacing = 0.sp,
+        fontFeatureSettings = "liga, calt, init, medi, fina",
+        lineHeight = if (lineHeight.isSp) lineHeight * 1.3f else lineHeight,
+    )
 
 /** Arabic typography: the app font everywhere, and taller lines so marks above and below never clip. */
 fun arabicTypography(): Typography {

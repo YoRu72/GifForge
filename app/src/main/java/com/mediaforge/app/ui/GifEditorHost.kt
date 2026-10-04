@@ -1,5 +1,7 @@
 package com.mediaforge.app.ui
 
+import androidx.compose.ui.res.stringResource
+import com.mediaforge.app.R
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -42,7 +44,7 @@ fun GifEditorHost(uri: Uri, onBack: () -> Unit) {
     LaunchedEffect(uri) {
         GifProxy.build(ctx, uri) { progress = it }
             .onSuccess { proxy = it }
-            .onFailure { error = it.message ?: "Unknown error" }
+            .onFailure { error = it.message ?: ctx.getString(R.string.gh_unknown_error) }
     }
 
     val p = proxy
@@ -55,13 +57,13 @@ fun GifEditorHost(uri: Uri, onBack: () -> Unit) {
                 Modifier.fillMaxSize().padding(pad).padding(24.dp),
                 verticalArrangement = Arrangement.Center,
             ) {
-                Text("Couldn't prepare this GIF for the full editor.", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.gh_prepare_fail), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
                 Text(err, style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.height(16.dp))
-                Button(onClick = { quick = true }) { Text("Open the quick GIF editor (trim + crop)") }
+                Button(onClick = { quick = true }) { Text(stringResource(R.string.gh_open_quick)) }
                 Spacer(Modifier.height(8.dp))
-                OutlinedButton(onClick = onBack) { Text("Back") }
+                OutlinedButton(onClick = onBack) { Text(stringResource(R.string.gh_back)) }
             }
         }
         else -> Scaffold { pad ->
@@ -70,7 +72,7 @@ fun GifEditorHost(uri: Uri, onBack: () -> Unit) {
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text("Preparing your GIF for editing...", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.gh_preparing), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(16.dp))
                 LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(8.dp))

@@ -1,5 +1,5 @@
 # MediaForge (formerly GifForge) roadmap (source of truth - never drop a step)
-Last update: s18c (grid + collapsible line settings + keyframe effects with opacity fades). Before: s18b (Drop 2: A7 partly, A9 nav, A10, A11 delivered; Drops 3-6 planned as three tracks AR / AEG / SE).
+Last update: s18i (Arabic proofreading pass 1 + tools/AR_GLOSSARY.md). Before: s18h (A13.b translate mode). Before: s18g (A17 video export through FFmpeg wired: soft MKV/MP4, hard burn-in with fonts folder; roadmap gains tracks OPT, FEAT, AR-TR, AEG-S). Before: s18f (A17 export chooser UI + subtitle-file export; A19 part 2 Text/Shapes tabs). Before: s18e (A13 first part: video docked in the subtitle screen with real-time timing). Before: s18d (kashida bug 'الـا' fixed; A19 part 1: GIF host/editor/trim translated). Before: s18c (grid + collapsible line settings + keyframe effects with opacity fades). Before: s18b (Drop 2: A7 partly, A9 nav, A10, A11 delivered; Drops 3-6 planned as three tracks AR / AEG / SE).
 Legend: [x] done, [~] partial, [ ] todo. Work in small parts so no tokens are wasted. Every reply ships the current zip.
 
 ## PRIORITY LEG A (ADDED by owner, s18): Arabic-first + UI + Videos section. Done BEFORE all other open steps. Delivered in drops 1 to 6 (see below).
@@ -23,13 +23,17 @@ Rules from the owner: Arabic matters most; Arabic is its own system (not bolted 
 Sources: github.com/Aegisub/Aegisub (and TypesettingTools fork), github.com/SubtitleEdit/subtitleedit. Roadmap sections 17-29 below hold the detailed Aegisub-derived steps; they are scheduled here.
 
 ### Drop 3: subtitling workspace + export chooser (core of the owner's request)
-- [ ] A13 (AEG) Subtitling workspace: video on top, line list below, edit box docked (Aegisub + Subtitle Edit layout), tap-to-set start/end from the playhead, nudge buttons (+-1 frame, +-10 ms), per-line play and loop, keyframe snapping. Timing is done by the owner on the video itself
-- [ ] A13.b (SE) Subtitle Edit style 'translate mode': original column read-only + translation column editable, next/previous, jump to untranslated; for Aegisub's translation assistant see A15
+- [~] A13 (s18e DONE: video pane above the grid, overlay of the current line, transport + frame step, Set start / Set end from the playhead, 'End + next start' tap timing, +-1 frame and +-10 ms nudges for start and end, play line, loop line, follow-video selection, attach/detach video from the toolbar, hub card 'Subtitle a video'. LEFT: per-line play inside the grid, keyframe snapping, waveform (AEG-B), real ASS overlay (A21), Arabic-safe caret tools AR3) Subtitling workspace: video on top, line list below, edit box docked (Aegisub + Subtitle Edit layout), tap-to-set start/end from the playhead, nudge buttons (+-1 frame, +-10 ms), per-line play and loop, keyframe snapping. Timing is done by the owner on the video itself
+- [~] A13.b (s18h DONE: Translate mode button in the subtitle screen; original line read-only above the editable translation, copy original, clear, jump to next untranslated, 'x of y translated', grid numbers coloured translated/untranslated, insert/duplicate/delete locked in this mode so lines stay 1:1; works with the video pane. LEFT: load a separate original file side by side, per-line RTL tools (AR3), machine translation (SE7)) (SE) Subtitle Edit style 'translate mode': original column read-only + translation column editable, next/previous, jump to untranslated; for Aegisub's translation assistant see A15
 - [ ] A14 (AEG) List editing with undo/redo, search/replace (regex), split/join/duplicate/swap/sort, autosave + crash recovery (18.c to 18.f)
-- [ ] A15 (AEG) Translation assistant: original line / translation line side by side, next/previous, copy original, mark translated (23.e)
-- [ ] A17 Export chooser, shown BEFORE exporting: (1) video with subtitles - soft (muxed track, mp4/mkv) or hard (burned in); encoder choice H.264/HEVC/VP9/AV1, container, quality (CRF/bitrate), resolution, audio copy; (2) subtitle file only - any format, any encoding (UTF-8 / UTF-8 BOM / UTF-16 / Windows-1256 / ISO-8859-6...). Needs 10.B + 10.C (FFmpeg) first: they move up to A17.a, A17.b
-  - [ ] A17.a (was 10.B) FFmpeg in CI + Rust/JNI bridge, A17.b (was 10.C) decode pipeline MediaCodec first, FFmpeg fallback
-  - [ ] A17.c soft mux, A17.d burn-in (libass or Kotlin renderer through FrameComposer), A17.e encoder presets, A17.f subtitle-only export dialog
+- [~] A15 (s18h: covered by A13.b for the core flow; LEFT: mark-translated flag stored in the file, styling assistant) (AEG) Translation assistant: original line / translation line side by side, next/previous, copy original, mark translated (23.e)
+- [~] A17 (s18f DONE: ExportChooser.kt sheet from the Export button of the subtitle screen, three paths: file only / soft / hard; FILE path works now: any format of the registry x UTF-8, UTF-8 BOM, UTF-16 LE, Windows-1256, ISO-8859-6; soft/hard collect container MKV/MP4, encoder H.264/HEVC/VP9/AV1/copy, CRF, resolution, audio copy into VideoExportSettings and say plainly that the video engine is still missing. LEFT: A17.a-A17.e below; also a Videos-hub export entry for videos without subtitles) Export chooser, shown BEFORE exporting: (1) video with subtitles - soft (muxed track, mp4/mkv) or hard (burned in); encoder choice H.264/HEVC/VP9/AV1, container, quality (CRF/bitrate), resolution, audio copy; (2) subtitle file only - any format, any encoding (UTF-8 / UTF-8 BOM / UTF-16 / Windows-1256 / ISO-8859-6...). Needs 10.B + 10.C (FFmpeg) first: they move up to A17.a, A17.b
+  - [~] A17.a (s18g) FFmpeg engine: VideoExporter.kt calls the FFmpegKit API by reflection; artifact set by Gradle property ffmpegKit (gradle.properties, default com.moizhassan.ffmpeg:ffmpeg-kit-16kb:6.1.1 = UNVERIFIED, arm64-v8a only; original com.arthenica packages are gone from Maven Central, forks: ffmpegkit-maintained/ffmpeg (dev.ffmpegkit-maintained:ffmpeg-kit-free, no libass/x264 in the free tier: check) ). OWNER CHECK in CI: (1) coordinate resolves, (2) the tier has libass (hard subs), libx264/x265, libvpx, svtav1 - otherwise pick another tier or build our own (android.sh) in CI. LEFT: own static FFmpeg build in CI as the safe path, other ABIs, progress bar from statistics, SAF read without copying
+  - [x] A17.b (s18g) decode path for export = FFmpeg reads a cached copy of the video (copy step is slow for big files -> OPT3)
+  - [x] A17.c soft mux (s18g): MKV keeps the ASS track as is, MP4 gets a text track from SRT (styles lost, said in the sheet); track language chosen (Arabic default)
+  - [x] A17.d burn-in (s18g): FFmpeg ass filter + fontsdir = the app font folder, so imported fonts (UthmanTN1...) render; scale is applied before burning. Preview == export is NOT guaranteed until A21
+  - [ ] A17.e encoder presets (fast/balanced/small), hardware encoder option (MediaCodec) for speed, two-pass, bitrate mode, trim range, audio track pick
+  - [x] A17.f subtitle-only export dialog (s18f)
 - [ ] AR3 (AR) Subtitle editing in Arabic: caret/selection in RTL fields, LRM/RLM/isolates insert button, per-line direction toggle, Arabic punctuation (، ؛ ؟ « »), Win-1256/UTF-8 choice on save, mojibake repair (A18 + A23 + A25)
 
 ### Drop 4: effects with keyframes + Arabic depth + Aegisub core
@@ -69,12 +73,13 @@ Sources: github.com/Aegisub/Aegisub (and TypesettingTools fork), github.com/Subt
 - [ ] AR10 (AR) Arabic QA gate in CI: key parity values vs values-ar, plural categories complete, no hard-coded Latin literal in UI code (script in tools/)
 
 ### Bug and polish list (always open, fixed as found)
+- [x] B4 'الا' drawn as 'الـا': Material text styles carry letter spacing, and Android turns ligatures off when spacing is not 0, so lam-alef never formed. Arabic typography now forces letterSpacing 0 and liga/calt/init/medi/fina (ArabicType.kt). Verify on device; if any screen still shows it, search for Text(letterSpacing=...) there
 - [ ] B1 Enum labels (PlayMode, LayerBlend) still English -> A19
 - [ ] B2 fmtTime and sizes use Western digits already; verify every other number path (export names, dialogs) after A19
 - [ ] B3 Arabic-Indic digits typed by the keyboard are converted to 1234567 in numeric fields
 
 ## A19-A30 detail (string and Arabic work that Drop 2 left open)
-- [ ] A19 Remaining literals -> resources + Arabic: MediaBrowserScreen (about 32), TextTab (18), GifTrimPanel (15), ElementsTab (15), GifCropScreen, GifEditorHost, enum labels; list every file touched
+- [~] A19 (s18f: TextTab, ElementsTab DONE; LEFT: MediaBrowserScreen (filters use string keys as logic values: split label from value first), enum labels) (s18d: GifEditorHost, GifCropScreen, GifTrimPanel DONE; LEFT: MediaBrowserScreen, TextTab, ElementsTab, enum labels) Remaining literals -> resources + Arabic: MediaBrowserScreen (about 32), TextTab (18), GifTrimPanel (15), ElementsTab (15), GifCropScreen, GifEditorHost, enum labels; list every file touched
 - [ ] A23 Normalisation tools (Arabic): alef/yeh/kaf/heh forms, strip or keep tashkeel, tatweel, digits to 1234567
 - [ ] A25 Encodings in the UI: detect + pick another (17.d alternatives list), mojibake repair button
 - [ ] A29 Arabic sample text in font preview when the font has Arabic and no Latin (done for the font directory in A3; extend to the editor font picker)
@@ -188,3 +193,29 @@ Sources: github.com/Aegisub/Aegisub (and TypesettingTools fork), github.com/Subt
 
 - The Arabic font file UthmanTN1 (KFGQPC Uthman Taha Naskh) was supplied by the owner and is bundled; check its licence before publishing the app. It has Arabic letters, marks and digits but no Latin letters, so English text beside it is drawn by the system font.
 - Not compiled here (no Gradle in this environment): build with the CI workflow and report any error.
+
+## ADDED s18g by owner: four more tracks (every drop carries one item of each where possible; token-cheap steps)
+### OPT - optimization
+- [ ] OPT1 Startup and memory: lazy font list, thumbnails with size-capped cache, no full-file reads (video/sub), Compose stability (immutable events list, keys in LazyColumn), baseline profile + R8 (joins 10.G)
+- [ ] OPT2 Subtitle grid for 10 000+ lines: stable keys, no per-row allocations, text measured once; search/replace and Fix Common Errors run off the main thread
+- [ ] OPT3 Export speed: read the video through FFmpeg's SAF protocol instead of copying it to cache; MediaCodec hardware encoder path; progress + ETA from statistics; cancel is instant; temp files cleaned on start
+- [ ] OPT4 Player: one shared ExoPlayer for editor and subtitling, frame-accurate seek cache, proxy for heavy 4K/HEVC
+- [ ] OPT5 APK size: split per ABI, strip unused icons/libs, font subsetting for the bundled Arabic font
+### FEAT - more features
+- [ ] FEAT1 Video tools in the Videos hub (not GIF-only): trim/cut, join, speed, rotate/flip, crop, mute/replace audio, extract audio, compress, screenshots, GIF from range - all through the export engine with the same chooser
+- [ ] FEAT2 Batch: apply one subtitle/style to many videos, batch export queue with notifications
+- [ ] FEAT3 Subtitle projects: save workspace (video + subtitle + settings), reopen from Videos hub; share/open .ass from other apps (intent filters)
+- [ ] FEAT4 Style presets for Arabic (font, size, outline, shadow, bottom margin) and one-tap 'movie / anime / karaoke' looks
+- [ ] FEAT5 Waveform from the audio track with tap timing (AEG-B), scene-change snapping
+### AR-TR - Arabic translation quality (owner's first message: proper localisation, Sakkaki-style concision, no filler, no colloquial)
+- [~] AR-TR1 (s18i: pass 1 over all 285 strings DONE: GIF term unified, trim/crop/rotation/outline/bold/tab terms fixed, agreement fixed, '…' unified, soft/hard wording, glossary file tools/AR_GLOSSARY.md; LEFT: second pass after owner feedback on device, new strings must follow the glossary) Full copy audit of values-ar against a glossary (one Arabic term per concept: ترجمة/تصدير/طبقة/إطار/مسار...), consistent verb forms (imperative for buttons, nouns for titles), no mixed registers
+- [~] AR-TR2 (s18i: done together with pass 1) Shorten every string to the least words that stay exact; remove filler words and repeated 'يمكنك'; punctuation and quotes Arabic (، ؛ ؟ « »); digits always 1234567
+- [ ] AR-TR3 Plural audit (zero/one/two/few/many/other) for every quantity string; gender and agreement checks
+- [ ] AR-TR4 Translate-while-timing: translation assistant shows original and Arabic side by side (A13.b/A15), per-line RTL/LTR tools (AR3), Arabic QA rules (AR6)
+- [ ] AR-TR5 Check with the supplied font on device: every screen, no clipped marks, no stray kashida (B4), no flipped text
+### AEG-S - study Aegisub more (reading steps, notes go to AEGISUB_NOTES.md; each step ends with a small code change)
+- [ ] AEG-S1 Video/audio providers and keyframes (src/video_provider*, audio_provider*, keyframe loading): what to copy for waveform + keyframe snapping
+- [ ] AEG-S2 Timing tools in source: Shift Times, Timing Post-Processor, Resolution Resampler, Kanji Timer: exact rules and defaults
+- [ ] AEG-S3 ASS renderer expectations (libass vs Aegisub's own use of libass; override tag parsing in libaegisub/ass): test corpus for A21
+- [ ] AEG-S4 Automation 4 Lua API + karaoke templater docs (feeds AEG-E)
+- [ ] AEG-S5 UI patterns: grid columns, edit box, audio display, hotkeys -> touch equivalents, what to drop on a phone
