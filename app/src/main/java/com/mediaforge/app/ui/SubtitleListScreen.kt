@@ -184,6 +184,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit) {
 }
 
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 private fun SectionHeader(title: String, open: Boolean, onToggle: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().combinedClickable(onClick = onToggle).padding(vertical = 10.dp),
