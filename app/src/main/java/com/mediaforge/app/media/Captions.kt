@@ -4,9 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.text.Layout
 import android.text.StaticLayout
-import android.text.TextPaint
 import kotlin.math.roundToInt
 
 /** A meme-style strip added above or below the video. Height is a % of the (cropped) video height. */
@@ -30,22 +28,16 @@ private fun drawBar(c: Canvas, bar: CaptionBar, y: Float, w: Int, h: Int) {
     val padX = w * 0.04f
     val maxW = (w - 2 * padX).toInt().coerceAtLeast(1)
     val maxH = (h * 0.84f).coerceAtLeast(1f)
-    val align = when (bar.align) {
-        ALIGN_LEFT -> Layout.Alignment.ALIGN_NORMAL
-        ALIGN_RIGHT -> Layout.Alignment.ALIGN_OPPOSITE
-        else -> Layout.Alignment.ALIGN_CENTER
-    }
-    val paint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+    val align = physicalAlignment(bar.text, bar.align)
+    val paint = newTextPaint(bar.text, FontStore.typeface(bar.fontPath, bar.bold, bar.fontVars), h * 0.7f).apply {
         color = bar.color
-        typeface = FontStore.typeface(bar.fontPath, bar.bold, bar.fontVars)
     }
     // shrink the text until it fits inside the bar
     var size = h * 0.7f
     var layout: StaticLayout
     while (true) {
         paint.textSize = size
-        layout = StaticLayout.Builder.obtain(bar.text, 0, bar.text.length, paint, maxW)
-            .setAlignment(align).build()
+        layout = buildLayout(bar.text, paint, maxW, align)
         if (layout.height <= maxH || size <= 6f) break
         size *= 0.92f
     }

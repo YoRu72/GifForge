@@ -1,5 +1,9 @@
 package com.mediaforge.app.ui
 
+import com.mediaforge.app.R
+
+import androidx.compose.ui.res.stringResource
+
 import android.os.Build
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -58,27 +62,27 @@ fun GifResultDialog(r: ExportResult, onDismiss: () -> Unit) {
     var saved by remember { mutableStateOf(r.savedToGallery) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("GIF ready") },
+        title = { Text(stringResource(R.string.rs_ready)) },
         text = {
             Column {
                 AsyncImage(
                     model = r.file,
                     imageLoader = loader,
-                    contentDescription = "Exported GIF",
+                    contentDescription = stringResource(R.string.rs_desc),
                     contentScale = ContentScale.Fit,
                     modifier = Modifier.fillMaxWidth().heightIn(max = 320.dp),
                 )
                 Spacer(Modifier.height(12.dp))
                 Text("${r.width}x${r.height} - ${formatSize(r.file.length())}")
-                Text(if (saved) "Saved to Pictures/MediaForge" else "Not in the gallery yet - tap Save or Share")
+                Text(if (saved) stringResource(R.string.rs_saved) else stringResource(R.string.rs_not_saved))
             }
         },
-        confirmButton = { Button(onClick = { shareGif(ctx, r.file) }) { Text("Share") } },
+        confirmButton = { Button(onClick = { shareGif(ctx, r.file) }) { Text(stringResource(R.string.share)) } },
         dismissButton = {
             Row {
-                if (!saved) TextButton(onClick = { scope.launch { saved = saveGif(ctx, r.file) != null } }) { Text("Save") }
-                TextButton(onClick = { openGif(ctx, r.file) }) { Text("Open") }
-                TextButton(onClick = onDismiss) { Text("Close") }
+                if (!saved) TextButton(onClick = { scope.launch { saved = saveGif(ctx, r.file) != null } }) { Text(stringResource(R.string.save)) }
+                TextButton(onClick = { openGif(ctx, r.file) }) { Text(stringResource(R.string.open)) }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) }
             }
         },
     )

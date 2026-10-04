@@ -1,5 +1,83 @@
 # MediaForge (formerly GifForge) roadmap (source of truth - never drop a step)
+Last update: s18c (grid + collapsible line settings + keyframe effects with opacity fades). Before: s18b (Drop 2: A7 partly, A9 nav, A10, A11 delivered; Drops 3-6 planned as three tracks AR / AEG / SE).
 Legend: [x] done, [~] partial, [ ] todo. Work in small parts so no tokens are wasted. Every reply ships the current zip.
+
+## PRIORITY LEG A (ADDED by owner, s18): Arabic-first + UI + Videos section. Done BEFORE all other open steps. Delivered in drops 1 to 6 (see below).
+Rules from the owner: Arabic matters most; Arabic is its own system (not bolted onto English); numbers always Western 1234567; Arabic copy is concise classical Arabic (Sakkaki-style: exact, no filler, no colloquial); the supplied font UthmanTN1 is the app's Arabic font; never break the UI.
+### Drop 1 (s18, this zip): Arabic foundation + font and flip bugs
+- [x] A1 Language system: Settings > Language (device / English / العربية), applied live without restart; separate locale layer (l10n/AppLang.kt), RTL layout direction, Locale carries -u-nu-latn so every number is 1234567; res/values-ar is the Arabic string set (plurals use real Arabic forms)
+- [x] A2 Supplied font UthmanTN1 shipped in the app (res/font), used as the Arabic UI typeface (taller line height so marks never clip) and copied once into the font library
+- [x] A3 Glyph-font bug: Arabic/symbol/icon fonts used to preview with Latin sample text they do not contain, so Android drew the sample in the system font (looked like Arial). Now the cmap is read and the preview uses glyphs the font really has (Arabic sample, digits, or its own symbols)
+- [x] A4 Flipped text bug: Left/Center/Right were mapped to NORMAL/OPPOSITE, which mirror on right-to-left text. Alignment is now physical (TextLayouts.kt) for text layers and caption bars; preview frame, crop box, timelines, range sliders and the 3x3 position pad are locked left-to-right inside Arabic screens
+- [x] A5 Arabic text drawing: shared layout builder (no letter spacing, full-height lines for tashkeel, fallback line spacing), one code path for layers and bars so preview == export
+- [x] A6 Translated screens: Home, Settings, Fonts, import messages. Roadmap step 10.5 is split: shaping/bidi/digits/font here, rest in A7 to A12
+### Drop 2 (s18b, this zip): whole-app Arabic + UI cleanup (Rexplayer style) + Videos hub
+- [~] A7 Every English literal moved to string resources + Arabic. DONE: Editor shell and tabs, Trim, Crop, timing, layer look, export settings, result dialog, Bars. LEFT -> A19
+- [ ] A8 Layer editor offers the font's own sample text when the font lacks the layer's letters (see A29)
+- [~] A9 UI cleanup modelled on Rexplayer. DONE: bottom navigation (Home / Videos / Fonts / Settings), one entry per section. LEFT: card lists with thumbnails, consistent spacing, editor tabs as a bottom sheet so the preview is never squeezed (A9b)
+- [x] A10 Videos hub (VideosScreen): open video/GIF, media finder, open subtitle, new subtitle, recent subtitles
+- [~] A11 Subtitle screen, Aegisub style (reworked s18c on the owner's note: the LINE is plain, its SETTINGS collapse). Top: compact grid (#, start, end, style [wide screens], text), tap = active line, long-press = multi-select. Docked below: line text, then two collapsible sections (both closed by default): Line settings (start, end, style, actor, effect, layer, margins, comment) and Effects. Insert/duplicate/delete, previous/next line, save via SAF in the file's own format and encoding. Times stay left-to-right in Arabic. LEFT: undo/redo, search/replace, split/join (A14)
+- [ ] A12 A+B loop kept and moved into the Videos player controls
+
+## THE THREE TRACKS (owner: update evenly). Every drop below carries one Arabic item (AR), one Aegisub item (AEG), one Subtitle Edit item (SE). Study steps come first inside their drop.
+Sources: github.com/Aegisub/Aegisub (and TypesettingTools fork), github.com/SubtitleEdit/subtitleedit. Roadmap sections 17-29 below hold the detailed Aegisub-derived steps; they are scheduled here.
+
+### Drop 3: subtitling workspace + export chooser (core of the owner's request)
+- [ ] A13 (AEG) Subtitling workspace: video on top, line list below, edit box docked (Aegisub + Subtitle Edit layout), tap-to-set start/end from the playhead, nudge buttons (+-1 frame, +-10 ms), per-line play and loop, keyframe snapping. Timing is done by the owner on the video itself
+- [ ] A13.b (SE) Subtitle Edit style 'translate mode': original column read-only + translation column editable, next/previous, jump to untranslated; for Aegisub's translation assistant see A15
+- [ ] A14 (AEG) List editing with undo/redo, search/replace (regex), split/join/duplicate/swap/sort, autosave + crash recovery (18.c to 18.f)
+- [ ] A15 (AEG) Translation assistant: original line / translation line side by side, next/previous, copy original, mark translated (23.e)
+- [ ] A17 Export chooser, shown BEFORE exporting: (1) video with subtitles - soft (muxed track, mp4/mkv) or hard (burned in); encoder choice H.264/HEVC/VP9/AV1, container, quality (CRF/bitrate), resolution, audio copy; (2) subtitle file only - any format, any encoding (UTF-8 / UTF-8 BOM / UTF-16 / Windows-1256 / ISO-8859-6...). Needs 10.B + 10.C (FFmpeg) first: they move up to A17.a, A17.b
+  - [ ] A17.a (was 10.B) FFmpeg in CI + Rust/JNI bridge, A17.b (was 10.C) decode pipeline MediaCodec first, FFmpeg fallback
+  - [ ] A17.c soft mux, A17.d burn-in (libass or Kotlin renderer through FrameComposer), A17.e encoder presets, A17.f subtitle-only export dialog
+- [ ] AR3 (AR) Subtitle editing in Arabic: caret/selection in RTL fields, LRM/RLM/isolates insert button, per-line direction toggle, Arabic punctuation (، ؛ ؟ « »), Win-1256/UTF-8 choice on save, mojibake repair (A18 + A23 + A25)
+
+### Drop 4: effects with keyframes + Arabic depth + Aegisub core
+- [~] A16 (AEG) [s18c: a, b, c, e(opacity fades) DONE; d preview LEFT until the renderer A21] Effects with keyframes, per point on the text: blur (\blur, \be), border, shadow, fade, scale, rotation, colour, alpha. Value-over-time GRAPH editor: tracks per property, add/drag keyframes, linear / ease-in / ease-out / hold curves, scrub on the video, live preview. Compiled to ASS \t(t1,t2,accel,...) and \fad. Text range: whole line, a selection, or per word/letter (karaoke-style stagger)
+  - [x] A16.a model (subs/Effects.kt): Track(property, keyframes[time, value, curve]); properties opacity, blur, border, shadow, scale, rotation, letter spacing; curves linear / ease in / ease out / hold
+  - [~] A16.b graph (EffectsPanel.kt, under each line, Alight Motion style): tap to add a keyframe, drag to move (stays between neighbours), numeric time/value, curve per segment, delete. LEFT: pinch zoom on time, snap to playhead and to other lines, scrub with the video
+  - [x] A16.c compiler to ASS: one override block per line, plain tags (\alpha, \blur, \t with accel) plus a harmless 'MF1;' note so the keyframes reopen editable; Aegisub and libass play the tags unchanged
+  - [ ] A16.d live preview on the video through the renderer (A21)
+  - [~] A16.e presets: opacity fade in / fade out / both DONE; blur in/out, pulse, typewriter, shake, glow LEFT
+  - [ ] A16.f per word / per letter ranges (stagger), colour and alpha-per-channel tracks
+  - [ ] A16.g GIF/video export uses the same compiler (A17)
+- [ ] A21 (AEG) ASS rendering engine + decision gate libass vs Kotlin (21.a-21.g), shaping + bidi from day one
+- [ ] SE1 (SE) Study Subtitle Edit (10.4): formats list, Fix Common Errors rules, sync tools, translate, waveform, batch, OCR -> SUBTITLEEDIT_NOTES.md; then pick the order of SE2 to SE20
+- [ ] AR4 (AR) Arabic text engine: shaping (HarfBuzz via Android layout), lam-alef, tashkeel placement, kashida/tatweel justification, mixed LTR numbers and Latin words inside RTL lines, preview == export (A21 hook)
+- [ ] AR5 (AR) Per-run fonts in one layer: Arabic runs in the chosen Arabic font (UthmanTN1 for example), Latin runs in a Latin font (fixes 'no Latin glyphs' fallback to system font)
+
+### Drop 5: Aegisub parity + Subtitle Edit core tools + Arabic tools
+- [ ] AEG-A (AEG) Styles manager + editor, script properties, attachments, fonts collector (19.a-19.d)
+- [ ] AEG-B (AEG) Video timing: frame stepping, keyframes, waveform + touch timing, snap, spectrogram optional (20.a-20.f)
+- [ ] AEG-C (AEG) Timing tools: Shift Times, Timing Post-Processor, CPS/QC checker, Resolution Resampler, styling assistant, spell checker (23.a-23.f)
+- [ ] SE2 (SE) Fix Common Errors: overlap, short/long duration, gaps, empty lines, double spaces, dialog dashes, uppercase i, music symbols, line balancing; each rule toggled, preview of every fix, apply selected
+- [ ] SE3 (SE) Synchronization: shift all, point sync (two points), visual sync, change frame rate (23.976 <-> 25 ...), adjust to a new duration
+- [ ] SE4 (SE) Split/merge: split long line at best point, merge short lines, merge/split whole files, remove text for hearing impaired ([music], speaker names), change casing, remove duplicates
+- [ ] SE5 (SE) Reading-speed profiles (Netflix, BBC, custom): CPS, WPM, max line length, max lines, min gap; colour-coded in the list
+- [ ] AR6 (AR) Arabic QA rules inside Fix Common Errors: RTL punctuation, tashkeel kept/stripped, alef/yeh/kaf normalisation, digits to 1234567, CPS counted without tashkeel, line-length by letters
+- [ ] AR7 (AR) Arabic font manager: filter fonts that support Arabic, sample نص تجريبي, warn when the font lacks glyphs of the current text, mark fonts with tashkeel support
+
+### Drop 6: Subtitle Edit breadth + Aegisub scripting + Arabic finish
+- [ ] SE6 (SE) Batch convert (folder in, format/encoding/frame rate out), compare two subtitles, statistics, find/replace across files
+- [ ] SE7 (SE) Auto-translate (online engines behind a key, plus offline option later) with Arabic as target and source; keeps tags; side by side with the original; machine text marked for review
+- [ ] SE8 (SE) Waveform + spectrogram + shot changes (shares AEG-B), audio-to-text (offline speech model) as an optional download, text-to-speech check
+- [ ] SE9 (SE) OCR for image subtitles (SUP, VobSub) and more formats (SMI, JSON, Netflix TTML, EBU STL, PAC...) as the format registry grows
+- [ ] AEG-D (AEG) Visual typesetting: drag pos/move/origin, rotate/scale/shear handles, clips, drawings (22.a-22.c), karaoke timing (22.d, 21.g)
+- [ ] AEG-E (AEG) Lua automation + templater (10.3, 26-28) after the study step
+- [ ] AR8 (AR) Arabic karaoke and effects: per-letter timing that respects joined letters (a connected word is one shaped run), kashida stretch effects
+- [ ] AR9 (AR) Arabic help, about, tips and error text; plural audit for every count; screen-reader labels in Arabic
+- [ ] AR10 (AR) Arabic QA gate in CI: key parity values vs values-ar, plural categories complete, no hard-coded Latin literal in UI code (script in tools/)
+
+### Bug and polish list (always open, fixed as found)
+- [ ] B1 Enum labels (PlayMode, LayerBlend) still English -> A19
+- [ ] B2 fmtTime and sizes use Western digits already; verify every other number path (export names, dialogs) after A19
+- [ ] B3 Arabic-Indic digits typed by the keyboard are converted to 1234567 in numeric fields
+
+## A19-A30 detail (string and Arabic work that Drop 2 left open)
+- [ ] A19 Remaining literals -> resources + Arabic: MediaBrowserScreen (about 32), TextTab (18), GifTrimPanel (15), ElementsTab (15), GifCropScreen, GifEditorHost, enum labels; list every file touched
+- [ ] A23 Normalisation tools (Arabic): alef/yeh/kaf/heh forms, strip or keep tashkeel, tatweel, digits to 1234567
+- [ ] A25 Encodings in the UI: detect + pick another (17.d alternatives list), mojibake repair button
+- [ ] A29 Arabic sample text in font preview when the font has Arabic and no Latin (done for the font directory in A3; extend to the editor font picker)
 
 ## Leg 1: editor polish
 - [x] 9  Text-over-seeker fix, compact seeker below video, 3x3 snap pad (pad also sets L/C/R alignment)
@@ -17,8 +95,8 @@ Legend: [x] done, [~] partial, [ ] todo. Work in small parts so no tokens are wa
 
 ## Step 10 extras (owner's order was before 10.1; 10.1 study was done first on request - extras still pending) - formats, images, performance
 - [ ] 10.A Format audit: what device decodes natively, where it fails (webm, mkv, hevc, av1, avi, flv, 3gp, ts, mov...)
-- [ ] 10.B FFmpeg build in GitHub Actions + Rust/JNI bridge (check ffmpeg-kit status; own static build; WASM only as fallback)
-- [ ] 10.C Decode pipeline: MediaCodec/ExoPlayer first, FFmpeg fallback, any video/audio/image format
+- [ ] 10.B (moved up: A17.a) FFmpeg build in GitHub Actions + Rust/JNI bridge (check ffmpeg-kit status; own static build; WASM only as fallback)
+- [ ] 10.C (moved up: A17.b) Decode pipeline: MediaCodec/ExoPlayer first, FFmpeg fallback, any video/audio/image format
 - [ ] 10.D Image -> GIF (single image, image sequences, animated webp/apng/avif input)
 - [ ] 10.E Import SVG/PNG/WebP/etc as layers on videos and GIFs
 - [ ] 10.F Encoder performance: sequential decode, scaled frames, buffer reuse, native RGBA, streaming
@@ -30,8 +108,8 @@ Legend: [x] done, [~] partial, [ ] todo. Work in small parts so no tokens are wa
 - [x] 10.2 (DONE: audio display/timing, Shift Times, Timing Post-Processor, release-note lessons -> AEGISUB_NOTES.md part 2; the smaller tools are read when their step starts) Aegisub study part 2: video/audio/timing docs + src/audio, src/video (keyframes, waveform), Shift Times, Timing Post-Processor, Kanji Timer, Resolution Resampler, Translation/Styling assistants, Spell Checker, Paste Over, Select Lines
 - [ ] 10.3 Aegisub study part 3: Automation (Lua API, modules karaskel/util/unicode/cleantags/clipboard/re), Karaoke Templater rules, included macros, styles/fonts collector/attachments/properties/commands/options/autosave -> decide Lua runtime
 - [ ] 10.3b Aegisub study part 4 (only if needed): libaegisub/ass + subtitle_format_*.cpp edge cases -> test corpus
-- [ ] 10.4 Study Subtitle Edit (formats, Fix Common Errors, sync, waveform/spectrogram, batch, spell check, auto-translate, OCR) and merge with Aegisub notes: what each does best   https://github.com/SubtitleEdit/subtitleedit
-- [ ] 10.5 Arabic support: shaping + RTL/bidi on GIF text (override, start/end align, diacritics, tatweel), Arabic sample (نص تجريبي) in font preview, subtitle encodings (UTF-8/16, Win-1256, ISO-8859-6) + punctuation fix, renderer with shaping+bidi from day one, RTL-mirrored UI + optional Arabic translation. Preview and export must match.
+- [ ] 10.4 (SCHEDULED as SE1, Drop 4) Study Subtitle Edit (formats, Fix Common Errors, sync, waveform/spectrogram, batch, spell check, auto-translate, OCR) and merge with Aegisub notes: what each does best   https://github.com/SubtitleEdit/subtitleedit
+- [~] 10.5 (mostly moved to Priority Leg A; A1-A6 done) Arabic support: shaping + RTL/bidi on GIF text (override, start/end align, diacritics, tatweel), Arabic sample (نص تجريبي) in font preview, subtitle encodings (UTF-8/16, Win-1256, ISO-8859-6) + punctuation fix, renderer with shaping+bidi from day one, RTL-mirrored UI + optional Arabic translation. Preview and export must match.
 
 ## Unified editor (ADDED by owner: GIF and video must have the same abilities)
 - [x] 14.6 One editor for video AND GIF: a GIF is converted once to a hidden all-intra H.264 proxy video (GifProxy, cached as mfproxy_*.mp4; transparency -> white; tiny GIFs enlarged to >=128px short side), then EditorScreen edits it, so trim/crop/text/shapes/bars/blend/timing/speed/reverse/ping-pong all work on GIFs. Home has one "Edit video or GIF" entry; media browser routes GIFs the same way. Old lossless "quick GIF editor" stays as automatic fallback if the phone's encoder refuses. Native: sequential GIF reader (nativeGifOpen/Next/Close). Later (10.B/10.C): same proxy idea for WebM/MKV etc via FFmpeg.
@@ -43,10 +121,10 @@ Legend: [x] done, [~] partial, [ ] todo. Work in small parts so no tokens are wa
 - [x] 17.b WebVTT (cues, <i><b><u>, <v> speaker, align/line <-> \an), SBV, LRC (multi-stamp, offset, metadata, enhanced word stamps <-> \k), plain TXT (# comments, untimed)
 - [x] 17.c MicroDVD SUB (fps kept in script info, {y:ibus} {c:$bbggrr}, | breaks) and TTML/DFXP (clock/offset/frame times, spans, <br/>, align). SMI and others later if wanted
 - [x] 17.d Encodings.kt: BOM, UTF-16 without BOM, strict UTF-8, scored legacy charsets (Win-1256, ISO-8859-6, Cyrillic, Greek, Hebrew, Thai, Turkish, Central European, Western, SJIS/GBK/Big5/EUC-KR), alternatives list for a 'try another encoding' picker, forced decodeAs, encode with BOM choice; RtlFix.kt moves leading punctuation to the end of RTL lines. Heuristic: if it proves weak, add uchardet via NDK (like Aegisub)
-- [ ] 17.e Videos section UI: home entry, open/save via SAF, recent files, new empty file, format picker
+- [x] 17.e (done as A10) Videos section UI: home entry, open/save via SAF, recent files, new empty file, format picker
 ### 18 Subtitle editor without video
-- [ ] 18.a Grid (virtualized list: #, start, end, style, text, flags) + selection
-- [ ] 18.b Edit box (text, times, style, layer, margins, actor, effect, comment) + inline tag buttons (i b u s, colour, alignment)
+- [~] 18.a (A11 done: Aegisub-style grid + selection) Grid
+- [~] 18.b (A11: docked edit area with collapsible Line settings; inline tag buttons and video docking = A13) Edit box (text, times, style, layer, margins, actor, effect, comment) + inline tag buttons (i b u s, colour, alignment)
 - [ ] 18.c Undo/redo (snapshot history) + dirty state
 - [ ] 18.d Search and replace (plain/regex, case, fields: text/style/actor/effect)
 - [ ] 18.e Line operations: insert before/after, duplicate, delete, join, split at cursor, swap, sort, select lines, paste over
@@ -107,3 +185,6 @@ Legend: [x] done, [~] partial, [ ] todo. Work in small parts so no tokens are wa
 - 3x3 pad covers above/below inside the video; extra bars come with step 12.
 - Renamed app installs as a NEW app (new applicationId); old GifForge install and its fonts are not migrated. Zip filename keeps the GifForge prefix so gifforge-push.sh still finds it; repo name in that script is still 'gifforge' (change R= when you want).
 - Push: gifforge-push.sh (holds the owner's token; do not modify or leak it).
+
+- The Arabic font file UthmanTN1 (KFGQPC Uthman Taha Naskh) was supplied by the owner and is bundled; check its licence before publishing the app. It has Arabic letters, marks and digits but no Latin letters, so English text beside it is drawn by the system font.
+- Not compiled here (no Gradle in this environment): build with the CI workflow and report any error.

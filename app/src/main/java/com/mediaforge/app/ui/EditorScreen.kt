@@ -1,5 +1,7 @@
 package com.mediaforge.app.ui
 
+import androidx.compose.ui.res.stringResource
+
 import android.net.Uri
 import android.view.LayoutInflater
 import android.graphics.Bitmap
@@ -87,7 +89,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 
-private val tabs = listOf("Trim", "Crop", "Text", "Bars", "Shapes", "Settings")
+private val tabs = listOf(R.string.tab_trim, R.string.tab_crop, R.string.tab_text, R.string.tab_bars, R.string.tab_shapes, R.string.tab_settings)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -182,9 +184,9 @@ fun EditorScreen(uri: Uri, onBack: () -> Unit, fpsHint: Int? = null, fullClip: B
                         BitmapFactory.decodeFile(f.absolutePath, b)
                         result = ExportResult(f, saved != null, b.outWidth, b.outHeight)
                     }
-                    .onFailure { status = "Failed: ${it.message}" }
+                    .onFailure { status = ctx.getString(R.string.ed_failed, it.message ?: "") }
             } catch (e: CancellationException) {
-                status = "Export cancelled"
+                status = ctx.getString(R.string.ed_cancelled)
                 throw e
             } finally {
                 progress = null
@@ -217,19 +219,19 @@ fun EditorScreen(uri: Uri, onBack: () -> Unit, fpsHint: Int? = null, fullClip: B
     blendFrame?.let { bf ->
         AlertDialog(
             onDismissRequest = { blendFrame = null },
-            title = { Text("Blended frame") },
-            text = { Image(bf.asImageBitmap(), "Blended frame", Modifier.fillMaxWidth()) },
-            confirmButton = { TextButton(onClick = { blendFrame = null }) { Text("Close") } },
+            title = { Text(stringResource(R.string.ed_blended)) },
+            text = { Image(bf.asImageBitmap(), stringResource(R.string.ed_blended), Modifier.fillMaxWidth()) },
+            confirmButton = { TextButton(onClick = { blendFrame = null }) { Text(stringResource(R.string.close)) } },
         )
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Editor") },
+                title = { Text(stringResource(R.string.ed_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back))
                     }
                 },
                 actions = {
@@ -238,19 +240,19 @@ fun EditorScreen(uri: Uri, onBack: () -> Unit, fpsHint: Int? = null, fullClip: B
                             onClick = { export() },
                             enabled = info != null,
                             modifier = Modifier.padding(end = 8.dp),
-                        ) { Text("Export") }
+                        ) { Text(stringResource(R.string.export)) }
                     } else {
                         OutlinedButton(
                             onClick = { job?.cancel() },
                             modifier = Modifier.padding(end = 8.dp),
-                        ) { Text("Cancel") }
+                        ) { Text(stringResource(R.string.cancel)) }
                     }
                 },
             )
         },
     ) { pad ->
         Column(Modifier.fillMaxSize().padding(pad)) {
-            Box(Modifier.fillMaxWidth().height(240.dp).background(Color(0xFF101010)).onSizeChanged { boxSize = it }) {
+            ForceLtr { Box(Modifier.fillMaxWidth().height(240.dp).background(Color(0xFF101010)).onSizeChanged { boxSize = it }) {
                 val inf = info
                 if (compMode && inf != null && boxSize.width > 0) {
                     val fr = previewFrame(boxSize.width.toFloat(), boxSize.height.toFloat(), inf.width, inf.height, state.crop.rect, topPct, botPct)
@@ -378,8 +380,8 @@ fun EditorScreen(uri: Uri, onBack: () -> Unit, fpsHint: Int? = null, fullClip: B
                         )
                     }
                 }
-            }
-            TransportBar(player, state.durationMs, state.startMs, state.endMs)
+            } }
+            ForceLtr { TransportBar(player, state.durationMs, state.startMs, state.endMs) }
             if (state.overlays.any { it.blend != LayerBlend.NORMAL } || state.elements.any { it.blend != LayerBlend.NORMAL }) {
                 TextButton(
                     onClick = {
@@ -389,7 +391,7 @@ fun EditorScreen(uri: Uri, onBack: () -> Unit, fpsHint: Int? = null, fullClip: B
                         }
                     },
                     modifier = Modifier.padding(horizontal = 8.dp),
-                ) { Text("See blended frame") }
+                ) { Text(stringResource(R.string.ed_see_blend)) }
             }
             info?.let {
                 Text(
@@ -400,7 +402,7 @@ fun EditorScreen(uri: Uri, onBack: () -> Unit, fpsHint: Int? = null, fullClip: B
             }
             progress?.let {
                 Text(
-                    "Encoding... ${(it * 100).toInt()}%",
+                    stringResource(R.string.ed_encoding, (it * 100).toInt()),
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                 )
                 LinearProgressIndicator(
@@ -411,7 +413,7 @@ fun EditorScreen(uri: Uri, onBack: () -> Unit, fpsHint: Int? = null, fullClip: B
             status?.let { Text(it, modifier = Modifier.padding(12.dp)) }
             TabRow(selectedTabIndex = tab) {
                 tabs.forEachIndexed { i, t ->
-                    Tab(selected = tab == i, onClick = { tab = i }, text = { Text(t) })
+                    Tab(selected = tab == i, onClick = { tab = i }, text = { Text(stringResource(t)) })
                 }
             }
             Box(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {

@@ -32,7 +32,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.mediaforge.app.R
 
 @Composable
 fun HomeScreen(onVideo: (Uri) -> Unit, onGif: (Uri) -> Unit, onBrowse: () -> Unit, onFonts: () -> Unit, onSettings: () -> Unit) {
@@ -47,17 +49,17 @@ fun HomeScreen(onVideo: (Uri) -> Unit, onGif: (Uri) -> Unit, onBrowse: () -> Uni
             verticalArrangement = Arrangement.Center,
         ) {
             Text("MediaForge", style = MaterialTheme.typography.headlineLarge)
-            Text("Video to GIF, done right", style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.home_tagline), style = MaterialTheme.typography.bodyLarge)
             Spacer(Modifier.height(24.dp))
-            SectionCard(Icons.Filled.VideoLibrary, "Edit video or GIF", "Trim, crop, text, shapes, captions, export as GIF") {
+            SectionCard(Icons.Filled.VideoLibrary, stringResource(R.string.home_edit_title), stringResource(R.string.home_edit_sub)) {
                 picker.launch(arrayOf("video/*", "image/gif"))
             }
             Spacer(Modifier.height(12.dp))
-            SectionCard(Icons.Filled.Folder, "Media finder", "Browse your videos and GIFs by folder", onBrowse)
+            SectionCard(Icons.Filled.Folder, stringResource(R.string.home_finder_title), stringResource(R.string.home_finder_sub), onBrowse)
             Spacer(Modifier.height(12.dp))
-            SectionCard(Icons.Filled.TextFields, "Fonts", "Preview, import and manage fonts", onFonts)
+            SectionCard(Icons.Filled.TextFields, stringResource(R.string.home_fonts_title), stringResource(R.string.home_fonts_sub), onFonts)
             Spacer(Modifier.height(12.dp))
-            SectionCard(Icons.Filled.Settings, "Settings", "Theme, export defaults, saving", onSettings)
+            SectionCard(Icons.Filled.Settings, stringResource(R.string.home_settings_title), stringResource(R.string.home_settings_sub), onSettings)
         }
     }
 }

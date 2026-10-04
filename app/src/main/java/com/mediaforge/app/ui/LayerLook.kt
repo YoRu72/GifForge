@@ -1,5 +1,9 @@
 package com.mediaforge.app.ui
 
+import com.mediaforge.app.R
+
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -23,10 +27,10 @@ fun LayerLookControls(
     onOpacity: (Float) -> Unit,
     onBlend: (LayerBlend) -> Unit,
 ) {
-    LabeledSlider("Layer opacity", "${(opacity * 100).roundToInt()}%", opacity, 0.05f..1f, 0) {
+    LabeledSlider(stringResource(R.string.ly_opacity), "${(opacity * 100).roundToInt()}%", opacity, 0.05f..1f, 0) {
         onOpacity((it * 100).roundToInt() / 100f)
     }
-    Text("Blend mode", style = MaterialTheme.typography.labelLarge)
+    Text(stringResource(R.string.ly_blend), style = MaterialTheme.typography.labelLarge)
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         LayerBlend.entries.filter { it.available }.forEach { b ->
             FilterChip(selected = blend == b, onClick = { onBlend(b) }, label = { Text(b.label) })
@@ -34,7 +38,7 @@ fun LayerLookControls(
     }
     if (blend != LayerBlend.NORMAL) {
         Text(
-            "Blending mixes with the video in the exported GIF. Use \"See blended frame\" under the video to check it.",
+            stringResource(R.string.ly_blend_hint),
             style = MaterialTheme.typography.bodySmall,
         )
     }

@@ -1,5 +1,9 @@
 package com.mediaforge.app.ui
 
+import com.mediaforge.app.R
+
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,7 +23,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun CropControls(crop: CropState, cw: Int, ch: Int) {
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Drag inside the box to move it, drag a corner to resize.")
+        Text(stringResource(R.string.crop_hint))
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             CROP_PRESETS.forEach { name ->
                 FilterChip(
@@ -30,7 +34,7 @@ fun CropControls(crop: CropState, cw: Int, ch: Int) {
             }
         }
         val p = crop.rect.toPx(cw, ch)
-        Text("Output size: ${p[2]}x${p[3]} px (original pixels, no scaling)")
-        OutlinedButton(onClick = { crop.reset() }) { Text("Reset crop") }
+        Text(stringResource(R.string.crop_size, p[2], p[3]))
+        OutlinedButton(onClick = { crop.reset() }) { Text(stringResource(R.string.crop_reset)) }
     }
 }

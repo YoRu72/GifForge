@@ -55,7 +55,7 @@ fun GifTrimPanel(meta: GifMeta, src: File, startF: Int, endF: Int, onChange: (In
             "The preview above plays the whole GIF. Use the sliders and the stills below to choose the part to keep.",
             style = MaterialTheme.typography.bodySmall,
         )
-        RangeSlider(
+        LtrRangeSlider(
             value = startF.toFloat()..endF.toFloat(),
             onValueChange = { r ->
                 val s = r.start.roundToInt().coerceIn(0, last)

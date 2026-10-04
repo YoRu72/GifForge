@@ -10,7 +10,9 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.Typography
 import com.mediaforge.app.Prefs
+import com.mediaforge.app.l10n.AppLang
 
 private val Purple = Color(0xFF6C4DFF)
 private val Light = lightColorScheme(primary = Purple)
@@ -26,5 +28,9 @@ fun MediaForgeTheme(content: @Composable () -> Unit) {
         dark -> Dark
         else -> Light
     }
-    MaterialTheme(colorScheme = scheme, content = content)
+    MaterialTheme(
+        colorScheme = scheme,
+        typography = if (AppLang.isArabic()) arabicTypography() else Typography(),
+        content = content,
+    )
 }

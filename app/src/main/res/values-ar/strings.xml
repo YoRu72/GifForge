@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MediaForge</string>
+
+    <!-- عامّ -->
+    <string name="back">رجوع</string>
+    <string name="cancel">إلغاء</string>
+    <string name="delete">حذف</string>
+    <string name="add">إضافة</string>
+
+    <!-- الرئيسة -->
+    <string name="home_tagline">من الفيديو إلى GIF بإتقان</string>
+    <string name="home_edit_title">تحرير فيديو أو GIF</string>
+    <string name="home_edit_sub">اقتطاع وقصّ ونصوص وأشكال وتعليقات، ثم تصدير GIF</string>
+    <string name="home_finder_title">مستعرض الوسائط</string>
+    <string name="home_finder_sub">تصفّح الفيديو وGIF بحسب المجلد</string>
+    <string name="home_fonts_title">الخطوط</string>
+    <string name="home_fonts_sub">معاينة الخطوط واستيرادها وإدارتها</string>
+    <string name="home_settings_title">الإعدادات</string>
+    <string name="home_settings_sub">اللغة والسمة وافتراضات التصدير والحفظ</string>
+
+    <!-- الإعدادات -->
+    <string name="set_title">الإعدادات</string>
+    <string name="set_language">اللغة</string>
+    <string name="lang_system">لغة الجهاز</string>
+    <string name="lang_en">English</string>
+    <string name="lang_ar">العربية</string>
+    <string name="set_appearance">المظهر</string>
+    <string name="theme_system">النظام</string>
+    <string name="theme_light">فاتح</string>
+    <string name="theme_dark">داكن</string>
+    <string name="set_dynamic">ألوان ديناميكية (من الخلفية)</string>
+    <string name="set_defaults">افتراضات المشروع الجديد</string>
+    <string name="set_defaults_hint">تُطبَّق عند فتح فيديو، ويمكن تغييرها لكل مشروع.</string>
+    <string name="set_fps">معدّل الإطارات</string>
+    <string name="unit_fps">%1$d إطارًا/ث</string>
+    <string name="set_quality">الجودة</string>
+    <string name="set_clip_len">مدّة المقطع الافتراضية</string>
+    <string name="unit_sec">%1$d ث</string>
+    <string name="set_max_width">أقصى عرض</string>
+    <string name="set_loop">تكرار دائم</string>
+    <string name="set_fast">ترميز سريع (جودة أقل)</string>
+    <string name="set_saving">الحفظ</string>
+    <string name="set_autosave">الحفظ في المعرض تلقائيًّا</string>
+    <string name="set_prefix">بادئة اسم الملف</string>
+    <string name="set_prefix_example">مثال: %1$s</string>
+    <string name="set_behavior">السلوك</string>
+    <string name="set_keep_awake">إبقاء الشاشة مضاءة أثناء الترميز</string>
+    <string name="set_fonts">الخطوط</string>
+    <plurals name="font_files_installed">
+        <item quantity="zero">لا ملفات خطوط مثبّتة</item>
+        <item quantity="one">ملف خط واحد مثبّت - %2$s</item>
+        <item quantity="two">ملفا خط مثبّتان - %2$s</item>
+        <item quantity="few">%1$d ملفات خطوط مثبّتة - %2$s</item>
+        <item quantity="many">%1$d ملف خط مثبّتًا - %2$s</item>
+        <item quantity="other">%1$d ملف خط مثبّت - %2$s</item>
+    </plurals>
+    <string name="set_fonts_folder">مكان الحفظ: مجلد التطبيق الخاص %1$s</string>
+    <string name="set_open_fonts">فتح دليل الخطوط</string>
+    <string name="set_import_files">استيراد ملفات</string>
+    <string name="set_import_folder">استيراد مجلد</string>
+    <string name="set_preview_text">نص معاينة الخط</string>
+    <string name="set_preview_hint">يظهر في دليل الخطوط. الافتراضي: %1$s</string>
+    <string name="set_preview_reset">إعادة نص المعاينة</string>
+    <string name="set_delete_fonts">حذف كل الخطوط المستوردة</string>
+    <string name="set_delete_fonts_title">حذف كل الخطوط المستوردة؟</string>
+    <string name="set_delete_fonts_body">يرجع النص إلى الخط الافتراضي إن كان يستعمل هذه الخطوط. خطوط النظام لا تُمَسّ.</string>
+    <string name="set_deleted_fonts">حُذفت كل الخطوط المستوردة</string>
+    <string name="set_importing">جارٍ الاستيراد...</string>
+    <string name="set_scanning">جارٍ فحص المجلد...</string>
+    <string name="set_storage">التخزين</string>
+    <string name="set_temp_files">الملفات المؤقتة: %1$s</string>
+    <string name="set_clear_temp">مسح الملفات المؤقتة</string>
+    <string name="set_about">حول</string>
+
+    <!-- الخطوط -->
+    <string name="fonts_title">الخطوط</string>
+    <string name="fonts_choose">اختيار الخط</string>
+    <string name="fonts_custom_preview">نص معاينة مخصّص</string>
+    <string name="fonts_add">إضافة خطوط</string>
+    <string name="fonts_import_files">استيراد ملفات خطوط أو ZIP</string>
+    <string name="fonts_import_folder">استيراد مجلد خطوط</string>
+    <string name="fonts_type_preview">اكتب نص المعاينة</string>
+    <string name="fonts_search">ابحث في الخطوط</string>
+    <string name="fonts_tab_mine">خطوطي (%1$s)</string>
+    <string name="fonts_tab_system">النظام (%1$s)</string>
+    <string name="fonts_none_match">لا خطوط تطابق البحث</string>
+    <string name="fonts_none_mine">لا خطوط بعد. اضغط + لاستيراد TTF أو OTF أو TTC أو WOFF أو WOFF2 أو ZIP.</string>
+    <string name="fonts_none_system">لا خطوط للنظام</string>
+    <string name="fonts_default">الخط الافتراضي</string>
+    <string name="fonts_delete_title">حذف ملف الخط؟</string>
+    <string name="fonts_collection_of">(مجموعة من %1$d أنماط)</string>
+    <string name="fonts_cant_load">تعذّر تحميل هذا الخط</string>
+    <string name="fonts_skipped">تُخطّي: أسقط التطبيق من قبل</string>
+    <string name="fonts_retry">إعادة المحاولة</string>
+    <string name="fonts_variable">متغيّر</string>
+    <string name="fonts_color">ملوّن</string>
+    <string name="fonts_collection">مجموعة %1$d/%2$d</string>
+    <plurals name="fonts_imported">
+        <item quantity="zero">لم يُستورد أي ملف خط</item>
+        <item quantity="one">استُورد ملف خط واحد</item>
+        <item quantity="two">استُورد ملفا خط</item>
+        <item quantity="few">استُوردت %1$d ملفات خطوط</item>
+        <item quantity="many">استُورد %1$d ملف خط</item>
+        <item quantity="other">استُورد %1$d ملف خط</item>
+    </plurals>
+    <string name="fonts_import_failed">تعذّرت قراءة %1$d</string>
+    <string name="fonts_import_unsupported">غير مدعوم في أندرويد: %1$s</string>
+    <string name="font_installed">ثُبّت الخط (%1$d)</string>
+    <string name="font_unsupported">لا يعرض أندرويد خطوط %1$s</string>
+    <string name="font_invalid">الملف ليس خطًّا صالحًا</string>
+
+    <!-- editor (A7) -->
+    <string name="ed_blended">الإطار بعد المزج</string>
+    <string name="close">إغلاق</string>
+    <string name="ed_title">المحرّر</string>
+    <string name="export">تصدير</string>
+    <string name="ed_see_blend">عرض الإطار الممزوج</string>
+    <string name="ed_encoding">جارٍ الترميز… %1$d%%</string>
+    <string name="ed_failed">تعذّر التصدير: %1$s</string>
+    <string name="ed_cancelled">أُلغي التصدير</string>
+    <string name="tab_trim">قصّ المدّة</string>
+    <string name="tab_crop">اقتصاص</string>
+    <string name="tab_text">نص</string>
+    <string name="tab_bars">أشرطة</string>
+    <string name="tab_shapes">أشكال</string>
+    <string name="tab_settings">الإعداد</string>
+    <string name="loading_video">جارٍ تحميل الفيديو…</string>
+    <string name="trim_start">البداية %1$s</string>
+    <string name="trim_end">النهاية %1$s</string>
+    <string name="trim_len">المدّة %1$s - %2$d إطارًا</string>
+    <string name="trim_long_warn">الصور المتحركة الطويلة بطيئة الترميز وكبيرة الحجم.</string>
+    <string name="trim_start_ph">البداية = المؤشّر</string>
+    <string name="trim_end_ph">النهاية = المؤشّر</string>
+    <string name="trim_preview">معاينة المقطع</string>
+    <string name="tm_range">الإظهار ضمن مدّة محدّدة فقط</string>
+    <string name="tm_appears">يظهر %1$s  ←  يختفي %2$s</string>
+    <string name="tm_a_ph">أ = المؤشّر</string>
+    <string name="tm_b_ph">ب = المؤشّر</string>
+    <string name="tm_go_a">انتقال إلى أ</string>
+    <string name="tm_go_b">انتقال إلى ب</string>
+    <string name="tm_hint">تظهر الطبقة في المعاينة ما دام المؤشّر بين أ وب. الأزمنة مواضع في الفيديو الأصلي.</string>
+    <string name="crop_hint">اسحب داخل الإطار لتحريكه، واسحب الزاوية لتغيير حجمه.</string>
+    <string name="crop_size">حجم الناتج: %1$d×%2$d بكسل (دون تحجيم)</string>
+    <string name="crop_reset">إعادة الاقتصاص</string>
+    <string name="ly_opacity">شفافية الطبقة</string>
+    <string name="ly_blend">نمط المزج</string>
+    <string name="ly_blend_hint">يُمزج النص بالفيديو في الناتج. تحقّق عبر «عرض الإطار الممزوج» أسفل الفيديو.</string>
+    <string name="st_speed">السرعة</string>
+    <string name="st_playback">التشغيل</string>
+    <string name="st_original">الأصلي</string>
+    <string name="rs_ready">الصورة المتحركة جاهزة</string>
+    <string name="rs_desc">الصورة المتحركة المصدَّرة</string>
+    <string name="rs_saved">حُفظت في Pictures/MediaForge</string>
+    <string name="rs_not_saved">لم تُحفظ في المعرض بعد: اضغط «حفظ» أو «مشاركة»</string>
+    <string name="share">مشاركة</string>
+    <string name="save">حفظ</string>
+    <string name="open">فتح</string>
+    <string name="bar_hint">أضِف شريطًا فوق الفيديو أو تحته للتعليقات. تبقى طبقات النص على الفيديو.</string>
+    <string name="bar_top">الشريط العلوي</string>
+    <string name="bar_bottom">الشريط السفلي</string>
+    <string name="bar_caption">التعليق</string>
+    <string name="bar_height">ارتفاع الشريط</string>
+    <string name="bar_height_val">%1$d%% من الفيديو</string>
+    <string name="bar_align">المحاذاة</string>
+    <string name="al_left">يسار</string>
+    <string name="al_center">وسط</string>
+    <string name="al_right">يمين</string>
+    <string name="bold">غليظ</string>
+    <string name="bar_font">الخط: %1$s</string>
+    <string name="bar_browse">تصفّح الخطوط</string>
+    <string name="default_">الافتراضي</string>
+    <string name="bar_color">لون الشريط</string>
+    <string name="text_color">لون النص</string>
+
+    <!-- التنقّل ومركز الفيديو وقائمة الترجمة -->
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_videos">الفيديو</string>
+    <string name="nav_fonts">الخطوط</string>
+    <string name="nav_settings">الإعدادات</string>
+    <string name="vid_title">الفيديو والترجمة</string>
+    <string name="vid_open_video">فتح فيديو أو صورة متحركة</string>
+    <string name="vid_open_video_sub">تحرير وقصّ وإضافة نص وتصدير</string>
+    <string name="vid_open_sub">فتح ملف ترجمة</string>
+    <string name="vid_open_sub_sub">ASS وSRT وVTT وSBV وLRC وSUB وTTML وTXT</string>
+    <string name="vid_new_sub">ملف ترجمة جديد</string>
+    <string name="vid_new_sub_sub">بدء نصّ ASS فارغ</string>
+    <string name="vid_recent">الترجمات الأخيرة</string>
+    <string name="sub_unreadable">صيغة الملف غير معروفة للتطبيق</string>
+    <string name="sub_saved">تم الحفظ</string>
+    <string name="sub_save_failed">تعذّر حفظ الملف</string>
+    <string name="sub_duplicate">تكرار</string>
+    <string name="sub_empty">لا أسطر بعد. اضغط + لإضافة سطر.</string>
+    <string name="sub_text">النص</string>
+    <string name="sub_start">البداية</string>
+    <string name="sub_end">النهاية</string>
+    <string name="sub_style">النمط</string>
+    <string name="sub_actor">المتحدّث</string>
+    <string name="sub_effect">المؤثّر</string>
+    <string name="sub_layer">الطبقة</string>
+    <string name="sub_margin_l">اليسار</string>
+    <string name="sub_margin_r">اليمين</string>
+    <string name="sub_margin_v">الرأسي</string>
+    <string name="sub_comment">تعليق (لا يظهر)</string>
+    <plurals name="sub_lines">
+        <item quantity="zero">لا أسطر</item>
+        <item quantity="one">سطر واحد</item>
+        <item quantity="two">سطران</item>
+        <item quantity="few">%1$d أسطر</item>
+        <item quantity="many">%1$d سطرًا</item>
+        <item quantity="other">%1$d سطر</item>
+    </plurals>
+
+    <!-- شبكة على نهج Aegisub ومؤثّرات بإطارات مفتاحية -->
+    <string name="sub_line_n">السطر %1$d من %2$d</string>
+    <string name="sub_prev">السطر السابق</string>
+    <string name="sub_next">السطر التالي</string>
+    <string name="sub_insert">إدراج سطر بعده</string>
+    <string name="sub_settings">إعدادات السطر</string>
+    <string name="sub_effects">المؤثّرات</string>
+    <string name="sub_effects_count">المؤثّرات (%1$d)</string>
+    <string name="sub_no_active">اضغط سطرًا لتحريره</string>
+    <string name="fx_add">إضافة مؤثّر</string>
+    <string name="fx_remove">حذف المؤثّر</string>
+    <string name="fx_p_opacity">الشفافية</string>
+    <string name="fx_p_blur">التمويه</string>
+    <string name="fx_p_bord">الحافة</string>
+    <string name="fx_p_shad">الظلّ</string>
+    <string name="fx_p_scale">الحجم</string>
+    <string name="fx_p_rot">الدوران</string>
+    <string name="fx_p_spacing">تباعد الحروف</string>
+    <string name="fx_c_linear">خطّي</string>
+    <string name="fx_c_in">تسارع</string>
+    <string name="fx_c_out">تباطؤ</string>
+    <string name="fx_c_hold">ثبات</string>
+    <string name="fx_fade_in">ظهور تدريجي</string>
+    <string name="fx_fade_out">اختفاء تدريجي</string>
+    <string name="fx_fade_both">ظهور واختفاء</string>
+    <string name="fx_key_time">الزمن (مللي ثانية)</string>
+    <string name="fx_key_value">القيمة</string>
+    <string name="fx_key_delete">حذف الإطار المفتاحي</string>
+    <string name="fx_curve">المنحنى إلى الإطار التالي</string>
+    <string name="fx_graph_hint">اضغط الرسم لإضافة إطار مفتاحي، واسحب النقطة لتحريكها.</string>
+    <string name="fx_note">تُحفظ بوسوم ASS قياسية، فيفتح Aegisub السطر دون تغيير.</string>
+</resources>

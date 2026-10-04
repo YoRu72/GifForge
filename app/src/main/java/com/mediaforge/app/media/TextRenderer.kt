@@ -4,9 +4,6 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.text.Layout
-import android.text.StaticLayout
-import android.text.TextPaint
 import kotlin.math.ceil
 import kotlin.math.max
 
@@ -40,24 +37,15 @@ fun drawOverlays(canvas: Canvas, w: Int, h: Int, overlays: List<TextOverlay>) {
         if (o.text.isBlank()) continue
         val size = o.sizePct / 100f * h
         if (size < 1f) continue
-        val paint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            textSize = size
-            typeface = FontStore.typeface(o.fontPath, o.bold, o.fontVars)
-            strokeJoin = Paint.Join.ROUND
-        }
-        val align = when (o.align) {
-            ALIGN_LEFT -> Layout.Alignment.ALIGN_NORMAL
-            ALIGN_RIGHT -> Layout.Alignment.ALIGN_OPPOSITE
-            else -> Layout.Alignment.ALIGN_CENTER
-        }
+        val paint = newTextPaint(o.text, FontStore.typeface(o.fontPath, o.bold, o.fontVars), size)
+        paint.strokeJoin = Paint.Join.ROUND
+        val align = physicalAlignment(o.text, o.align)
         val maxW = (w * 0.94f).toInt().coerceAtLeast(1)
-        val probe = StaticLayout.Builder.obtain(o.text, 0, o.text.length, paint, maxW)
-            .setAlignment(align).build()
+        val probe = buildLayout(o.text, paint, maxW, align)
         var widest = 0f
         for (i in 0 until probe.lineCount) widest = max(widest, probe.getLineWidth(i))
         val boxW = (ceil(widest).toInt() + 2).coerceIn(1, maxW)
-        val layout = StaticLayout.Builder.obtain(o.text, 0, o.text.length, paint, boxW)
-            .setAlignment(align).build()
+        val layout = buildLayout(o.text, paint, boxW, align)
 
         val m = 0.025f * minOf(w, h) // small safe margin from the frame edge
         val left = (o.posX * w - boxW / 2f).coerceIn(m, max(m, w - boxW - m))

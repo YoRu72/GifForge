@@ -1,5 +1,9 @@
 package com.mediaforge.app.ui
 
+import com.mediaforge.app.R
+
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,13 +26,13 @@ import com.mediaforge.app.media.VideoInfo
 @Composable
 fun TrimTab(state: EditorState, info: VideoInfo?, player: Player) {
     if (info == null || state.durationMs <= 0) {
-        Text("Loading video...", Modifier.padding(16.dp))
+        Text(stringResource(R.string.loading_video), Modifier.padding(16.dp))
         return
     }
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Start ${fmtTime(state.startMs)}")
-            Text("End ${fmtTime(state.endMs)}")
+            Text(stringResource(R.string.trim_start, fmtTime(state.startMs)))
+            Text(stringResource(R.string.trim_end, fmtTime(state.endMs)))
         }
         RangeSlider(
             value = state.startMs.toFloat()..state.endMs.toFloat(),
@@ -46,21 +50,21 @@ fun TrimTab(state: EditorState, info: VideoInfo?, player: Player) {
             valueRange = 0f..state.durationMs.toFloat(),
         )
         val len = state.endMs - state.startMs
-        Text("Length ${fmtTime(len)} - ${state.frameCount} frames")
+        Text(stringResource(R.string.trim_len, fmtTime(len), state.frameCount))
         if (state.frameCount > 300) {
             Text(
-                "Long GIFs are slow to encode and produce big files.",
+                stringResource(R.string.trim_long_warn),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = { state.setStart(player.currentPosition) }) { Text("Start = playhead") }
-            OutlinedButton(onClick = { state.setEnd(player.currentPosition) }) { Text("End = playhead") }
+            OutlinedButton(onClick = { state.setStart(player.currentPosition) }) { Text(stringResource(R.string.trim_start_ph)) }
+            OutlinedButton(onClick = { state.setEnd(player.currentPosition) }) { Text(stringResource(R.string.trim_end_ph)) }
         }
         Button(onClick = {
             player.seekTo(state.startMs)
             player.play()
-        }) { Text("Preview selection") }
+        }) { Text(stringResource(R.string.trim_preview)) }
     }
 }

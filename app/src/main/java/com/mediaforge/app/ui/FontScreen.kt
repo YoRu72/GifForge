@@ -48,7 +48,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.mediaforge.app.R
 import androidx.compose.ui.unit.sp
 import com.mediaforge.app.media.FontCatalog
 import com.mediaforge.app.media.FontFace
@@ -109,9 +111,9 @@ fun FontScreen(onBack: () -> Unit, onPick: ((String?) -> Unit)? = null) {
         mine = FontStore.list(ctx)
         busy = false
         val n = r.imported.size
-        var m = "Imported $n font file" + (if (n == 1) "" else "s")
-        if (r.failed > 0) m += ", ${r.failed} couldn't be read"
-        if (r.unsupported.isNotEmpty()) m += ". Not supported by Android: ${r.unsupported.joinToString(", ")}"
+        var m = ctx.resources.getQuantityString(R.plurals.fonts_imported, n, n)
+        if (r.failed > 0) m += "\n" + ctx.getString(R.string.fonts_import_failed, r.failed)
+        if (r.unsupported.isNotEmpty()) m += "\n" + ctx.getString(R.string.fonts_import_unsupported, r.unsupported.joinToString(", "))
         message = m
     }
 
@@ -139,24 +141,24 @@ fun FontScreen(onBack: () -> Unit, onPick: ((String?) -> Unit)? = null) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (onPick != null) "Choose font" else "Fonts") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                title = { Text(stringResource(if (onPick != null) R.string.fonts_choose else R.string.fonts_title)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } },
                 actions = {
                     IconButton(onClick = { customOn = !customOn }) {
                         Icon(
-                            Icons.Filled.TextFields, "Custom preview text",
+                            Icons.Filled.TextFields, stringResource(R.string.fonts_custom_preview),
                             tint = if (customOn) MaterialTheme.colorScheme.primary else LocalContentColor.current,
                         )
                     }
                     Box {
-                        IconButton(onClick = { addMenu = true }) { Icon(Icons.Filled.Add, "Add fonts") }
+                        IconButton(onClick = { addMenu = true }) { Icon(Icons.Filled.Add, stringResource(R.string.fonts_add)) }
                         DropdownMenu(expanded = addMenu, onDismissRequest = { addMenu = false }) {
                             DropdownMenuItem(
-                                text = { Text("Import font files or ZIP") },
+                                text = { Text(stringResource(R.string.fonts_import_files)) },
                                 onClick = { addMenu = false; filesLauncher.launch(arrayOf("*/*")) },
                             )
                             DropdownMenuItem(
-                                text = { Text("Import a folder of fonts") },
+                                text = { Text(stringResource(R.string.fonts_import_folder)) },
                                 onClick = { addMenu = false; treeLauncher.launch(null) },
                             )
                         }
@@ -175,7 +177,7 @@ fun FontScreen(onBack: () -> Unit, onPick: ((String?) -> Unit)? = null) {
                     value = customText,
                     onValueChange = { if (it.length <= 40) customText = it },
                     singleLine = true,
-                    label = { Text("Type your preview text") },
+                    label = { Text(stringResource(R.string.fonts_type_preview)) },
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
                 )
             }
@@ -183,21 +185,23 @@ fun FontScreen(onBack: () -> Unit, onPick: ((String?) -> Unit)? = null) {
                 value = query,
                 onValueChange = { query = it },
                 singleLine = true,
-                placeholder = { Text("Search fonts") },
+                placeholder = { Text(stringResource(R.string.fonts_search)) },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
             )
             TabRow(selectedTabIndex = tab) {
-                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("My fonts (${mineFaces?.size ?: "..."})") })
-                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("System (${systemFaces?.size ?: "..."})") })
+                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.fonts_tab_mine, mineFaces?.size?.toString() ?: "...")) })
+                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.fonts_tab_system, systemFaces?.size?.toString() ?: "...")) })
             }
             when {
                 faces == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                 listItems.isEmpty() && (onPick == null || tab == 1 || q.isNotEmpty()) ->
                     Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
                         Text(
-                            if (q.isNotEmpty()) "No fonts match your search"
-                            else if (tab == 0) "No fonts yet. Tap + to import TTF, OTF, TTC, WOFF, WOFF2 or a ZIP of fonts."
-                            else "No system fonts found",
+                            stringResource(
+                                if (q.isNotEmpty()) R.string.fonts_none_match
+                                else if (tab == 0) R.string.fonts_none_mine
+                                else R.string.fonts_none_system,
+                            ),
                         )
                     }
                 else -> LazyColumn(Modifier.fillMaxSize()) {
@@ -207,7 +211,7 @@ fun FontScreen(onBack: () -> Unit, onPick: ((String?) -> Unit)? = null) {
                                 Modifier.fillMaxWidth().clickable { onPick(null) }
                                     .padding(horizontal = 16.dp, vertical = 10.dp),
                             ) {
-                                Text("Default font", style = MaterialTheme.typography.labelMedium)
+                                Text(stringResource(R.string.fonts_default), style = MaterialTheme.typography.labelMedium)
                                 Text(sample, fontSize = 26.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                         }
@@ -243,14 +247,14 @@ fun FontScreen(onBack: () -> Unit, onPick: ((String?) -> Unit)? = null) {
     toDelete?.let { f ->
         AlertDialog(
             onDismissRequest = { toDelete = null },
-            title = { Text("Delete font file?") },
+            title = { Text(stringResource(R.string.fonts_delete_title)) },
             text = {
-                Text(f.file.name + if (f.faceCount > 1) " (collection with ${f.faceCount} styles)" else "")
+                Text(f.file.name + if (f.faceCount > 1) " " + stringResource(R.string.fonts_collection_of, f.faceCount) else "")
             },
             confirmButton = {
-                TextButton(onClick = { FontStore.delete(f.file); mine = FontStore.list(ctx); toDelete = null }) { Text("Delete") }
+                TextButton(onClick = { FontStore.delete(f.file); mine = FontStore.list(ctx); toDelete = null }) { Text(stringResource(R.string.delete)) }
             },
-            dismissButton = { TextButton(onClick = { toDelete = null }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { toDelete = null }) { Text(stringResource(R.string.cancel)) } },
         )
     }
 }
@@ -269,6 +273,8 @@ private fun FontFaceRow(
     // Loaded lazily, one at a time, off the main thread; rows scrolled off-screen cost nothing.
     val load by produceState<FontLoad>(FontLoad.Loading, face.ref, retryTick) { value = FontStore.load(face.ref) }
     val size = remember(face.file) { face.file.length() }
+    // Arabic, symbol and icon fonts lack Latin letters: preview them with glyphs they really have
+    val shown by produceState(sample, face.ref, sample) { value = withContext(Dispatchers.IO) { FontCatalog.previewText(face, sample) } }
     Row(
         Modifier.fillMaxWidth()
             .clickable(enabled = picking && load is FontLoad.Ready, onClick = onClick)
@@ -285,22 +291,22 @@ private fun FontFaceRow(
             )
             when (val l = load) {
                 is FontLoad.Ready -> Text(
-                    sample, fontFamily = FontFamily(l.typeface), fontSize = 26.sp,
+                    shown, fontFamily = FontFamily(l.typeface), fontSize = 26.sp,
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
                 FontLoad.Loading -> Text("...", fontSize = 26.sp, color = MaterialTheme.colorScheme.outline)
-                FontLoad.Failed -> Text("Can't load this font", color = MaterialTheme.colorScheme.error)
+                FontLoad.Failed -> Text(stringResource(R.string.fonts_cant_load), color = MaterialTheme.colorScheme.error)
                 FontLoad.Blocked -> Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Skipped: it crashed the app before", color = MaterialTheme.colorScheme.error)
-                    TextButton(onClick = onRetry) { Text("Try again") }
+                    Text(stringResource(R.string.fonts_skipped), color = MaterialTheme.colorScheme.error)
+                    TextButton(onClick = onRetry) { Text(stringResource(R.string.fonts_retry)) }
                 }
             }
             val meta = buildList {
                 add(if (face.cff) "OTF" else "TTF")
                 add(formatSize(size))
-                if (face.isVariable) add("Variable (" + face.axes.joinToString(", ") { it.tag } + ")")
-                if (face.color) add("Color")
-                if (face.faceCount > 1) add("Collection ${face.ttcIndex + 1}/${face.faceCount}")
+                if (face.isVariable) add(stringResource(R.string.fonts_variable) + " (" + face.axes.joinToString(", ") { it.tag } + ")")
+                if (face.color) add(stringResource(R.string.fonts_color))
+                if (face.faceCount > 1) add(stringResource(R.string.fonts_collection, face.ttcIndex + 1, face.faceCount))
             }.joinToString(" - ")
             Text(meta, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }

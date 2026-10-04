@@ -48,6 +48,21 @@ object FontStore {
     fun init(ctx: Context) {
         app = ctx.applicationContext
         recoverFromCrash()
+        seedBuiltin(ctx)
+    }
+
+    /** The Arabic font shipped with the app is copied into the library once; deleting it later sticks. */
+    private fun seedBuiltin(ctx: Context) {
+        val p = ctx.applicationContext.getSharedPreferences("fontguard", Context.MODE_PRIVATE)
+        if (p.getBoolean("seeded_uthman", false)) return
+        try {
+            val dest = File(dir(ctx), "UthmanTN1.ttf")
+            if (!dest.exists()) {
+                ctx.resources.openRawResource(com.mediaforge.app.R.font.uthman_tn1).use { i -> dest.outputStream().use { o -> i.copyTo(o) } }
+            }
+            p.edit().putBoolean("seeded_uthman", true).apply()
+        } catch (e: Exception) {
+        }
     }
 
     private fun prefs() = app!!.getSharedPreferences("fontguard", Context.MODE_PRIVATE)

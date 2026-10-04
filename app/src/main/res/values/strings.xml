@@ -1,3 +1,232 @@
 <resources>
     <string name="app_name">MediaForge</string>
+
+    <!-- common -->
+    <string name="back">Back</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="add">Add</string>
+
+    <!-- home -->
+    <string name="home_tagline">Video to GIF, done right</string>
+    <string name="home_edit_title">Edit video or GIF</string>
+    <string name="home_edit_sub">Trim, crop, text, shapes, captions, export as GIF</string>
+    <string name="home_finder_title">Media finder</string>
+    <string name="home_finder_sub">Browse your videos and GIFs by folder</string>
+    <string name="home_fonts_title">Fonts</string>
+    <string name="home_fonts_sub">Preview, import and manage fonts</string>
+    <string name="home_settings_title">Settings</string>
+    <string name="home_settings_sub">Language, theme, export defaults, saving</string>
+
+    <!-- settings -->
+    <string name="set_title">Settings</string>
+    <string name="set_language">Language</string>
+    <string name="lang_system">Device language</string>
+    <string name="lang_en">English</string>
+    <string name="lang_ar">العربية</string>
+    <string name="set_appearance">Appearance</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="set_dynamic">Dynamic colors (from wallpaper)</string>
+    <string name="set_defaults">New project defaults</string>
+    <string name="set_defaults_hint">Used when you open a video; you can still change them per project.</string>
+    <string name="set_fps">Frame rate</string>
+    <string name="unit_fps">%1$d fps</string>
+    <string name="set_quality">Quality</string>
+    <string name="set_clip_len">Default clip length</string>
+    <string name="unit_sec">%1$d s</string>
+    <string name="set_max_width">Maximum width</string>
+    <string name="set_loop">Loop forever</string>
+    <string name="set_fast">Fast encode (lower quality)</string>
+    <string name="set_saving">Saving</string>
+    <string name="set_autosave">Save to gallery automatically</string>
+    <string name="set_prefix">File name prefix</string>
+    <string name="set_prefix_example">Example: %1$s</string>
+    <string name="set_behavior">Behavior</string>
+    <string name="set_keep_awake">Keep screen on while encoding</string>
+    <string name="set_fonts">Fonts</string>
+    <plurals name="font_files_installed">
+        <item quantity="one">%1$d font file installed - %2$s</item>
+        <item quantity="other">%1$d font files installed - %2$s</item>
+    </plurals>
+    <string name="set_fonts_folder">Stored in the app\'s private folder: %1$s</string>
+    <string name="set_open_fonts">Open font directory</string>
+    <string name="set_import_files">Import files</string>
+    <string name="set_import_folder">Import a folder</string>
+    <string name="set_preview_text">Font preview text</string>
+    <string name="set_preview_hint">Shown in the font directory. Default: %1$s</string>
+    <string name="set_preview_reset">Reset preview text</string>
+    <string name="set_delete_fonts">Delete all imported fonts</string>
+    <string name="set_delete_fonts_title">Delete all imported fonts?</string>
+    <string name="set_delete_fonts_body">Text using these fonts falls back to the default font. System fonts are not touched.</string>
+    <string name="set_deleted_fonts">Deleted all imported fonts</string>
+    <string name="set_importing">Importing...</string>
+    <string name="set_scanning">Scanning folder...</string>
+    <string name="set_storage">Storage</string>
+    <string name="set_temp_files">Temporary files: %1$s</string>
+    <string name="set_clear_temp">Clear temporary files</string>
+    <string name="set_about">About</string>
+
+    <!-- fonts -->
+    <string name="fonts_title">Fonts</string>
+    <string name="fonts_choose">Choose font</string>
+    <string name="fonts_custom_preview">Custom preview text</string>
+    <string name="fonts_add">Add fonts</string>
+    <string name="fonts_import_files">Import font files or ZIP</string>
+    <string name="fonts_import_folder">Import a folder of fonts</string>
+    <string name="fonts_type_preview">Type your preview text</string>
+    <string name="fonts_search">Search fonts</string>
+    <string name="fonts_tab_mine">My fonts (%1$s)</string>
+    <string name="fonts_tab_system">System (%1$s)</string>
+    <string name="fonts_none_match">No fonts match your search</string>
+    <string name="fonts_none_mine">No fonts yet. Tap + to import TTF, OTF, TTC, WOFF, WOFF2 or a ZIP of fonts.</string>
+    <string name="fonts_none_system">No system fonts found</string>
+    <string name="fonts_default">Default font</string>
+    <string name="fonts_delete_title">Delete font file?</string>
+    <string name="fonts_collection_of">(collection with %1$d styles)</string>
+    <string name="fonts_cant_load">Can\'t load this font</string>
+    <string name="fonts_skipped">Skipped: it crashed the app before</string>
+    <string name="fonts_retry">Try again</string>
+    <string name="fonts_variable">Variable</string>
+    <string name="fonts_color">Color</string>
+    <string name="fonts_collection">Collection %1$d/%2$d</string>
+    <plurals name="fonts_imported">
+        <item quantity="one">Imported %1$d font file</item>
+        <item quantity="other">Imported %1$d font files</item>
+    </plurals>
+    <string name="fonts_import_failed">%1$d couldn\'t be read</string>
+    <string name="fonts_import_unsupported">Not supported by Android: %1$s</string>
+    <string name="font_installed">Font installed (%1$d)</string>
+    <string name="font_unsupported">Android can\'t render %1$s fonts</string>
+    <string name="font_invalid">That file isn\'t a usable font</string>
+
+    <!-- editor (A7) -->
+    <string name="ed_blended">Blended frame</string>
+    <string name="close">Close</string>
+    <string name="ed_title">Editor</string>
+    <string name="export">Export</string>
+    <string name="ed_see_blend">See blended frame</string>
+    <string name="ed_encoding">Encoding... %1$d%%</string>
+    <string name="ed_failed">Failed: %1$s</string>
+    <string name="ed_cancelled">Export cancelled</string>
+    <string name="tab_trim">Trim</string>
+    <string name="tab_crop">Crop</string>
+    <string name="tab_text">Text</string>
+    <string name="tab_bars">Bars</string>
+    <string name="tab_shapes">Shapes</string>
+    <string name="tab_settings">Settings</string>
+    <string name="loading_video">Loading video...</string>
+    <string name="trim_start">Start %1$s</string>
+    <string name="trim_end">End %1$s</string>
+    <string name="trim_len">Length %1$s - %2$d frames</string>
+    <string name="trim_long_warn">Long GIFs are slow to encode and produce big files.</string>
+    <string name="trim_start_ph">Start = playhead</string>
+    <string name="trim_end_ph">End = playhead</string>
+    <string name="trim_preview">Preview selection</string>
+    <string name="tm_range">Show only during a time range</string>
+    <string name="tm_appears">Appears %1$s  →  disappears %2$s</string>
+    <string name="tm_a_ph">A = playhead</string>
+    <string name="tm_b_ph">B = playhead</string>
+    <string name="tm_go_a">Go to A</string>
+    <string name="tm_go_b">Go to B</string>
+    <string name="tm_hint">In the preview this layer shows only while the playhead is between A and B. Times are positions in the source video.</string>
+    <string name="crop_hint">Drag inside the box to move it, drag a corner to resize.</string>
+    <string name="crop_size">Output size: %1$d×%2$d px (original pixels, no scaling)</string>
+    <string name="crop_reset">Reset crop</string>
+    <string name="ly_opacity">Layer opacity</string>
+    <string name="ly_blend">Blend mode</string>
+    <string name="ly_blend_hint">Blending mixes with the video in the exported GIF. Use “See blended frame” under the video to check it.</string>
+    <string name="st_speed">Speed</string>
+    <string name="st_playback">Playback</string>
+    <string name="st_original">Original</string>
+    <string name="rs_ready">GIF ready</string>
+    <string name="rs_desc">Exported GIF</string>
+    <string name="rs_saved">Saved to Pictures/MediaForge</string>
+    <string name="rs_not_saved">Not in the gallery yet - tap Save or Share</string>
+    <string name="share">Share</string>
+    <string name="save">Save</string>
+    <string name="open">Open</string>
+    <string name="bar_hint">Add a strip above or below the video for meme-style captions. Text layers stay on the video.</string>
+    <string name="bar_top">Top bar</string>
+    <string name="bar_bottom">Bottom bar</string>
+    <string name="bar_caption">Caption</string>
+    <string name="bar_height">Bar height</string>
+    <string name="bar_height_val">%1$d%% of video</string>
+    <string name="bar_align">Alignment</string>
+    <string name="al_left">Left</string>
+    <string name="al_center">Center</string>
+    <string name="al_right">Right</string>
+    <string name="bold">Bold</string>
+    <string name="bar_font">Font: %1$s</string>
+    <string name="bar_browse">Browse fonts</string>
+    <string name="default_">Default</string>
+    <string name="bar_color">Bar color</string>
+    <string name="text_color">Text color</string>
+
+    <!-- nav + videos hub + subtitle list (A9-A11) -->
+    <string name="nav_home">Home</string>
+    <string name="nav_videos">Videos</string>
+    <string name="nav_fonts">Fonts</string>
+    <string name="nav_settings">Settings</string>
+    <string name="vid_title">Videos and subtitles</string>
+    <string name="vid_open_video">Open video or GIF</string>
+    <string name="vid_open_video_sub">Edit, trim, add text, export</string>
+    <string name="vid_open_sub">Open subtitle file</string>
+    <string name="vid_open_sub_sub">ASS, SRT, VTT, SBV, LRC, SUB, TTML, TXT</string>
+    <string name="vid_new_sub">New subtitle file</string>
+    <string name="vid_new_sub_sub">Start an empty ASS script</string>
+    <string name="vid_recent">Recent subtitles</string>
+    <string name="sub_unreadable">This file is not a subtitle format the app knows</string>
+    <string name="sub_saved">Saved</string>
+    <string name="sub_save_failed">Could not save the file</string>
+    <string name="sub_duplicate">Duplicate</string>
+    <string name="sub_empty">No lines yet. Tap + to add one.</string>
+    <string name="sub_text">Text</string>
+    <string name="sub_start">Start</string>
+    <string name="sub_end">End</string>
+    <string name="sub_style">Style</string>
+    <string name="sub_actor">Actor</string>
+    <string name="sub_effect">Effect</string>
+    <string name="sub_layer">Layer</string>
+    <string name="sub_margin_l">Left</string>
+    <string name="sub_margin_r">Right</string>
+    <string name="sub_margin_v">Vertical</string>
+    <string name="sub_comment">Comment (not shown)</string>
+    <plurals name="sub_lines">
+        <item quantity="one">%1$d line</item>
+        <item quantity="other">%1$d lines</item>
+    </plurals>
+
+    <!-- Aegisub-style grid + effects with keyframes -->
+    <string name="sub_line_n">Line %1$d of %2$d</string>
+    <string name="sub_prev">Previous line</string>
+    <string name="sub_next">Next line</string>
+    <string name="sub_insert">Insert line after</string>
+    <string name="sub_settings">Line settings</string>
+    <string name="sub_effects">Effects</string>
+    <string name="sub_effects_count">Effects (%1$d)</string>
+    <string name="sub_no_active">Tap a line to edit it</string>
+    <string name="fx_add">Add effect</string>
+    <string name="fx_remove">Remove effect</string>
+    <string name="fx_p_opacity">Opacity</string>
+    <string name="fx_p_blur">Blur</string>
+    <string name="fx_p_bord">Border</string>
+    <string name="fx_p_shad">Shadow</string>
+    <string name="fx_p_scale">Scale</string>
+    <string name="fx_p_rot">Rotation</string>
+    <string name="fx_p_spacing">Letter spacing</string>
+    <string name="fx_c_linear">Linear</string>
+    <string name="fx_c_in">Ease in</string>
+    <string name="fx_c_out">Ease out</string>
+    <string name="fx_c_hold">Hold</string>
+    <string name="fx_fade_in">Fade in</string>
+    <string name="fx_fade_out">Fade out</string>
+    <string name="fx_fade_both">Fade in and out</string>
+    <string name="fx_key_time">Time (ms)</string>
+    <string name="fx_key_value">Value</string>
+    <string name="fx_key_delete">Delete keyframe</string>
+    <string name="fx_curve">Curve to the next keyframe</string>
+    <string name="fx_graph_hint">Tap the graph to add a keyframe; drag a point to move it.</string>
+    <string name="fx_note">Saved as standard ASS tags, so Aegisub opens the line unchanged.</string>
 </resources>

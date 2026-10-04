@@ -1,5 +1,9 @@
 package com.mediaforge.app.ui
 
+import com.mediaforge.app.R
+
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,12 +33,12 @@ import kotlin.math.roundToInt
 fun BarsTab(state: EditorState, onPickFont: (Int) -> Unit) {
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            "Add a strip above or below the video for meme-style captions. Text layers stay on the video.",
+            stringResource(R.string.bar_hint),
             style = MaterialTheme.typography.bodySmall,
         )
-        BarEditor("Top bar", state.topBar, { state.topBar = it }) { onPickFont(1) }
+        BarEditor(stringResource(R.string.bar_top), state.topBar, { state.topBar = it }) { onPickFont(1) }
         HorizontalDivider(Modifier.padding(vertical = 8.dp))
-        BarEditor("Bottom bar", state.bottomBar, { state.bottomBar = it }) { onPickFont(2) }
+        BarEditor(stringResource(R.string.bar_bottom), state.bottomBar, { state.bottomBar = it }) { onPickFont(2) }
     }
 }
 
@@ -49,31 +53,31 @@ private fun BarEditor(title: String, bar: CaptionBar?, onChange: (CaptionBar?) -
     OutlinedTextField(
         value = b.text,
         onValueChange = { onChange(b.copy(text = it)) },
-        label = { Text("Caption") },
+        label = { Text(stringResource(R.string.bar_caption)) },
         modifier = Modifier.fillMaxWidth(),
     )
-    LabeledSlider("Bar height", "${b.heightPct.roundToInt()}% of video", b.heightPct, 8f..50f, 0) {
+    LabeledSlider(stringResource(R.string.bar_height), stringResource(R.string.bar_height_val, b.heightPct.roundToInt()), b.heightPct, 8f..50f, 0) {
         onChange(b.copy(heightPct = it.roundToInt().toFloat()))
     }
-    Text("Alignment", style = MaterialTheme.typography.labelLarge)
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        listOf(ALIGN_LEFT to "Left", ALIGN_CENTER to "Center", ALIGN_RIGHT to "Right").forEach { (a, label) ->
+    Text(stringResource(R.string.bar_align), style = MaterialTheme.typography.labelLarge)
+    ForceLtr { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        listOf(ALIGN_LEFT to stringResource(R.string.al_left), ALIGN_CENTER to stringResource(R.string.al_center), ALIGN_RIGHT to stringResource(R.string.al_right)).forEach { (a, label) ->
             FilterChip(selected = b.align == a, onClick = { onChange(b.copy(align = a)) }, label = { Text(label) })
         }
         if (b.fontPath == null) {
-            FilterChip(selected = b.bold, onClick = { onChange(b.copy(bold = !b.bold)) }, label = { Text("Bold") })
+            FilterChip(selected = b.bold, onClick = { onChange(b.copy(bold = !b.bold)) }, label = { Text(stringResource(R.string.bold)) })
         }
-    }
+    } }
     Text(
-        "Font: " + (b.fontPath?.substringAfterLast('/')?.substringBeforeLast('.') ?: "Default"),
+        stringResource(R.string.bar_font, b.fontPath?.substringAfterLast('/')?.substringBeforeLast('.') ?: stringResource(R.string.fonts_default)),
         style = MaterialTheme.typography.bodyMedium,
     )
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(onClick = onFont) { Text("Browse fonts") }
-        OutlinedButton(onClick = { onChange(b.copy(fontPath = null, fontVars = null)) }) { Text("Default") }
+        OutlinedButton(onClick = onFont) { Text(stringResource(R.string.bar_browse)) }
+        OutlinedButton(onClick = { onChange(b.copy(fontPath = null, fontVars = null)) }) { Text(stringResource(R.string.default_)) }
     }
-    Text("Bar color", style = MaterialTheme.typography.labelLarge)
+    Text(stringResource(R.string.bar_color), style = MaterialTheme.typography.labelLarge)
     Swatches(b.bg) { onChange(b.copy(bg = it)) }
-    Text("Text color", style = MaterialTheme.typography.labelLarge)
+    Text(stringResource(R.string.text_color), style = MaterialTheme.typography.labelLarge)
     Swatches(b.color) { onChange(b.copy(color = it)) }
 }

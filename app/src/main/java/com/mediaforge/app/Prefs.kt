@@ -14,6 +14,7 @@ class StrPref(val key: String, val def: String) { var value by mutableStateOf(de
 object Prefs {
     private var sp: SharedPreferences? = null
 
+    val lang = IntPref("lang", 0)                  // 0 device, 1 English, 2 Arabic
     val themeMode = IntPref("theme", 0)            // 0 system, 1 light, 2 dark
     val dynamicColor = BoolPref("dynamic", true)
     val defFps = IntPref("def_fps", 15)
@@ -26,10 +27,11 @@ object Prefs {
     val keepAwake = BoolPref("keep_awake", true)
     val namePrefix = StrPref("name_prefix", "MediaForge_")
     val fontSample = StrPref("font_sample", "12345abcd")   // preview text in the font directory
+    val recentSubs = StrPref("recent_subs", "")            // recent subtitle uris, one per line
 
-    private val ints = listOf(themeMode, defFps, defQuality, defClipSec, defMaxWidth)
+    private val ints = listOf(lang, themeMode, defFps, defQuality, defClipSec, defMaxWidth)
     private val bools = listOf(dynamicColor, defLoop, defFast, autoSave, keepAwake)
-    private val strs = listOf(namePrefix, fontSample)
+    private val strs = listOf(namePrefix, fontSample, recentSubs)
 
     fun init(ctx: Context) {
         if (sp != null) return

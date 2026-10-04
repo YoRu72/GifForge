@@ -137,11 +137,11 @@ fun TextTab(state: EditorState, player: Player, onBrowseFonts: () -> Unit) {
         }
 
         Text("Alignment", style = MaterialTheme.typography.labelLarge)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        ForceLtr { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(ALIGN_LEFT to "Left", ALIGN_CENTER to "Center", ALIGN_RIGHT to "Right").forEach { (a, label) ->
                 FilterChip(selected = sel.align == a, onClick = { edit { it.copy(align = a) } }, label = { Text(label) })
             }
-        }
+        } }
 
         Text("Snap position", style = MaterialTheme.typography.labelLarge)
         PositionPad(sel.posX, sel.posY) { x, y ->
@@ -206,7 +206,7 @@ internal fun Swatches(selected: Int, onPick: (Int) -> Unit) {
 @Composable
 private fun PositionPad(posX: Float, posY: Float, onPick: (Float, Float) -> Unit) {
     val glyphs = listOf("\u2196", "\u2191", "\u2197", "\u2190", "\u25CF", "\u2192", "\u2199", "\u2193", "\u2198")
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    ForceLtr { Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         for (r in 0..2) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 for (c in 0..2) {
@@ -227,7 +227,7 @@ private fun PositionPad(posX: Float, posY: Float, onPick: (Float, Float) -> Unit
                 }
             }
         }
-    }
+    } }
 }
 
 @Composable

@@ -1,5 +1,9 @@
 package com.mediaforge.app.ui
 
+import com.mediaforge.app.R
+
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,7 +32,7 @@ fun TimingControls(
 ) {
     val dur = state.durationMs.coerceAtLeast(MIN_GAP_MS * 2)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text("Show only during a time range")
+        Text(stringResource(R.string.tm_range))
         Switch(
             checked = timed,
             onCheckedChange = { on ->
@@ -42,8 +46,8 @@ fun TimingControls(
     if (!timed) return
     val a0 = fromMs.coerceIn(0L, dur - MIN_GAP_MS)
     val b0 = toMs.coerceIn(a0 + MIN_GAP_MS, dur)
-    Text("Appears ${fmtTime(a0)}  ->  disappears ${fmtTime(b0)}")
-    RangeSlider(
+    Text(stringResource(R.string.tm_appears, fmtTime(a0), fmtTime(b0)))
+    LtrRangeSlider(
         value = a0.toFloat()..b0.toFloat(),
         onValueChange = { r ->
             val a = r.start.toLong()
@@ -56,18 +60,18 @@ fun TimingControls(
         OutlinedButton(onClick = {
             val a = player.currentPosition.coerceIn(0L, dur - MIN_GAP_MS)
             onChange(true, a, maxOf(b0, a + MIN_GAP_MS))
-        }) { Text("A = playhead") }
+        }) { Text(stringResource(R.string.tm_a_ph)) }
         OutlinedButton(onClick = {
             val b = player.currentPosition.coerceIn(a0 + MIN_GAP_MS, dur)
             onChange(true, a0, b)
-        }) { Text("B = playhead") }
+        }) { Text(stringResource(R.string.tm_b_ph)) }
     }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(onClick = { player.pause(); player.seekTo(a0) }) { Text("Go to A") }
-        OutlinedButton(onClick = { player.pause(); player.seekTo(b0) }) { Text("Go to B") }
+        OutlinedButton(onClick = { player.pause(); player.seekTo(a0) }) { Text(stringResource(R.string.tm_go_a)) }
+        OutlinedButton(onClick = { player.pause(); player.seekTo(b0) }) { Text(stringResource(R.string.tm_go_b)) }
     }
     Text(
-        "In the preview this layer shows only while the playhead is between A and B. Times are positions in the source video.",
+        stringResource(R.string.tm_hint),
         style = MaterialTheme.typography.bodySmall,
     )
 }

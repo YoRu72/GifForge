@@ -133,7 +133,7 @@ fun GifCropScreen(uri: Uri, onBack: () -> Unit) {
             val m = meta
             val f = src
             if (m != null && f != null) {
-                Box(Modifier.fillMaxWidth().height(300.dp)) {
+                ForceLtr { Box(Modifier.fillMaxWidth().height(300.dp)) {
                     AsyncImage(
                         model = f,
                         imageLoader = loader,
@@ -142,7 +142,7 @@ fun GifCropScreen(uri: Uri, onBack: () -> Unit) {
                         modifier = Modifier.fillMaxSize(),
                     )
                     CropOverlay(crop.rect, { crop.rect = it }, crop.aspect, m.width, m.height)
-                }
+                } }
                 Text(
                     "${m.width}x${m.height} - ${m.frames} frames",
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),

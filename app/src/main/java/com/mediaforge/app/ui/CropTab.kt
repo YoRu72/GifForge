@@ -1,5 +1,9 @@
 package com.mediaforge.app.ui
 
+import com.mediaforge.app.R
+
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -10,7 +14,7 @@ import com.mediaforge.app.media.VideoInfo
 @Composable
 fun CropTab(state: EditorState, info: VideoInfo?) {
     if (info == null) {
-        Text("Loading video...", Modifier.padding(16.dp))
+        Text(stringResource(R.string.loading_video), Modifier.padding(16.dp))
         return
     }
     CropControls(state.crop, info.width, info.height)
