@@ -1,0 +1,68 @@
+name: Build FFmpeg engine
+# Run this ONCE (Actions -> Build FFmpeg engine -> Run workflow), then again only when you change the encoder list.
+# It builds FFmpegKit from source with libx264, libx265, libvpx, libass (+ AV1 when this FFmpegKit version offers it),
+# checks the result really contains them, and publishes ffmpeg-kit.aar to the release "ffmpeg-engine".
+# The normal "Build APK" workflow downloads that file automatically. Takes about 60-90 minutes.
+on:
+  workflow_dispatch:
+    inputs:
+      ndk:
+        description: "NDK version (FFmpegKit 6.0 is known to build with r25)"
+        default: "25.2.9519653"
+      kit_ref:
+        description: "FFmpegKit git tag"
+        default: "v6.0"
+permissions:
+  contents: write
+jobs:
+  engine:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 300
+    steps:
+      - name: Build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y autoconf automake libtool pkg-config curl cmake gperf texinfo yasm nasm bison \
+            autogen git wget autopoint meson ninja-build ragel groff gtk-doc-tools libtool-bin python3 gettext
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - name: Android NDK
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;${{ inputs.ndk }}" >/dev/null
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/${{ inputs.ndk }}" >> "$GITHUB_ENV"
+      - name: Get FFmpegKit
+        run: git clone --depth 1 --branch "${{ inputs.kit_ref }}" https://github.com/arthenica/ffmpeg-kit.git kit
+      - name: Build (arm64-v8a)
+        working-directory: kit
+        run: |
+          ARGS="--enable-gpl --enable-x264 --enable-x265 --enable-libvpx --enable-libass --enable-android-media-codec"
+          # optional AV1 encoders: only if this FFmpegKit version knows the flag (an unknown flag would abort the build)
+          HELP="$(./android.sh --help 2>&1 || true)"
+          for f in svt-av1 libaom; do
+            if echo "$HELP" | grep -q -- "--enable-$f"; then ARGS="$ARGS --enable-$f"; echo "AV1 option on: $f"; fi
+          done
+          ARGS="$ARGS --disable-arm-v7a --disable-arm-v7a-neon --disable-x86 --disable-x86-64 --no-archive --skip-ffmpeg-kit-test"
+          echo "./android.sh $ARGS"
+          ./android.sh $ARGS 2>&1 | tail -n 400
+      - name: Verify the encoders are really inside
+        run: |
+          AAR="$(find kit/prebuilt -name 'ffmpeg-kit*.aar' | head -n1)"
+          test -n "$AAR" || { echo "no AAR produced"; exit 1; }
+          mkdir x && cd x && unzip -q "../$AAR"
+          ls jni/arm64-v8a
+          miss=0
+          for name in x264 x265 vpx libass; do
+            if grep -qla "$name" jni/arm64-v8a/*.so; then echo "OK   $name"; else echo "MISS $name"; miss=1; fi
+          done
+          grep -qla "libaom\|SVT-AV1\|svtav1" jni/arm64-v8a/*.so && echo "AV1 encoder present" || echo "AV1 encoder not present (app falls back to H.264)"
+          test $miss = 0
+          cp "../$AAR" ../ffmpeg-kit.aar
+      - uses: actions/upload-artifact@v4
+        with: { name: ffmpeg-kit-aar, path: ffmpeg-kit.aar }
+      - name: Publish release asset
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          gh release view ffmpeg-engine >/dev/null 2>&1 || gh release create ffmpeg-engine --title "FFmpeg engine" \
+            --notes "FFmpegKit with libx264, libx265, libvpx, libass. Used by the Build APK workflow."
+          gh release upload ffmpeg-engine ffmpeg-kit.aar --clobber

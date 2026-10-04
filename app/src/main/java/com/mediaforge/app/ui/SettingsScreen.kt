@@ -133,6 +133,12 @@ fun SettingsScreen(onBack: () -> Unit, onFonts: () -> Unit) {
             Divider2()
             Header(stringResource(R.string.set_saving))
             SwitchRow(stringResource(R.string.set_autosave), Prefs.autoSave.value) { Prefs.set(Prefs.autoSave, it) }
+            val appCtx = androidx.compose.ui.platform.LocalContext.current
+            SwitchRow(stringResource(R.string.set_sub_autosave), Prefs.subAutosave.value) { on ->
+                Prefs.set(Prefs.subAutosave, on)
+                if (!on) com.mediaforge.app.media.Autosave.clearAll(appCtx) // off = nothing is kept, including old copies
+            }
+            Text(stringResource(R.string.set_sub_autosave_note), style = MaterialTheme.typography.bodySmall)
             OutlinedTextField(
                 value = Prefs.namePrefix.value,
                 onValueChange = { v -> Prefs.set(Prefs.namePrefix, v.filter { c -> c.isLetterOrDigit() || c == '_' || c == '-' }.take(24)) },

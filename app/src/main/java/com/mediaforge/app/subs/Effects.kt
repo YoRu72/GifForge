@@ -144,5 +144,5 @@ object Effects {
 
     fun neutral(prop: EffectProp, durMs: Long): Track =
         if (prop == EffectProp.OPACITY) fadeIn(durMs)
-        else Track(prop, listOf(Keyframe(0, prop.def), Keyframe(durMs, prop.def)))
+        else (if (prop == EffectProp.BLUR) 3f else prop.def).let { v -> Track(prop, listOf(Keyframe(0, v), Keyframe(durMs, v))) }
 }

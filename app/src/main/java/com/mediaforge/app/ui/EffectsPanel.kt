@@ -15,6 +15,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ShowChart
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -82,6 +85,7 @@ fun EffectsPanel(event: AssEvent, onChange: ((AssEvent) -> AssEvent) -> Unit) {
     val dur = event.durationMs.coerceAtLeast(1L)
     var picked by remember { mutableStateOf<EffectProp?>(null) }
     var selKey by remember { mutableStateOf(0) }
+    var graphView by remember { mutableStateOf(false) } // false = amount controls, true = keyframe graph
 
     fun commit(list: List<Track>) = onChange { it.copy(text = Effects.apply(it.text, list)) }
     fun replace(t: Track) = commit(tracks.map { if (it.prop == t.prop) t else it })
@@ -117,6 +121,11 @@ fun EffectsPanel(event: AssEvent, onChange: ((AssEvent) -> AssEvent) -> Unit) {
                             Icon(Icons.Filled.Close, stringResource(R.string.fx_remove))
                         }
                     }
+                    // two small icons switch between the two menus of an effect: amount and keyframe graph
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        FilterChip(!graphView, { graphView = false }, { Icon(Icons.Filled.Tune, stringResource(R.string.fx_view_amount)) })
+                        FilterChip(graphView, { graphView = true }, { Icon(Icons.Filled.ShowChart, stringResource(R.string.fx_view_graph)) })
+                    }
                     if (cur.prop == EffectProp.OPACITY) {
                         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(false, { replace(Effects.fadeIn(dur)); selKey = 0 }, { Text(stringResource(R.string.fx_fade_in)) })
@@ -124,6 +133,34 @@ fun EffectsPanel(event: AssEvent, onChange: ((AssEvent) -> AssEvent) -> Unit) {
                             FilterChip(false, { replace(Effects.fadeBoth(dur)); selKey = 0 }, { Text(stringResource(R.string.fx_fade_both)) })
                         }
                     }
+                    if (!graphView) {
+                        // amount: a flat effect has one strength for the whole line; an animated one edits the selected keyframe
+                        val flat = cur.keys.all { it.value == cur.keys.first().value }
+                        val idx = selKey.coerceIn(0, cur.keys.size - 1)
+                        val shown = if (flat) cur.keys.first().value else cur.keys[idx].value
+                        Text(
+                            stringResource(if (flat) R.string.fx_amount_all else R.string.fx_amount_key, fmt(shown)),
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                        ForceLtr {
+                            Slider(
+                                value = shown.coerceIn(cur.prop.min, cur.prop.max),
+                                onValueChange = { v ->
+                                    val r = (v * 10f).roundToInt() / 10f
+                                    replace(cur.copy(keys = cur.keys.mapIndexed { i, x -> if (flat || i == idx) x.copy(value = r) else x }))
+                                },
+                                valueRange = cur.prop.min..cur.prop.max,
+                            )
+                        }
+                        if (!flat) {
+                            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                cur.keys.forEachIndexed { i, kk ->
+                                    FilterChip(idx == i, { selKey = i }, { Text("${i + 1}: ${fmt(kk.value)}") })
+                                }
+                            }
+                        }
+                        Text(stringResource(R.string.fx_amount_hint), style = MaterialTheme.typography.bodySmall)
+                    } else {
                     KeyframeGraph(cur, dur, selKey, { selKey = it }, ::replace)
                     Text(stringResource(R.string.fx_graph_hint), style = MaterialTheme.typography.bodySmall)
                     val k = cur.keys.getOrNull(selKey)
@@ -152,6 +189,7 @@ fun EffectsPanel(event: AssEvent, onChange: ((AssEvent) -> AssEvent) -> Unit) {
                                 )
                             }
                         }
+                    }
                     }
                 }
             }

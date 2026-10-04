@@ -24,6 +24,16 @@ import androidx.media3.common.Player
 import com.mediaforge.app.media.ShapeElement
 import com.mediaforge.app.media.ShapeKind
 import kotlin.math.roundToInt
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.Button
+import com.mediaforge.app.media.ImageStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private val EMOJI = listOf(
     "😀", "😂", "🤣", "😍", "😎", "🥳", "🤔", "😭", "😡", "😱", "🤯", "💀",
@@ -34,13 +44,28 @@ private val EMOJI = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ElementsTab(state: EditorState, player: Player) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { u ->
+        if (u != null) scope.launch {
+            val img = withContext(Dispatchers.IO) { ImageStore.import(ctx, u) }
+            if (img == null) { Toast.makeText(ctx, R.string.el_image_failed, Toast.LENGTH_LONG).show(); return@launch }
+            val vs = player.videoSize
+            val r = state.crop.rect
+            val fw = (if (vs.width > 0) vs.width else 16) * (r.r - r.l).coerceAtLeast(0.01f)
+            val fh = (if (vs.height > 0) vs.height else 9) * (r.b - r.t).coerceAtLeast(0.01f)
+            state.addImage(img, fw / fh)
+        }
+    }
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.el_add_shape), style = MaterialTheme.typography.labelLarge)
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ShapeKind.entries.forEach { k ->
-                AssistChip(onClick = { state.addElement(k) }, label = { Text("+ ${k.label}") })
+            ShapeKind.entries.filter { it != ShapeKind.IMAGE }.forEach { k ->
+                AssistChip(onClick = { state.addElement(k) }, label = { Text("+ " + shapeName(k)) })
             }
         }
+        Button(onClick = { picker.launch(arrayOf("image/*", "image/svg+xml")) }, Modifier.fillMaxWidth()) { Text(stringResource(R.string.el_add_image)) }
+        Text(stringResource(R.string.el_image_note), style = MaterialTheme.typography.bodySmall)
         Text(stringResource(R.string.el_add_emoji), style = MaterialTheme.typography.labelLarge)
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             EMOJI.forEach { e -> AssistChip(onClick = { state.addEmoji(e) }, label = { Text(e) }) }
@@ -54,7 +79,7 @@ fun ElementsTab(state: EditorState, player: Player) {
                     FilterChip(
                         selected = el.id == state.selectedElId,
                         onClick = { state.selectedElId = el.id },
-                        label = { Text("${el.kind.label} ${i + 1}") },
+                        label = { Text(shapeName(el.kind) + " ${i + 1}") },
                     )
                 }
             }
@@ -66,7 +91,7 @@ fun ElementsTab(state: EditorState, player: Player) {
         }
         fun edit(f: (ShapeElement) -> ShapeElement) = state.updateElement(sel.id, f)
 
-        if (!sel.isLine) {
+        if (!sel.isLine && sel.kind != ShapeKind.IMAGE) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.el_filled))
                 Switch(checked = sel.filled, onCheckedChange = { v -> edit { it.copy(filled = v) } })
@@ -79,15 +104,20 @@ fun ElementsTab(state: EditorState, player: Player) {
                 }
             }
         }
-        Text(if (sel.isLine) stringResource(R.string.el_color) else stringResource(R.string.el_outline_color), style = MaterialTheme.typography.labelLarge)
-        Swatches(sel.stroke) { c -> edit { it.copy(stroke = c) } }
-        LabeledSlider(
-            if (sel.isLine) stringResource(R.string.el_thickness) else stringResource(R.string.el_outline_thick), "${"%.1f".format(sel.strokePct)}%",
-            sel.strokePct, 0f..10f, 0,
-        ) { v -> edit { it.copy(strokePct = (v * 10).roundToInt() / 10f) } }
+        if (sel.kind != ShapeKind.IMAGE) {
+            Text(if (sel.isLine) stringResource(R.string.el_color) else stringResource(R.string.el_outline_color), style = MaterialTheme.typography.labelLarge)
+            Swatches(sel.stroke) { c -> edit { it.copy(stroke = c) } }
+            LabeledSlider(
+                if (sel.isLine) stringResource(R.string.el_thickness) else stringResource(R.string.el_outline_thick), "${"%.1f".format(sel.strokePct)}%",
+                sel.strokePct, 0f..10f, 0,
+            ) { v -> edit { it.copy(strokePct = (v * 10).roundToInt() / 10f) } }
+        }
 
-        LabeledSlider(stringResource(R.string.el_width), "${(sel.w * 100).roundToInt()}%", sel.w, 0.02f..1.5f, 0) { v -> edit { it.copy(w = v) } }
-        if (sel.kind != ShapeKind.LINE) {
+        LabeledSlider(stringResource(R.string.el_width), "${(sel.w * 100).roundToInt()}%", sel.w, 0.02f..1.5f, 0) { v ->
+            // a picture keeps its proportions: height follows width
+            edit { if (it.kind == ShapeKind.IMAGE && it.w > 0f) it.copy(w = v, h = it.h * v / it.w) else it.copy(w = v) }
+        }
+        if (sel.kind != ShapeKind.LINE && sel.kind != ShapeKind.IMAGE) {
             LabeledSlider(
                 if (sel.kind == ShapeKind.ARROW) stringResource(R.string.el_arrow_head) else stringResource(R.string.el_height),
                 "${(sel.h * 100).roundToInt()}%", sel.h, 0.02f..1.5f, 0,
@@ -109,3 +139,15 @@ fun ElementsTab(state: EditorState, player: Player) {
         }
     }
 }
+
+@Composable
+private fun shapeName(k: com.mediaforge.app.media.ShapeKind): String = stringResource(
+    when (k) {
+        com.mediaforge.app.media.ShapeKind.RECT -> R.string.sh_rect
+        com.mediaforge.app.media.ShapeKind.ROUND -> R.string.sh_round
+        com.mediaforge.app.media.ShapeKind.ELLIPSE -> R.string.sh_ellipse
+        com.mediaforge.app.media.ShapeKind.LINE -> R.string.sh_line
+        com.mediaforge.app.media.ShapeKind.ARROW -> R.string.sh_arrow
+        com.mediaforge.app.media.ShapeKind.IMAGE -> R.string.sh_image
+    },
+)

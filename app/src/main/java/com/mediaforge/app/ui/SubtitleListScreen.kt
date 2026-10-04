@@ -8,6 +8,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,6 +25,20 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Undo
+import androidx.compose.material.icons.filled.Redo
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
+import com.mediaforge.app.subs.Find
+import com.mediaforge.app.subs.History
+import com.mediaforge.app.subs.LineOps
+import com.mediaforge.app.subs.SearchSpec
+import com.mediaforge.app.media.Autosave
+import com.mediaforge.app.Prefs
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
@@ -95,6 +110,25 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
     val listState = rememberLazyListState()
     val events = file.events
 
+    // A18.c undo/redo: every change of `file` is recorded; undo/redo set `file` back (the echo is ignored by History)
+    val hist = remember { History(doc.file) }
+    LaunchedEffect(file) { hist.record(file) }
+    fun fixAfterJump() { marked = emptySet(); active = active.coerceIn(if (file.events.isEmpty()) -1 else 0, file.events.size - 1); dirty = true }
+    fun undo() { hist.undo()?.let { file = it; fixAfterJump() } }
+    fun redo() { hist.redo()?.let { file = it; fixAfterJump() } }
+
+    // A18.f autosave a moment after the last change; offer recovery when a newer unsaved copy exists
+    LaunchedEffect(file) { if (dirty && Prefs.subAutosave.value) { kotlinx.coroutines.delay(2500); withContext(Dispatchers.IO) { Autosave.write(ctx, doc.name, file) } } }
+    var recovered by remember { mutableStateOf<com.mediaforge.app.subs.SubFile?>(null) }
+    LaunchedEffect(Unit) { if (Prefs.subAutosave.value) recovered = withContext(Dispatchers.IO) { Autosave.recover(ctx, doc.name, doc.file) } }
+
+    // A18.d find / replace
+    var findOpen by rememberSaveable { mutableStateOf(false) }
+    var spec by remember { mutableStateOf(SearchSpec()) }
+    var replacement by remember { mutableStateOf("") }
+    var menuOpen by remember { mutableStateOf(false) }
+    val cur = remember { IntArray(1) } // caret position in the active line's text (for Split)
+
     fun edit(i: Int, f: (AssEvent) -> AssEvent) {
         file = file.copy(events = file.events.mapIndexed { k, e -> if (k == i) f(e) else e }); dirty = true
     }
@@ -108,7 +142,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
     val saver = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { u ->
         if (u != null) {
             val ok = writeSubDoc(ctx, u, doc, file)
-            if (ok) dirty = false
+            if (ok) { dirty = false; Autosave.clear(ctx, doc.name) }
             Toast.makeText(ctx, if (ok) R.string.sub_saved else R.string.sub_save_failed, Toast.LENGTH_SHORT).show()
         }
     }
@@ -137,7 +171,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
             }
             r.file?.delete()
             exporting = false
-            if (copied) Toast.makeText(ctx, R.string.ex_done, Toast.LENGTH_LONG).show()
+            if (copied) Toast.makeText(ctx, ctx.getString(R.string.ex_done) + (if (r.note.isNotEmpty()) " (" + r.note + ")" else ""), Toast.LENGTH_LONG).show()
             else exportError = if (!com.mediaforge.app.media.VideoExporter.available()) ctx.getString(R.string.ex_engine_missing) else r.log
         }
     }
@@ -174,7 +208,15 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { exportError = null }, title = { Text(stringResource(R.string.ex_failed)) },
             text = { Text(msg, Modifier.verticalScroll(rememberScrollState()), style = MaterialTheme.typography.bodySmall) },
-            confirmButton = { androidx.compose.material3.TextButton(onClick = { exportError = null }) { Text("OK") } },
+            confirmButton = { androidx.compose.material3.TextButton(onClick = { exportError = null }) { Text(stringResource(R.string.ok)) } },
+        )
+    }
+    recovered?.let { rf ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { recovered = null }, title = { Text(stringResource(R.string.rc_title)) },
+            text = { Text(stringResource(R.string.rc_text)) },
+            confirmButton = { androidx.compose.material3.TextButton(onClick = { file = rf; dirty = true; active = if (rf.events.isEmpty()) -1 else 0; recovered = null }) { Text(stringResource(R.string.rc_restore)) } },
+            dismissButton = { androidx.compose.material3.TextButton(onClick = { Autosave.clear(ctx, doc.name); recovered = null }) { Text(stringResource(R.string.rc_discard)) } },
         )
     }
     LaunchedEffect(active) { if (active in events.indices) listState.animateScrollToItem((active - 1).coerceAtLeast(0)) }
@@ -193,35 +235,67 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                 },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } },
                 actions = {
-                    IconButton(onClick = {
-                        translate = !translate
-                        if (translate) originals = file.events.map { it.text }
-                    }) {
-                        Icon(Icons.Filled.Translate, stringResource(R.string.tr_mode), tint = if (translate) MaterialTheme.colorScheme.primary else LocalContentColor.current)
+                    IconButton(enabled = hist.canUndo, onClick = { undo() }) { Icon(Icons.Filled.Undo, stringResource(R.string.undo)) }
+                    IconButton(enabled = hist.canRedo, onClick = { redo() }) { Icon(Icons.Filled.Redo, stringResource(R.string.redo)) }
+                    IconButton(onClick = { findOpen = !findOpen }) {
+                        Icon(Icons.Filled.Search, stringResource(R.string.fd_title), tint = if (findOpen) MaterialTheme.colorScheme.primary else LocalContentColor.current)
                     }
-                    IconButton(enabled = !translate, onClick = {
-                        val at = (active + 1).coerceIn(0, events.size)
-                        val prevEnd = events.getOrNull(at - 1)?.endMs ?: 0L
-                        val n = AssEvent(startMs = prevEnd, endMs = prevEnd + 2000L, style = file.styles.firstOrNull()?.name ?: "Default")
-                        file = file.copy(events = events.take(at) + n + events.drop(at)); active = at; marked = emptySet(); dirty = true
-                    }) { Icon(Icons.Filled.Add, stringResource(R.string.sub_insert)) }
-                    IconButton(enabled = targets().isNotEmpty() && !translate, onClick = {
-                        val t = targets()
-                        val dup = events.filterIndexed { i, _ -> i in t }
-                        val at = (t.max() + 1)
-                        file = file.copy(events = events.take(at) + dup + events.drop(at)); active = at; marked = emptySet(); dirty = true
-                    }) { Icon(Icons.Filled.ContentCopy, stringResource(R.string.sub_duplicate)) }
-                    IconButton(enabled = targets().isNotEmpty() && !translate, onClick = {
-                        val t = targets()
-                        val left = events.filterIndexed { i, _ -> i !in t }
-                        file = file.copy(events = left); marked = emptySet()
-                        active = if (left.isEmpty()) -1 else (t.min()).coerceAtMost(left.size - 1); dirty = true
-                    }) { Icon(Icons.Filled.Delete, stringResource(R.string.delete)) }
-                    IconButton(onClick = { if (video == null) videoPicker.launch(arrayOf("video/*")) else video = null }) {
-                        Icon(if (video == null) Icons.Filled.Videocam else Icons.Filled.VideocamOff, stringResource(if (video == null) R.string.sv_attach else R.string.sv_detach))
-                    }
-                    IconButton(onClick = { chooser = true }) { Icon(Icons.Filled.IosShare, stringResource(R.string.ex_title)) }
                     IconButton(onClick = { saver.launch(doc.name) }) { Icon(Icons.Filled.Save, stringResource(R.string.save)) }
+                    Box {
+                        IconButton(onClick = { menuOpen = true }) { Icon(Icons.Filled.MoreVert, stringResource(R.string.more)) }
+                        DropdownMenu(menuOpen, { menuOpen = false }) {
+                            val t = targets()
+                            val ed = !translate
+                            @Composable fun item(label: Int, enabled: Boolean = true, run: () -> Unit) =
+                                DropdownMenuItem(text = { Text(stringResource(label)) }, enabled = enabled, onClick = { menuOpen = false; run() })
+                            fun put(list: List<AssEvent>, newActive: Int) { file = file.copy(events = list); active = newActive; marked = emptySet(); dirty = true }
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.tr_mode)) },
+                                leadingIcon = { Icon(Icons.Filled.Translate, null, tint = if (translate) MaterialTheme.colorScheme.primary else LocalContentColor.current) },
+                                onClick = { menuOpen = false; translate = !translate; if (translate) originals = file.events.map { it.text } },
+                            )
+                            item(R.string.sub_insert, ed) {
+                                val at = (active + 1).coerceIn(0, events.size)
+                                val prevEnd = events.getOrNull(at - 1)?.endMs ?: 0L
+                                put(events.take(at) + AssEvent(startMs = prevEnd, endMs = prevEnd + 2000L, style = file.styles.firstOrNull()?.name ?: "Default") + events.drop(at), at)
+                            }
+                            item(R.string.sub_insert_before, ed) {
+                                val at = active.coerceIn(0, events.size)
+                                val nextStart = events.getOrNull(at)?.startMs ?: 0L
+                                val s0 = (nextStart - 2000L).coerceAtLeast(0L)
+                                put(events.take(at) + AssEvent(startMs = s0, endMs = maxOf(nextStart, s0 + 1L), style = file.styles.firstOrNull()?.name ?: "Default") + events.drop(at), at)
+                            }
+                            item(R.string.sub_duplicate, ed && t.isNotEmpty()) {
+                                val dup = events.filterIndexed { i, _ -> i in t }
+                                val at = t.max() + 1
+                                put(events.take(at) + dup + events.drop(at), at)
+                            }
+                            item(R.string.delete, ed && t.isNotEmpty()) {
+                                val left = events.filterIndexed { i, _ -> i !in t }
+                                put(left, if (left.isEmpty()) -1 else t.min().coerceAtMost(left.size - 1))
+                            }
+                            HorizontalDivider()
+                            item(R.string.ln_split, ed && active in events.indices) {
+                                val parts = LineOps.split(events[active], cur[0])
+                                if (parts.size == 2) put(events.take(active) + parts + events.drop(active + 1), active + 1)
+                                else Toast.makeText(ctx, R.string.ln_split_fail, Toast.LENGTH_SHORT).show()
+                            }
+                            item(R.string.ln_join, ed && marked.size >= 2) {
+                                val sel = marked.sorted(); val first = sel.first(); val rest = sel.drop(1).toSet()
+                                val joined = LineOps.join(sel.map { events[it] })
+                                put(events.mapIndexed { i, e -> if (i == first) joined else e }.filterIndexed { i, _ -> i !in rest }, first)
+                            }
+                            item(R.string.ln_up, ed && active > 0) { LineOps.move(events, active, -1)?.let { put(it, active - 1) } }
+                            item(R.string.ln_down, ed && active in 0 until events.size - 1) { LineOps.move(events, active, 1)?.let { put(it, active + 1) } }
+                            HorizontalDivider()
+                            item(R.string.ln_sort_start, ed && events.size > 1) { put(LineOps.sort(events, LineOps.SortBy.START), 0) }
+                            item(R.string.ln_sort_end, ed && events.size > 1) { put(LineOps.sort(events, LineOps.SortBy.END), 0) }
+                            item(R.string.ln_sort_style, ed && events.size > 1) { put(LineOps.sort(events, LineOps.SortBy.STYLE), 0) }
+                            HorizontalDivider()
+                            item(if (video == null) R.string.sv_attach else R.string.sv_detach) { if (video == null) videoPicker.launch(arrayOf("video/*")) else video = null }
+                            item(R.string.ex_title) { chooser = true }
+                        }
+                    }
                 },
             )
         },
@@ -251,6 +325,24 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                             it.copy(startMs = s0, endMs = maxOf(s0 + 1L, it.endMs + de))
                         }
                     },
+                )
+                HorizontalDivider()
+            }
+            if (findOpen) {
+                FindBar(
+                    file, active, spec, replacement, { spec = it }, { replacement = it },
+                    onGo = { d -> val j = Find.next(file, spec, active, d); if (j >= 0) active = j },
+                    onReplaceOne = {
+                        val e0 = events.getOrNull(active)
+                        val r = e0?.let { Find.replaceLine(it, spec, replacement) }
+                        if (r != null) { edit(active) { r }; val j = Find.next(file, spec, active, 1); if (j >= 0) active = j }
+                    },
+                    onReplaceAll = {
+                        val (f2, n) = Find.replaceAll(file, spec, replacement)
+                        if (n > 0) { file = f2; dirty = true }
+                        Toast.makeText(ctx, ctx.getString(R.string.fd_replaced, n), Toast.LENGTH_SHORT).show()
+                    },
+                    onClose = { findOpen = false },
                 )
                 HorizontalDivider()
             }
@@ -298,8 +390,11 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                         val done = events.indices.count { events[it].text != originals[it] && events[it].text.isNotBlank() }
                         Text(stringResource(R.string.tr_progress, done, events.size), style = MaterialTheme.typography.labelSmall)
                     }
+                    var tf by remember(active) { mutableStateOf(TextFieldValue(e.text, TextRange(e.text.length))) }
+                    if (tf.text != e.text) tf = TextFieldValue(e.text, TextRange(minOf(tf.selection.end, e.text.length)))
+                    cur[0] = tf.selection.end
                     OutlinedTextField(
-                        value = e.text, onValueChange = { v -> edit(active) { it.copy(text = v) } },
+                        value = tf, onValueChange = { v -> tf = v; cur[0] = v.selection.end; if (v.text != e.text) edit(active) { it.copy(text = v.text) } },
                         label = { Text(stringResource(if (trOn) R.string.tr_translation else R.string.sub_text)) }, modifier = Modifier.fillMaxWidth(),
                         textStyle = LocalTextStyle.current.copy(textDirection = TextDirection.Content),
                     )

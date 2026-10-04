@@ -74,13 +74,13 @@ fun GifTrimPanel(meta: GifMeta, src: File, startF: Int, endF: Int, onChange: (In
 
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.gt_start), Modifier.width(44.dp))
-            OutlinedButton(onClick = { onChange((startF - 1).coerceAtLeast(0), endF) }) { Text("-1 frame") }
-            OutlinedButton(onClick = { onChange((startF + 1).coerceAtMost(endF), endF) }) { Text("+1 frame") }
+            OutlinedButton(onClick = { onChange((startF - 1).coerceAtLeast(0), endF) }) { Text(stringResource(R.string.gt_minus1)) }
+            OutlinedButton(onClick = { onChange((startF + 1).coerceAtMost(endF), endF) }) { Text(stringResource(R.string.gt_plus1)) }
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.gt_end), Modifier.width(44.dp))
-            OutlinedButton(onClick = { onChange(startF, (endF - 1).coerceAtLeast(startF)) }) { Text("-1 frame") }
-            OutlinedButton(onClick = { onChange(startF, (endF + 1).coerceAtMost(last)) }) { Text("+1 frame") }
+            OutlinedButton(onClick = { onChange(startF, (endF - 1).coerceAtLeast(startF)) }) { Text(stringResource(R.string.gt_minus1)) }
+            OutlinedButton(onClick = { onChange(startF, (endF + 1).coerceAtMost(last)) }) { Text(stringResource(R.string.gt_plus1)) }
         }
 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {

@@ -9,13 +9,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Arabic guard
+        run: bash tools/check_arabic.sh
+      - name: Fetch our FFmpeg engine (made by the Build FFmpeg engine workflow)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p app/libs
+          if gh release download ffmpeg-engine -p ffmpeg-kit.aar -D app/libs --clobber; then
+            echo "using our FFmpeg engine"
+          else
+            echo "no own engine yet: falling back to the ffmpegKit property (video export may be unavailable)"
+          fi
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+          targets: aarch64-linux-android
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: native
@@ -25,12 +37,20 @@ jobs:
         run: |
           export ANDROID_NDK_HOME="${ANDROID_NDK_LATEST_HOME:-$ANDROID_NDK_ROOT}"
           echo "Using NDK: $ANDROID_NDK_HOME"
-          cargo ndk -t arm64-v8a -t armeabi-v7a -t x86_64 -o ../app/src/main/jniLibs build --release
+          cargo ndk -t arm64-v8a -o ../app/src/main/jniLibs build --release
+          # only libmediaforge_native is loaded (gifski is linked inside it): drop the stray libgifski-*.so copies
+          rm -f ../app/src/main/jniLibs/*/libgifski*.so
           ls -l ../app/src/main/jniLibs/*/
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.7
       - run: gradle assembleDebug --no-daemon
+      - name: APK size report
+        run: |
+          APK=$(find . -path '*/build/outputs/apk/debug/*.apk' | head -1)
+          ls -l "$APK"
+          echo "Biggest files inside the APK (bytes, method, compressed bytes):"
+          unzip -lv "$APK" | sort -k1 -n -r | head -12 | awk '{print $1, $2, $3, $8}'
       - name: Collect APK
         run: |
           APK=$(find . -path '*/build/outputs/apk/debug/*.apk' | head -1)

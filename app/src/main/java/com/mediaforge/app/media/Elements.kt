@@ -10,7 +10,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 enum class ShapeKind(val label: String) {
-    RECT("Rectangle"), ROUND("Rounded"), ELLIPSE("Ellipse"), LINE("Line"), ARROW("Arrow")
+    RECT("Rectangle"), ROUND("Rounded"), ELLIPSE("Ellipse"), LINE("Line"), ARROW("Arrow"), IMAGE("Image")
 }
 
 /** A vector shape layer. All geometry is relative to the (cropped) frame, so preview == export at any size. */
@@ -32,6 +32,7 @@ data class ShapeElement(
     val timed: Boolean = false,      // show only between fromMs and toMs (source-video time)
     val fromMs: Long = 0L,
     val toMs: Long = 0L,
+    val imagePath: String? = null,   // IMAGE only: file made by ImageStore.import
 ) {
     val isLine: Boolean get() = kind == ShapeKind.LINE || kind == ShapeKind.ARROW
 
@@ -54,6 +55,14 @@ fun drawElements(canvas: Canvas, w: Int, h: Int, els: List<ShapeElement>) {
         val hw = e.w * w / 2f
         val hh = e.h * h / 2f
         val rect = RectF(cx - hw, cy - hh, cx + hw, cy + hh)
+        if (e.kind == ShapeKind.IMAGE) {
+            val bmp = e.imagePath?.let { ImageStore.bitmap(it) } ?: continue
+            canvas.save()
+            canvas.rotate(e.rotation, cx, cy)
+            canvas.drawBitmap(bmp, null, rect, Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG or Paint.DITHER_FLAG))
+            canvas.restore()
+            continue
+        }
         val fillColor = (e.fill and 0x00FFFFFF) or ((e.fillAlpha.coerceIn(0f, 1f) * 255f).roundToInt() shl 24)
         val sw = e.strokePct / 100f * h
         val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL; color = fillColor }
@@ -82,6 +91,7 @@ fun drawElements(canvas: Canvas, w: Int, h: Int, els: List<ShapeElement>) {
                 if (drawOutline) canvas.drawOval(rect, line)
             }
             ShapeKind.LINE -> canvas.drawLine(cx - hw, cy, cx + hw, cy, line)
+            ShapeKind.IMAGE -> Unit // drawn above
             ShapeKind.ARROW -> {
                 val headLen = max(line.strokeWidth * 3f, min(hw * 0.8f, hh * 2f))
                 val half = headLen * 0.6f

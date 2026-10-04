@@ -1,5 +1,7 @@
 package com.mediaforge.app.ui
 
+import com.mediaforge.app.R
+import androidx.compose.ui.res.stringResource
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -198,21 +200,21 @@ fun MediaBrowserScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (vm.tab == 1 && cur != null) folderTitle(cur) else "Media finder") },
+                title = { Text(if (vm.tab == 1 && cur != null) folderTitle(cur) else stringResource(R.string.mb_title)) },
                 navigationIcon = {
-                    IconButton(onClick = { goBack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    IconButton(onClick = { goBack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.mb_back)) }
                 },
                 actions = {
                     IconButton(onClick = {
                         if (vm.searching) { vm.searching = false; vm.filter = filter.copy(query = "") }
                         else vm.searching = true
-                    }) { Icon(Icons.Filled.Search, "Search") }
+                    }) { Icon(Icons.Filled.Search, stringResource(R.string.mb_search)) }
                     Box {
-                        IconButton(onClick = { sortMenu = true }) { Icon(Icons.AutoMirrored.Filled.Sort, "Sort") }
+                        IconButton(onClick = { sortMenu = true }) { Icon(Icons.AutoMirrored.Filled.Sort, stringResource(R.string.mb_sort)) }
                         DropdownMenu(expanded = sortMenu, onDismissRequest = { sortMenu = false }) {
                             SortField.entries.forEach { f ->
                                 DropdownMenuItem(
-                                    text = { Text((if (filter.sort == f) "\u2713 " else "    ") + f.label) },
+                                    text = { Text((if (filter.sort == f) "\u2713 " else "    ") + sortName(f)) },
                                     onClick = {
                                         vm.filter = filter.copy(sort = f, ascending = f == SortField.NAME)
                                         sortMenu = false
@@ -220,24 +222,24 @@ fun MediaBrowserScreen(
                                 )
                             }
                             DropdownMenuItem(
-                                text = { Text((if (filter.ascending) "\u2713 " else "    ") + "Ascending") },
+                                text = { Text((if (filter.ascending) "\u2713 " else "    ") + stringResource(R.string.mb_asc)) },
                                 onClick = { vm.filter = filter.copy(ascending = true); sortMenu = false },
                             )
                             DropdownMenuItem(
-                                text = { Text((if (!filter.ascending) "\u2713 " else "    ") + "Descending") },
+                                text = { Text((if (!filter.ascending) "\u2713 " else "    ") + stringResource(R.string.mb_desc)) },
                                 onClick = { vm.filter = filter.copy(ascending = false); sortMenu = false },
                             )
                         }
                     }
                     Box {
-                        IconButton(onClick = { moreMenu = true }) { Icon(Icons.Filled.MoreVert, "More") }
+                        IconButton(onClick = { moreMenu = true }) { Icon(Icons.Filled.MoreVert, stringResource(R.string.mb_more)) }
                         DropdownMenu(expanded = moreMenu, onDismissRequest = { moreMenu = false }) {
                             DropdownMenuItem(
-                                text = { Text(if (vm.gridView) "List view" else "Grid view") },
+                                text = { Text(if (vm.gridView) stringResource(R.string.mb_list_view) else stringResource(R.string.mb_grid_view)) },
                                 onClick = { vm.gridView = !vm.gridView; moreMenu = false },
                             )
                             DropdownMenuItem(
-                                text = { Text("Rescan library") },
+                                text = { Text(stringResource(R.string.mb_rescan)) },
                                 onClick = { vm.load(force = true); moreMenu = false },
                             )
                         }
@@ -255,7 +257,7 @@ fun MediaBrowserScreen(
                 val scopeName = if (vm.tab == 1 && cur != null && !vm.everywhere) folderTitle(cur) else null
                 SearchField(
                     value = filter.query,
-                    placeholder = if (scopeName != null) "Search in $scopeName" else "Search videos and GIFs",
+                    placeholder = if (scopeName != null) stringResource(R.string.mb_search_in, scopeName) else stringResource(R.string.mb_search_all),
                     onChange = { vm.filter = filter.copy(query = it) },
                     onClose = { vm.searching = false; vm.filter = filter.copy(query = "") },
                 )
@@ -271,13 +273,13 @@ fun MediaBrowserScreen(
                     Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    FilterChip(selected = !vm.everywhere, onClick = { vm.everywhere = false }, label = { Text("This folder") })
-                    FilterChip(selected = vm.everywhere, onClick = { vm.everywhere = true }, label = { Text("Everywhere") })
+                    FilterChip(selected = !vm.everywhere, onClick = { vm.everywhere = false }, label = { Text(stringResource(R.string.mb_this_folder)) })
+                    FilterChip(selected = vm.everywhere, onClick = { vm.everywhere = true }, label = { Text(stringResource(R.string.mb_everywhere)) })
                 }
             }
             TabRow(selectedTabIndex = vm.tab) {
-                Tab(selected = vm.tab == 0, onClick = { vm.tab = 0 }, text = { Text("All media") })
-                Tab(selected = vm.tab == 1, onClick = { vm.tab = 1 }, text = { Text("Folders") })
+                Tab(selected = vm.tab == 0, onClick = { vm.tab = 0 }, text = { Text(stringResource(R.string.mb_tab_all)) })
+                Tab(selected = vm.tab == 1, onClick = { vm.tab = 1 }, text = { Text(stringResource(R.string.mb_tab_folders)) })
             }
             if (browsing && cur != null) {
                 Breadcrumbs(cur) { vm.path = it }
@@ -287,8 +289,8 @@ fun MediaBrowserScreen(
             when {
                 vm.loading && vm.items.isEmpty() ->
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                vm.items.isEmpty() -> Empty("No videos or GIFs found on this device")
-                filtered.isEmpty() -> Empty("Nothing matches your search and filters") {
+                vm.items.isEmpty() -> Empty(stringResource(R.string.mb_none))
+                filtered.isEmpty() -> Empty(stringResource(R.string.mb_no_match)) {
                     vm.filter = LibraryFilter(sort = filter.sort, ascending = filter.ascending)
                 }
                 vm.tab == 0 -> ExplorerList(
@@ -298,7 +300,7 @@ fun MediaBrowserScreen(
                 !browsing -> {
                     val scoped = if (vm.everywhere || cur == null) filtered
                     else filtered.filter { inside(it.parentPath, cur) }
-                    if (scoped.isEmpty()) Empty("No results in ${folderTitle(cur ?: "")}")
+                    if (scoped.isEmpty()) Empty(stringResource(R.string.mb_no_in, folderTitle(cur ?: "")))
                     else ExplorerList(
                         folders = emptyList(), list = scoped, grid = vm.gridView, showPath = true,
                         tokens = tokens, loader = loader, header = summary(scoped), onFolder = {}, onItem = pick,
@@ -313,7 +315,7 @@ fun MediaBrowserScreen(
                             loader = loader, header = null, onFolder = { vm.path = it.path }, onItem = pick,
                         )
                     } else if (idx.count(cur) == 0) {
-                        Empty("Nothing in this folder matches the filters")
+                        Empty(stringResource(R.string.mb_no_folder_match))
                     } else {
                         ExplorerList(
                             folders = idx.children(cur).map {
@@ -360,62 +362,63 @@ private fun FilterBar(
     onCustomSize: () -> Unit,
     onCustomDate: () -> Unit,
 ) {
+    val ctx = LocalContext.current
     Row(
         Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 2.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         MenuChip(
-            if (filter.type == "All") "Type" else filter.type, filter.type != "All",
-            listOf("All", "Videos", "GIFs").map { t -> t to { onChange(filter.copy(type = t)) } },
+            if (filter.type == "All") stringResource(R.string.mb_type) else typeName(filter.type), filter.type != "All",
+            listOf("All", "Videos", "GIFs").map { t -> typeName(t) to { onChange(filter.copy(type = t)) } },
         )
         MenuChip(
-            filter.sizeLabel?.let { "Size: $it" } ?: "Size", filter.sizeLabel != null,
+            filter.sizeLabel?.let { stringResource(R.string.mb_size_l, it) } ?: stringResource(R.string.mb_size), filter.sizeLabel != null,
             listOf(
-                "Any size" to { onChange(filter.copy(minSize = null, maxSize = null, sizeLabel = null)) },
-                "Under 1 MB" to { onChange(filter.copy(minSize = null, maxSize = MB, sizeLabel = "< 1 MB")) },
+                stringResource(R.string.mb_any_size) to { onChange(filter.copy(minSize = null, maxSize = null, sizeLabel = null)) },
+                stringResource(R.string.mb_u1mb) to { onChange(filter.copy(minSize = null, maxSize = MB, sizeLabel = "< 1 MB")) },
                 "1 - 10 MB" to { onChange(filter.copy(minSize = MB, maxSize = 10 * MB, sizeLabel = "1 - 10 MB")) },
                 "10 - 100 MB" to { onChange(filter.copy(minSize = 10 * MB, maxSize = 100 * MB, sizeLabel = "10 - 100 MB")) },
-                "Over 100 MB" to { onChange(filter.copy(minSize = 100 * MB, maxSize = null, sizeLabel = "> 100 MB")) },
-                "Custom range..." to onCustomSize,
+                stringResource(R.string.mb_o100mb) to { onChange(filter.copy(minSize = 100 * MB, maxSize = null, sizeLabel = "> 100 MB")) },
+                stringResource(R.string.mb_custom) to onCustomSize,
             ),
         )
         MenuChip(
-            filter.dateLabel?.let { "Date: $it" } ?: "Date", filter.dateLabel != null,
+            filter.dateLabel?.let { stringResource(R.string.mb_date_l, it) } ?: stringResource(R.string.mb_date), filter.dateLabel != null,
             listOf(
-                "Any date" to { onChange(filter.copy(dateFromSec = null, dateToSec = null, dateLabel = null)) },
-                "Today" to { onChange(filter.copy(dateFromSec = startOfDaySec(0), dateToSec = null, dateLabel = "Today")) },
-                "Last 7 days" to { onChange(filter.copy(dateFromSec = startOfDaySec(6), dateToSec = null, dateLabel = "7 days")) },
-                "Last 30 days" to { onChange(filter.copy(dateFromSec = startOfDaySec(29), dateToSec = null, dateLabel = "30 days")) },
-                "This year" to { onChange(filter.copy(dateFromSec = startOfYearSec(), dateToSec = null, dateLabel = "This year")) },
-                "Older than 1 year" to {
-                    onChange(filter.copy(dateFromSec = null, dateToSec = startOfDaySec(365), dateLabel = "> 1 year old"))
+                stringResource(R.string.mb_any_date) to { onChange(filter.copy(dateFromSec = null, dateToSec = null, dateLabel = null)) },
+                stringResource(R.string.mb_today) to { onChange(filter.copy(dateFromSec = startOfDaySec(0), dateToSec = null, dateLabel = ctx.getString(R.string.mb_today))) },
+                stringResource(R.string.mb_7d) to { onChange(filter.copy(dateFromSec = startOfDaySec(6), dateToSec = null, dateLabel = ctx.getString(R.string.mb_7d_s))) },
+                stringResource(R.string.mb_30d) to { onChange(filter.copy(dateFromSec = startOfDaySec(29), dateToSec = null, dateLabel = ctx.getString(R.string.mb_30d_s))) },
+                stringResource(R.string.mb_year) to { onChange(filter.copy(dateFromSec = startOfYearSec(), dateToSec = null, dateLabel = ctx.getString(R.string.mb_year))) },
+                stringResource(R.string.mb_old) to {
+                    onChange(filter.copy(dateFromSec = null, dateToSec = startOfDaySec(365), dateLabel = ctx.getString(R.string.mb_old_s)))
                 },
-                "Custom range..." to onCustomDate,
+                stringResource(R.string.mb_custom) to onCustomDate,
             ),
         )
         MenuChip(
-            filter.resLabel?.let { "Res: $it" } ?: "Resolution", filter.resLabel != null,
+            filter.resLabel?.let { stringResource(R.string.mb_res_l, it) } ?: stringResource(R.string.mb_res), filter.resLabel != null,
             listOf(
-                "Any resolution" to { onChange(filter.copy(minLongSide = 0, resLabel = null)) },
-                "720p and up" to { onChange(filter.copy(minLongSide = 1280, resLabel = "720p+")) },
-                "1080p and up" to { onChange(filter.copy(minLongSide = 1920, resLabel = "1080p+")) },
-                "2K and up" to { onChange(filter.copy(minLongSide = 2560, resLabel = "2K+")) },
-                "4K and up" to { onChange(filter.copy(minLongSide = 3840, resLabel = "4K+")) },
+                stringResource(R.string.mb_any_res) to { onChange(filter.copy(minLongSide = 0, resLabel = null)) },
+                stringResource(R.string.mb_720) to { onChange(filter.copy(minLongSide = 1280, resLabel = "720p+")) },
+                stringResource(R.string.mb_1080) to { onChange(filter.copy(minLongSide = 1920, resLabel = "1080p+")) },
+                stringResource(R.string.mb_2k) to { onChange(filter.copy(minLongSide = 2560, resLabel = "2K+")) },
+                stringResource(R.string.mb_4k) to { onChange(filter.copy(minLongSide = 3840, resLabel = "4K+")) },
             ),
         )
         MenuChip(
-            filter.durLabel?.let { "Length: $it" } ?: "Length", filter.durLabel != null,
+            filter.durLabel?.let { stringResource(R.string.mb_len_l, it) } ?: stringResource(R.string.mb_len), filter.durLabel != null,
             listOf(
-                "Any length" to { onChange(filter.copy(minDurMs = null, maxDurMs = null, durLabel = null)) },
-                "Under 5 s" to { onChange(filter.copy(minDurMs = null, maxDurMs = 5_000, durLabel = "< 5 s")) },
+                stringResource(R.string.mb_any_len) to { onChange(filter.copy(minDurMs = null, maxDurMs = null, durLabel = null)) },
+                stringResource(R.string.mb_u5s) to { onChange(filter.copy(minDurMs = null, maxDurMs = 5_000, durLabel = ctx.getString(R.string.mb_u5s_s))) },
                 "5 - 15 s" to { onChange(filter.copy(minDurMs = 5_000, maxDurMs = 15_000, durLabel = "5 - 15 s")) },
                 "15 - 60 s" to { onChange(filter.copy(minDurMs = 15_000, maxDurMs = 60_000, durLabel = "15 - 60 s")) },
-                "Over 1 min" to { onChange(filter.copy(minDurMs = 60_000, maxDurMs = null, durLabel = "> 1 min")) },
+                stringResource(R.string.mb_o1m) to { onChange(filter.copy(minDurMs = 60_000, maxDurMs = null, durLabel = ctx.getString(R.string.mb_o1m_s))) },
             ),
         )
         if (filter.hasActiveFilters) {
-            TextButton(onClick = { onChange(filter.cleared()) }) { Text("Clear") }
+            TextButton(onClick = { onChange(filter.cleared()) }) { Text(stringResource(R.string.mb_clear)) }
         }
     }
 }
@@ -447,17 +450,17 @@ private fun SizeDialog(onDismiss: () -> Unit, onApply: (Long?, Long?, String) ->
     var unit by remember { mutableStateOf("MB") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Custom size") },
+        title = { Text(stringResource(R.string.mb_custom_size)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
-                        minT, { minT = it }, label = { Text("Min") }, singleLine = true,
+                        minT, { minT = it }, label = { Text(stringResource(R.string.mb_min)) }, singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.weight(1f),
                     )
                     OutlinedTextField(
-                        maxT, { maxT = it }, label = { Text("Max") }, singleLine = true,
+                        maxT, { maxT = it }, label = { Text(stringResource(R.string.mb_max)) }, singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.weight(1f),
                     )
@@ -482,9 +485,9 @@ private fun SizeDialog(onDismiss: () -> Unit, onApply: (Long?, Long?, String) ->
                     a != null -> onApply(a, null, "> ${shown(a)} $unit")
                     else -> onApply(null, b, "< ${shown(b!!)} $unit")
                 }
-            }) { Text("Apply") }
+            }) { Text(stringResource(R.string.mb_apply)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }
 
@@ -504,9 +507,9 @@ private fun DateRangeDialog(onDismiss: () -> Unit, onApply: (Long, Long, String)
                     val to = pickerMillisToLocalSec(e, plusDays = 1)
                     onApply(from, to, if (e == s) fmtDate(from) else "${fmtDate(from)} - ${fmtDate(to - 1)}")
                 },
-            ) { Text("Apply") }
+            ) { Text(stringResource(R.string.mb_apply)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     ) {
         DateRangePicker(state = st, modifier = Modifier.height(480.dp))
     }
@@ -527,7 +530,7 @@ private fun SearchField(value: String, placeholder: String, onChange: (String) -
         leadingIcon = { Icon(Icons.Filled.Search, null) },
         trailingIcon = {
             IconButton(onClick = { if (value.isNotEmpty()) onChange("") else onClose() }) {
-                Icon(Icons.Filled.Close, "Clear")
+                Icon(Icons.Filled.Close, stringResource(R.string.mb_clear))
             }
         },
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
@@ -570,7 +573,7 @@ private fun Empty(text: String, onClear: (() -> Unit)? = null) {
         Text(text)
         if (onClear != null) {
             Spacer(Modifier.height(12.dp))
-            Button(onClick = onClear) { Text("Clear search and filters") }
+            Button(onClick = onClear) { Text(stringResource(R.string.mb_clear_all)) }
         }
     }
 }
@@ -582,9 +585,9 @@ private fun PermissionPrompt(onGrant: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("MediaForge needs access to your videos and images to list your videos and GIFs.")
+        Text(stringResource(R.string.mb_perm))
         Spacer(Modifier.height(16.dp))
-        Button(onClick = onGrant) { Text("Allow access") }
+        Button(onClick = onGrant) { Text(stringResource(R.string.mb_allow)) }
     }
 }
 
@@ -652,7 +655,7 @@ private fun FolderRow(f: FolderEntry, onClick: () -> Unit) {
         Column {
             Text(f.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(
-                "${f.count} item" + (if (f.count == 1) "" else "s") + " - " + formatSize(f.sizeBytes),
+                stringResource(R.string.mb_items, f.count) + " - " + formatSize(f.sizeBytes),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -735,3 +738,17 @@ private fun Badge(text: String, modifier: Modifier) {
             .padding(horizontal = 5.dp, vertical = 1.dp),
     )
 }
+
+@Composable
+private fun typeName(t: String): String = stringResource(when (t) { "Videos" -> R.string.mb_videos; "GIFs" -> R.string.mb_gifs; else -> R.string.mb_all })
+
+@Composable
+private fun sortName(f: com.mediaforge.app.media.SortField): String = stringResource(
+    when (f) {
+        com.mediaforge.app.media.SortField.NAME -> R.string.sort_name
+        com.mediaforge.app.media.SortField.DATE -> R.string.sort_date
+        com.mediaforge.app.media.SortField.SIZE -> R.string.sort_size
+        com.mediaforge.app.media.SortField.DURATION -> R.string.sort_dur
+        com.mediaforge.app.media.SortField.RESOLUTION -> R.string.sort_res
+    },
+)

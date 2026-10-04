@@ -13,6 +13,7 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "0.1.0"
+        ndk { abiFilters += "arm64-v8a" }
     }
 
     buildTypes {
@@ -25,7 +26,10 @@ android {
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
     composeOptions { kotlinCompilerExtensionVersion = "1.5.14" }
-    packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
+    packaging {
+        resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        jniLibs.useLegacyPackaging = true
+    }
 }
 
 dependencies {
@@ -44,7 +48,15 @@ dependencies {
     implementation("io.coil-kt:coil-gif:2.6.0")
     implementation("io.coil-kt:coil-video:2.6.0")
     implementation("androidx.documentfile:documentfile:1.0.1")
-    // A17: FFmpeg engine for video export. The artifact is a property so a bad coordinate never blocks the build:
-    // blank it in gradle.properties and the app builds without video export (VideoExporter.available() = false).
-    providers.gradleProperty("ffmpegKit").orNull?.takeIf { it.isNotBlank() }?.let { implementation(it) }
+    implementation("com.caverock:androidsvg-aar:1.4") // A20.a: SVG import (rasterised once)
+    // A17: FFmpeg engine for video export. Preferred: our own build (app/libs/ffmpeg-kit.aar, made by the
+    // "Build FFmpeg engine" workflow: libx264, libx265, libvpx, libass). Fallback: the ffmpegKit property in
+    // gradle.properties; blank = the app builds without video export (VideoExporter.available() = false).
+    val ownEngine = file("libs/ffmpeg-kit.aar")
+    if (ownEngine.exists()) {
+        implementation(files(ownEngine))
+        implementation("com.arthenica:smart-exception-java:0.2.1") // FFmpegKit's only Java dependency
+    } else {
+        providers.gradleProperty("ffmpegKit").orNull?.takeIf { it.isNotBlank() }?.let { implementation(it) }
+    }
 }

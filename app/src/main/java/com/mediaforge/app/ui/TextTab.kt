@@ -94,7 +94,7 @@ fun TextTab(state: EditorState, player: Player, onBrowseFonts: () -> Unit) {
                     label = { Text(o.text.take(12).ifBlank { "(empty)" }) },
                 )
             }
-            AssistChip(onClick = { state.addOverlay() }, label = { Text("+ Add text") })
+            AssistChip(onClick = { state.addOverlay() }, label = { Text(stringResource(R.string.tx_add)) })
         }
 
         val sel = state.selected()

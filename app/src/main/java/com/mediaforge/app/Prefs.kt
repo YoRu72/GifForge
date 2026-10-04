@@ -25,12 +25,13 @@ object Prefs {
     val defFast = BoolPref("def_fast", false)
     val autoSave = BoolPref("auto_save", true)
     val keepAwake = BoolPref("keep_awake", true)
+    val subAutosave = BoolPref("sub_autosave", true)   // recovery copy of the open subtitle script
     val namePrefix = StrPref("name_prefix", "MediaForge_")
     val fontSample = StrPref("font_sample", "12345abcd")   // preview text in the font directory
     val recentSubs = StrPref("recent_subs", "")            // recent subtitle uris, one per line
 
     private val ints = listOf(lang, themeMode, defFps, defQuality, defClipSec, defMaxWidth)
-    private val bools = listOf(dynamicColor, defLoop, defFast, autoSave, keepAwake)
+    private val bools = listOf(dynamicColor, defLoop, defFast, autoSave, keepAwake, subAutosave)
     private val strs = listOf(namePrefix, fontSample, recentSubs)
 
     fun init(ctx: Context) {

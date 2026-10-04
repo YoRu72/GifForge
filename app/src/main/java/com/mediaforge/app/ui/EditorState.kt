@@ -60,6 +60,14 @@ class EditorState {
         elements = elements + e
         selectedElId = e.id
     }
+    /** A20.a: a picture layer, about half the frame wide, in the frame's centre, keeping the picture's proportions. */
+    fun addImage(img: com.mediaforge.app.media.ImportedImage, frameAspect: Float) {
+        val w = if (img.aspect >= frameAspect) 0.6f else 0.6f * img.aspect / frameAspect
+        val h = w * frameAspect / img.aspect
+        val e = ShapeElement(System.nanoTime(), ShapeKind.IMAGE, w = w, h = h, imagePath = img.path)
+        elements = elements + e
+        selectedElId = e.id
+    }
     fun duplicateSelectedElement() {
         val s = selectedElement() ?: return
         val c = s.copy(id = System.nanoTime(), cx = (s.cx + 0.05f).coerceAtMost(1f), cy = (s.cy + 0.05f).coerceAtMost(1f))

@@ -76,7 +76,7 @@ fun GifEditorHost(uri: Uri, onBack: () -> Unit) {
                 Spacer(Modifier.height(16.dp))
                 LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(8.dp))
-                Text("${(progress * 100).toInt()}%  (done once, then it opens instantly)", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.gh_once, (progress * 100).toInt()), style = MaterialTheme.typography.bodySmall)
             }
         }
     }
