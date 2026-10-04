@@ -9,13 +9,42 @@
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/Theme.GifForge">
+        android:theme="@style/Theme.MediaForge">
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- open .ttf/.otf files straight into the app -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="font/ttf" />
+                <data android:mimeType="font/otf" />
+                <data android:mimeType="font/sfnt" />
+                <data android:mimeType="application/x-font-ttf" />
+                <data android:mimeType="application/x-font-opentype" />
+                <data android:mimeType="application/vnd.ms-opentype" />
+                <data android:mimeType="application/font-sfnt" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:host="*" />
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.ttf" />
+                <data android:pathPattern=".*\\.otf" />
+                <data android:pathPattern=".*\\.TTF" />
+                <data android:pathPattern=".*\\.OTF" />
             </intent-filter>
         </activity>
         <provider

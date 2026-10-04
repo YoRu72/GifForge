@@ -1,4 +1,5 @@
 //! JNI bridge: Kotlin pushes RGBA frames, gifski encodes them to a GIF file on a writer thread.
+mod fontconv;
 mod gifcrop;
 
 use gifski::{Collector, Repeat, Settings};
@@ -17,7 +18,7 @@ struct Session {
 }
 
 #[no_mangle]
-pub extern "system" fn Java_com_gifforge_app_media_GifskiNative_nativeStart(
+pub extern "system" fn Java_com_mediaforge_app_media_GifskiNative_nativeStart(
     mut env: JNIEnv,
     _this: JObject,
     path: JString,
@@ -55,7 +56,7 @@ pub extern "system" fn Java_com_gifforge_app_media_GifskiNative_nativeStart(
 }
 
 #[no_mangle]
-pub extern "system" fn Java_com_gifforge_app_media_GifskiNative_nativeAddFrame(
+pub extern "system" fn Java_com_mediaforge_app_media_GifskiNative_nativeAddFrame(
     env: JNIEnv,
     _this: JObject,
     handle: jlong,
@@ -98,7 +99,7 @@ fn close(handle: jlong) -> bool {
 }
 
 #[no_mangle]
-pub extern "system" fn Java_com_gifforge_app_media_GifskiNative_nativeFinish(
+pub extern "system" fn Java_com_mediaforge_app_media_GifskiNative_nativeFinish(
     _env: JNIEnv,
     _this: JObject,
     handle: jlong,
@@ -107,7 +108,7 @@ pub extern "system" fn Java_com_gifforge_app_media_GifskiNative_nativeFinish(
 }
 
 #[no_mangle]
-pub extern "system" fn Java_com_gifforge_app_media_GifskiNative_nativeCancel(
+pub extern "system" fn Java_com_mediaforge_app_media_GifskiNative_nativeCancel(
     _env: JNIEnv,
     _this: JObject,
     handle: jlong,
