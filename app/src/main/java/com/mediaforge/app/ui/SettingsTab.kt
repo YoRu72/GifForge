@@ -1,5 +1,6 @@
 package com.mediaforge.app.ui
 
+import com.mediaforge.app.media.labelRes
 import com.mediaforge.app.R
 
 import androidx.compose.ui.res.stringResource
@@ -42,7 +43,7 @@ fun SettingsTab(state: EditorState, info: VideoInfo?) {
         Text(stringResource(R.string.st_playback), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             PlayMode.entries.forEach { m ->
-                FilterChip(selected = state.playMode == m, onClick = { state.playMode = m }, label = { Text(m.label) })
+                FilterChip(selected = state.playMode == m, onClick = { state.playMode = m }, label = { Text(stringResource(m.labelRes())) })
             }
         }
         Text(stringResource(R.string.set_max_width), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))

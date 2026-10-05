@@ -13,6 +13,8 @@ import kotlin.math.max
 
 enum class PlayMode(val label: String) { NORMAL("Normal"), REVERSE("Reverse"), PINGPONG("Ping-pong") }
 
+fun PlayMode.labelRes(): Int = when (this) { PlayMode.NORMAL -> com.mediaforge.app.R.string.pm_normal; PlayMode.REVERSE -> com.mediaforge.app.R.string.pm_reverse; PlayMode.PINGPONG -> com.mediaforge.app.R.string.pm_pingpong }
+
 /** Source frame index for every output frame. */
 internal fun frameOrder(n: Int, mode: PlayMode): List<Int> = when {
     mode == PlayMode.REVERSE -> (n - 1 downTo 0).toList()

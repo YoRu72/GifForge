@@ -1,5 +1,6 @@
 package com.mediaforge.app.ui
 
+import com.mediaforge.app.media.labelRes
 import com.mediaforge.app.R
 
 import androidx.compose.ui.res.stringResource
@@ -33,7 +34,7 @@ fun LayerLookControls(
     Text(stringResource(R.string.ly_blend), style = MaterialTheme.typography.labelLarge)
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         LayerBlend.entries.filter { it.available }.forEach { b ->
-            FilterChip(selected = blend == b, onClick = { onBlend(b) }, label = { Text(b.label) })
+            FilterChip(selected = blend == b, onClick = { onBlend(b) }, label = { Text(stringResource(b.labelRes())) })
         }
     }
     if (blend != LayerBlend.NORMAL) {

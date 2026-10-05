@@ -1,5 +1,6 @@
 package com.mediaforge.app.ui
 
+import androidx.compose.foundation.horizontalScroll
 import android.content.Context
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -101,6 +102,15 @@ fun SettingsScreen(onBack: () -> Unit, onFonts: () -> Unit) {
                     FilterChip(selected = Prefs.lang.value == i, onClick = { Prefs.set(Prefs.lang, i) }, label = { Text(stringResource(n)) })
                 }
             }
+
+            Divider2()
+            Header(stringResource(R.string.set_read))
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(R.string.rp_relaxed, R.string.rp_standard, R.string.rp_netflix, R.string.rp_fast).forEachIndexed { i, n ->
+                    FilterChip(selected = Prefs.readProfile.value == i, onClick = { Prefs.set(Prefs.readProfile, i) }, label = { Text(stringResource(n)) })
+                }
+            }
+            Text(stringResource(R.string.set_read_note), style = MaterialTheme.typography.bodySmall)
 
             Divider2()
             Header(stringResource(R.string.set_appearance))

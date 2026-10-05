@@ -97,6 +97,7 @@ private fun AppRoot(incomingFont: Uri?, onFontHandled: () -> Unit) {
     var subUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var newSub by rememberSaveable { mutableStateOf(false) }
     var subVideo by rememberSaveable { mutableStateOf<Uri?>(null) }
+    var pickSource by rememberSaveable { mutableStateOf<Uri?>(null) } // video waiting for its subtitle source (track / file / empty)
     var tab by rememberSaveable { mutableStateOf(0) } // 0 home, 1 videos, 2 fonts, 3 settings
     LaunchedEffect(incomingFont) {
         val u = incomingFont ?: return@LaunchedEffect
@@ -132,6 +133,17 @@ private fun AppRoot(incomingFont: Uri?, onFontHandled: () -> Unit) {
         )
         else -> {
             BackHandler(enabled = tab != 0) { tab = 0 }
+            pickSource?.let { pv ->
+                val filePicker = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { u ->
+                    if (u != null) { subVideo = pv; subUri = u; newSub = false; pickSource = null }
+                }
+                com.mediaforge.app.ui.SubSourceDialog(
+                    video = pv, onDismiss = { pickSource = null },
+                    onImport = { filePicker.launch(arrayOf("*/*")) },
+                    onEmpty = { subVideo = pv; subUri = null; newSub = true; pickSource = null },
+                    onTrack = { f, _ -> subVideo = pv; subUri = Uri.fromFile(f); newSub = false; pickSource = null },
+                )
+            }
             MainShell(tab, { tab = it }) { pad ->
                 Box(Modifier.padding(pad).consumeWindowInsets(pad)) {
                     when (tab) {
@@ -142,7 +154,7 @@ private fun AppRoot(incomingFont: Uri?, onFontHandled: () -> Unit) {
                         1 -> VideosScreen(
                             onVideo = { video = it }, onGif = { gif = it }, onBrowse = { browsing = true },
                             onSubtitle = { subUri = it }, onNewSubtitle = { newSub = true },
-                            onSubtitleVideo = { subVideo = it; newSub = true },
+                            onSubtitleVideo = { pickSource = it },
                         )
                         2 -> FontScreen(onBack = { tab = 0 })
                         else -> SettingsScreen(onBack = { tab = 0 }, onFonts = { tab = 2 })

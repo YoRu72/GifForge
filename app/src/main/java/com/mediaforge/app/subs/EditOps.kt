@@ -130,3 +130,56 @@ object Find {
         return file.copy(events = list) to n
     }
 }
+
+/** AEG-C / SE3: timing tools. Pure functions, no UI. */
+object TimeOps {
+    /** Moves the lines in [targets] by [deltaMs]. Duration is kept; nothing goes below 0 (a line that would is stopped at 0). */
+    fun shift(events: List<AssEvent>, targets: Set<Int>, deltaMs: Long): List<AssEvent> =
+        events.mapIndexed { i, e ->
+            if (i !in targets) e else {
+                val s = (e.startMs + deltaMs).coerceAtLeast(0L)
+                e.copy(startMs = s, endMs = maxOf(s + 1L, (e.endMs + deltaMs).coerceAtLeast(0L)))
+            }
+        }
+
+    /** Frame-rate change: every time is multiplied by from/to (a 23.976 fps subtitle on a 25 fps video: from=23.976, to=25). */
+    fun rescale(events: List<AssEvent>, targets: Set<Int>, fromFps: Double, toFps: Double): List<AssEvent> {
+        if (fromFps <= 0.0 || toFps <= 0.0) return events
+        val k = fromFps / toFps
+        return events.mapIndexed { i, e ->
+            if (i !in targets) e else {
+                val s = Math.round(e.startMs * k)
+                e.copy(startMs = s, endMs = maxOf(s + 1L, Math.round(e.endMs * k)))
+            }
+        }
+    }
+
+    /** Two-point sync: line [a] moves to start [aNew], line [b] to [bNew]; every time is mapped on the straight line through both. Null when impossible. */
+    fun linearSync(events: List<AssEvent>, a: Int, aNew: Long, b: Int, bNew: Long): List<AssEvent>? {
+        val ea = events.getOrNull(a) ?: return null; val eb = events.getOrNull(b) ?: return null
+        if (a == b || ea.startMs == eb.startMs) return null
+        val k = (bNew - aNew).toDouble() / (eb.startMs - ea.startMs)
+        if (k <= 0.0) return null
+        fun map(t: Long) = Math.round(aNew + (t - ea.startMs) * k).coerceAtLeast(0L)
+        return events.map { e -> val s = map(e.startMs); e.copy(startMs = s, endMs = maxOf(s + 1L, map(e.endMs))) }
+    }
+
+    /** "1.5", "-1,5", "+0.25" seconds, or "1500ms" -> milliseconds; null when it is not a number. */
+    fun parseDelta(s: String): Long? {
+        val t = s.trim().replace(',', '.').lowercase()
+        if (t.isEmpty()) return null
+        return if (t.endsWith("ms")) t.removeSuffix("ms").trim().toDoubleOrNull()?.let { Math.round(it) }
+        else t.toDoubleOrNull()?.let { Math.round(it * 1000.0) }
+    }
+}
+
+/** SE5 first part: reading speed. Counts what is read: no override tags, no line-break codes, no tashkeel or tatweel. */
+object ReadOps {
+    private val LIMITS = doubleArrayOf(12.0, 17.0, 20.0, 25.0)
+    /** Limit in characters per second, chosen in Settings (reading-speed profile). */
+    fun max(): Double = LIMITS[com.mediaforge.app.Prefs.readProfile.value.coerceIn(0, LIMITS.size - 1)]
+    private val TAG = Regex("\\{[^}]*\\}")
+    private val MARKS = Regex("[\\u0640\\u064B-\\u065F\\u0670]")
+    fun chars(text: String): Int = MARKS.replace(TAG.replace(text, "").replace("\\N", " ").replace("\\n", " ").replace("\\h", " "), "").trim().length
+    fun cps(e: AssEvent): Double { val d = e.endMs - e.startMs; return if (d <= 0L) 0.0 else chars(e.text) * 1000.0 / d }
+}

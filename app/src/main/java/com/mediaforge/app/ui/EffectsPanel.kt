@@ -72,6 +72,18 @@ private fun curveLabel(c: Curve) = when (c) {
 }
 
 /** Number of keyframe effects stored in a line (for the section badge). */
+private fun slideLabel(k: com.mediaforge.app.subs.AssLook.Slide) = when (k) {
+    com.mediaforge.app.subs.AssLook.Slide.IN_LEFT -> R.string.sl_in_left; com.mediaforge.app.subs.AssLook.Slide.IN_RIGHT -> R.string.sl_in_right
+    com.mediaforge.app.subs.AssLook.Slide.IN_BELOW -> R.string.sl_in_below; com.mediaforge.app.subs.AssLook.Slide.IN_ABOVE -> R.string.sl_in_above
+    com.mediaforge.app.subs.AssLook.Slide.OUT_LEFT -> R.string.sl_out_left; com.mediaforge.app.subs.AssLook.Slide.OUT_RIGHT -> R.string.sl_out_right
+}
+
+private fun presetLabel(p: Effects.Preset) = when (p) {
+    Effects.Preset.POP -> R.string.pre_pop; Effects.Preset.ZOOM_IN -> R.string.pre_zoom_in; Effects.Preset.ZOOM_OUT -> R.string.pre_zoom_out
+    Effects.Preset.PULSE -> R.string.pre_pulse; Effects.Preset.BLUR_IN -> R.string.pre_blur_in; Effects.Preset.BLUR_OUT -> R.string.pre_blur_out
+    Effects.Preset.GLOW -> R.string.pre_glow; Effects.Preset.SPIN -> R.string.pre_spin; Effects.Preset.SHAKE -> R.string.pre_shake; Effects.Preset.FLICKER -> R.string.pre_flicker
+}
+
 fun effectCount(e: AssEvent): Int = Effects.parse(e.text).size
 
 /**
@@ -80,7 +92,7 @@ fun effectCount(e: AssEvent): Int = Effects.parse(e.text).size
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EffectsPanel(event: AssEvent, onChange: ((AssEvent) -> AssEvent) -> Unit) {
+fun EffectsPanel(event: AssEvent, file: com.mediaforge.app.subs.SubFile? = null, onChange: ((AssEvent) -> AssEvent) -> Unit) {
     val tracks = Effects.parse(event.text)
     val dur = event.durationMs.coerceAtLeast(1L)
     var picked by remember { mutableStateOf<EffectProp?>(null) }
@@ -102,9 +114,23 @@ fun EffectsPanel(event: AssEvent, onChange: ((AssEvent) -> AssEvent) -> Unit) {
                 )
             }
         }
+        Text(stringResource(R.string.pre_title), style = MaterialTheme.typography.labelLarge)
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Effects.Preset.entries.forEach { p ->
+                FilterChip(false, { commit(Effects.withPreset(tracks, p, dur)); picked = null; selKey = 0 }, { Text(stringResource(presetLabel(p))) })
+            }
+        }
+        if (file != null) {
+            Text(stringResource(R.string.sl_title), style = MaterialTheme.typography.labelLarge)
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                com.mediaforge.app.subs.AssLook.Slide.entries.forEach { k ->
+                    FilterChip(false, { onChange { ev -> ev.copy(text = com.mediaforge.app.subs.AssLook.slide(file, ev, k)) } }, { Text(stringResource(slideLabel(k))) })
+                }
+            }
+        }
         Text(stringResource(R.string.fx_add), style = MaterialTheme.typography.labelLarge)
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            EffectProp.entries.filter { p -> tracks.none { it.prop == p } }.forEach { p ->
+            EffectProp.entries.filter { p -> tracks.none { it.prop == p } && !(p == EffectProp.SPACING && Regex("[\\u0600-\\u06FF]").containsMatchIn(event.text)) }.forEach { p ->
                 FilterChip(
                     selected = false,
                     onClick = { commit(tracks + Effects.neutral(p, dur)); picked = p; selKey = 0 },

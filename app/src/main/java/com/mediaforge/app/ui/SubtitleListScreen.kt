@@ -103,6 +103,8 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
     val ctx = LocalContext.current
     var video by remember { mutableStateOf(videoUri) }
     val videoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { u -> if (u != null) video = u }
+    var cd by remember { mutableStateOf(doc) }
+    val scope0 = androidx.compose.runtime.rememberCoroutineScope()
     var file by remember { mutableStateOf(doc.file) }
     var active by rememberSaveable { mutableStateOf(if (doc.file.events.isEmpty()) -1 else 0) }
     var marked by remember { mutableStateOf(setOf<Int>()) }
@@ -118,9 +120,9 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
     fun redo() { hist.redo()?.let { file = it; fixAfterJump() } }
 
     // A18.f autosave a moment after the last change; offer recovery when a newer unsaved copy exists
-    LaunchedEffect(file) { if (dirty && Prefs.subAutosave.value) { kotlinx.coroutines.delay(2500); withContext(Dispatchers.IO) { Autosave.write(ctx, doc.name, file) } } }
+    LaunchedEffect(file) { if (dirty && Prefs.subAutosave.value) { kotlinx.coroutines.delay(2500); withContext(Dispatchers.IO) { Autosave.write(ctx, cd.name, file) } } }
     var recovered by remember { mutableStateOf<com.mediaforge.app.subs.SubFile?>(null) }
-    LaunchedEffect(Unit) { if (Prefs.subAutosave.value) recovered = withContext(Dispatchers.IO) { Autosave.recover(ctx, doc.name, doc.file) } }
+    LaunchedEffect(Unit) { if (Prefs.subAutosave.value) recovered = withContext(Dispatchers.IO) { Autosave.recover(ctx, cd.name, doc.file) } }
 
     // A18.d find / replace
     var findOpen by rememberSaveable { mutableStateOf(false) }
@@ -139,10 +141,57 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
         file = file.copy(events = file.events.mapIndexed { k, ev -> if (k in t) f(ev) else ev }); dirty = true
     }
 
+    fun styleName() = file.styles.firstOrNull()?.name ?: "Default"
+    /** Adds a line after the active one (or at [startAt]) and selects it: the "+" of the empty state and edit header. */
+    fun addLine(startAt: Long? = null) {
+        val at = (active + 1).coerceIn(0, events.size)
+        val s0 = startAt ?: (events.getOrNull(at - 1)?.endMs ?: 0L)
+        file = file.copy(events = events.take(at) + AssEvent(startMs = s0, endMs = s0 + 2000L, style = styleName()) + events.drop(at))
+        active = at; marked = emptySet(); dirty = true
+    }
+    /** Replaces the lines with another subtitle (imported file or extracted track); undo brings the old ones back. */
+    fun adopt(d: SubDoc?) {
+        if (d == null) { Toast.makeText(ctx, R.string.sub_unreadable, Toast.LENGTH_LONG).show(); return }
+        cd = d; file = d.file; active = if (d.file.events.isEmpty()) -1 else 0; marked = emptySet(); dirty = true
+        Toast.makeText(ctx, ctx.getString(R.string.sub_imported, d.name), Toast.LENGTH_SHORT).show()
+    }
+    val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { u ->
+        if (u != null) scope0.launch { adopt(withContext(Dispatchers.IO) { readSubDoc(ctx, u) }) }
+    }
+    var tracksOpen by remember { mutableStateOf(false) }
+    var shiftOpen by remember { mutableStateOf(false) }
+    var fixOpen by remember { mutableStateOf(false) }
+    var syncOpen by remember { mutableStateOf(false) }
+    if (syncOpen) SyncDialog(events, active, { syncOpen = false }) { a, ta, b, tb ->
+        val r = com.mediaforge.app.subs.TimeOps.linearSync(file.events, a, ta, b, tb)
+        syncOpen = false
+        if (r == null) Toast.makeText(ctx, R.string.sy_failed, Toast.LENGTH_LONG).show()
+        else { file = file.copy(events = r); dirty = true; Toast.makeText(ctx, R.string.sh_done, Toast.LENGTH_SHORT).show() }
+    }
+    if (fixOpen) FixDialog(events, { fixOpen = false }) { rules ->
+        val out = com.mediaforge.app.subs.FixOps.applyAll(file.events, rules)
+        file = file.copy(events = out); active = active.coerceIn(if (out.isEmpty()) -1 else 0, out.size - 1); marked = emptySet(); dirty = true; fixOpen = false
+        Toast.makeText(ctx, R.string.fx_done, Toast.LENGTH_SHORT).show()
+    }
+    fun scopeSet(s: ShiftScope): Set<Int> = when (s) {
+        ShiftScope.ALL -> events.indices.toSet()
+        ShiftScope.FROM_ACTIVE -> events.indices.filter { it >= active }.toSet()
+        ShiftScope.SELECTED -> marked
+    }
+    if (shiftOpen) ShiftDialog(
+        hasSelection = marked.isNotEmpty(), hasActive = active in events.indices, onDismiss = { shiftOpen = false },
+        onShift = { s, d -> file = file.copy(events = com.mediaforge.app.subs.TimeOps.shift(file.events, scopeSet(s), d)); dirty = true; shiftOpen = false; Toast.makeText(ctx, R.string.sh_done, Toast.LENGTH_SHORT).show() },
+        onRescale = { s, a, b -> file = file.copy(events = com.mediaforge.app.subs.TimeOps.rescale(file.events, scopeSet(s), a, b)); dirty = true; shiftOpen = false; Toast.makeText(ctx, R.string.sh_done, Toast.LENGTH_SHORT).show() },
+    )
+    if (tracksOpen && video != null) SubSourceDialog(
+        video = video!!, onEmpty = null, onDismiss = { tracksOpen = false },
+        onImport = { tracksOpen = false; importer.launch(arrayOf("*/*")) },
+        onTrack = { f, _ -> tracksOpen = false; scope0.launch { adopt(withContext(Dispatchers.IO) { readSubDoc(ctx, android.net.Uri.fromFile(f)) }) } },
+    )
     val saver = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { u ->
         if (u != null) {
-            val ok = writeSubDoc(ctx, u, doc, file)
-            if (ok) { dirty = false; Autosave.clear(ctx, doc.name) }
+            val ok = writeSubDoc(ctx, u, cd, file)
+            if (ok) { dirty = false; Autosave.clear(ctx, cd.name) }
             Toast.makeText(ctx, if (ok) R.string.sub_saved else R.string.sub_save_failed, Toast.LENGTH_SHORT).show()
         }
     }
@@ -188,15 +237,15 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
         pendingExport = null
     }
     if (chooser) ExportChooser(
-        hasVideo = video != null, engineReady = com.mediaforge.app.media.VideoExporter.available(), defaultFormatId = doc.format.id, onDismiss = { chooser = false },
+        hasVideo = video != null, engineReady = com.mediaforge.app.media.VideoExporter.available(), defaultFormatId = cd.format.id, onDismiss = { chooser = false },
         onExportFile = { id, enc ->
-            val f = com.mediaforge.app.subs.SubFormats.byId(id) ?: doc.format
+            val f = com.mediaforge.app.subs.SubFormats.byId(id) ?: cd.format
             pendingExport = f to enc; chooser = false
-            exporter.launch(doc.name.substringBeforeLast('.') + "." + (f.extensions.firstOrNull() ?: "txt"))
+            exporter.launch(cd.name.substringBeforeLast('.') + "." + (f.extensions.firstOrNull() ?: "txt"))
         },
         onExportVideo = { m, st ->
             pendingVideo = m to st; chooser = false
-            videoSaver.launch(doc.name.substringBeforeLast('.') + (if (m == ExportMode.HARD) "_hard." else "_soft.") + st.container)
+            videoSaver.launch(cd.name.substringBeforeLast('.') + (if (m == ExportMode.HARD) "_hard." else "_soft.") + st.container)
         },
     )
     if (exporting) androidx.compose.material3.AlertDialog(
@@ -216,7 +265,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
             onDismissRequest = { recovered = null }, title = { Text(stringResource(R.string.rc_title)) },
             text = { Text(stringResource(R.string.rc_text)) },
             confirmButton = { androidx.compose.material3.TextButton(onClick = { file = rf; dirty = true; active = if (rf.events.isEmpty()) -1 else 0; recovered = null }) { Text(stringResource(R.string.rc_restore)) } },
-            dismissButton = { androidx.compose.material3.TextButton(onClick = { Autosave.clear(ctx, doc.name); recovered = null }) { Text(stringResource(R.string.rc_discard)) } },
+            dismissButton = { androidx.compose.material3.TextButton(onClick = { Autosave.clear(ctx, cd.name); recovered = null }) { Text(stringResource(R.string.rc_discard)) } },
         )
     }
     LaunchedEffect(active) { if (active in events.indices) listState.animateScrollToItem((active - 1).coerceAtLeast(0)) }
@@ -226,10 +275,10 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
             TopAppBar(
                 title = {
                     Column {
-                        Text(doc.name + if (dirty) " *" else "", maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(cd.name + if (dirty) " *" else "", maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
                         Text(
-                            ctx.resources.getQuantityString(R.plurals.sub_lines, events.size, events.size) + " - " + doc.format.label,
-                            style = MaterialTheme.typography.bodySmall,
+                            ctx.resources.getQuantityString(R.plurals.sub_lines, events.size, events.size) + " - " + (cd.format.extensions.firstOrNull() ?: cd.format.id).uppercase(),
+                            style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis,
                         )
                     }
                 },
@@ -240,7 +289,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                     IconButton(onClick = { findOpen = !findOpen }) {
                         Icon(Icons.Filled.Search, stringResource(R.string.fd_title), tint = if (findOpen) MaterialTheme.colorScheme.primary else LocalContentColor.current)
                     }
-                    IconButton(onClick = { saver.launch(doc.name) }) { Icon(Icons.Filled.Save, stringResource(R.string.save)) }
+                    IconButton(onClick = { saver.launch(cd.name) }) { Icon(Icons.Filled.Save, stringResource(R.string.save)) }
                     Box {
                         IconButton(onClick = { menuOpen = true }) { Icon(Icons.Filled.MoreVert, stringResource(R.string.more)) }
                         DropdownMenu(menuOpen, { menuOpen = false }) {
@@ -254,6 +303,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                                 leadingIcon = { Icon(Icons.Filled.Translate, null, tint = if (translate) MaterialTheme.colorScheme.primary else LocalContentColor.current) },
                                 onClick = { menuOpen = false; translate = !translate; if (translate) originals = file.events.map { it.text } },
                             )
+                            item(R.string.sub_add, ed) { addLine() }
                             item(R.string.sub_insert, ed) {
                                 val at = (active + 1).coerceIn(0, events.size)
                                 val prevEnd = events.getOrNull(at - 1)?.endMs ?: 0L
@@ -288,10 +338,15 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                             item(R.string.ln_up, ed && active > 0) { LineOps.move(events, active, -1)?.let { put(it, active - 1) } }
                             item(R.string.ln_down, ed && active in 0 until events.size - 1) { LineOps.move(events, active, 1)?.let { put(it, active + 1) } }
                             HorizontalDivider()
+                            item(R.string.sh_menu, events.isNotEmpty()) { shiftOpen = true }
+                            item(R.string.sy_menu, events.size > 1) { syncOpen = true }
+                            item(R.string.fx_menu, ed && events.isNotEmpty()) { fixOpen = true }
                             item(R.string.ln_sort_start, ed && events.size > 1) { put(LineOps.sort(events, LineOps.SortBy.START), 0) }
                             item(R.string.ln_sort_end, ed && events.size > 1) { put(LineOps.sort(events, LineOps.SortBy.END), 0) }
                             item(R.string.ln_sort_style, ed && events.size > 1) { put(LineOps.sort(events, LineOps.SortBy.STYLE), 0) }
                             HorizontalDivider()
+                            item(R.string.sub_import) { importer.launch(arrayOf("*/*")) }
+                            if (video != null) item(R.string.sub_tracks) { tracksOpen = true }
                             item(if (video == null) R.string.sv_attach else R.string.sv_detach) { if (video == null) videoPicker.launch(arrayOf("video/*")) else video = null }
                             item(R.string.ex_title) { chooser = true }
                         }
@@ -305,10 +360,11 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
             video?.let { v ->
                 SubVideoPane(
                     uri = v, file = file, events = events, active = active, onActive = { active = it },
-                    onSetStart = { t -> if (active in events.indices) edit(active) { it.copy(startMs = t, endMs = maxOf(it.endMs, t + 100L)) } },
+                    onSetStart = { t -> if (active in events.indices) edit(active) { it.copy(startMs = t, endMs = maxOf(it.endMs, t + 100L)) } else addLine(t) },
                     onSetEnd = { t -> if (active in events.indices) edit(active) { it.copy(endMs = maxOf(t, it.startMs + 1L)) } },
                     onTapChain = { t ->
-                        if (active in events.indices) {
+                        if (active !in events.indices) addLine(t)
+                        else {
                             edit(active) { it.copy(endMs = maxOf(t, it.startMs + 1L)) }
                             val next = active + 1
                             if (next < file.events.size) {
@@ -351,7 +407,12 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                 val showStyle = maxWidth >= 480.dp
                 Column {
                     GridHeader(showStyle)
-                    if (events.isEmpty()) Text(stringResource(R.string.sub_empty), Modifier.padding(24.dp))
+                    if (events.isEmpty()) Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(stringResource(R.string.sub_empty))
+                        androidx.compose.material3.Button(onClick = { addLine() }) { Icon(Icons.Filled.Add, null); Text(stringResource(R.string.sub_add), Modifier.padding(start = 8.dp)) }
+                        androidx.compose.material3.OutlinedButton(onClick = { importer.launch(arrayOf("*/*")) }) { Text(stringResource(R.string.sub_import)) }
+                        if (video != null) androidx.compose.material3.OutlinedButton(onClick = { tracksOpen = true }) { Text(stringResource(R.string.sub_tracks)) }
+                    }
                     LazyColumn(state = listState, modifier = Modifier.weight(1f)) {
                         itemsIndexed(events) { i, e ->
                             GridRow(
@@ -374,7 +435,16 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                 var lookOpen by rememberSaveable(active) { mutableStateOf(false) }
                 Column(Modifier.weight(if (video != null) 0.9f else 1.15f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 6.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(stringResource(R.string.sub_line_n, active + 1, events.size), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.sub_line_n, active + 1, events.size), style = MaterialTheme.typography.titleSmall)
+                            val cps = com.mediaforge.app.subs.ReadOps.cps(e)
+                            val tooFast = cps > com.mediaforge.app.subs.ReadOps.max()
+                            Text(
+                                stringResource(R.string.cps_label, Math.round(cps).toInt()) + if (tooFast) " - " + stringResource(R.string.cps_high) else "",
+                                style = MaterialTheme.typography.labelSmall, color = if (tooFast) MaterialTheme.colorScheme.error else LocalContentColor.current,
+                            )
+                        }
+                        if (!translate) IconButton(onClick = { addLine() }) { Icon(Icons.Filled.Add, stringResource(R.string.sub_add)) }
                         IconButton(enabled = active > 0, onClick = { active -= 1 }) { Icon(Icons.Filled.KeyboardArrowUp, stringResource(R.string.sub_prev)) }
                         IconButton(enabled = active < events.size - 1, onClick = { active += 1 }) { Icon(Icons.Filled.KeyboardArrowDown, stringResource(R.string.sub_next)) }
                     }
@@ -409,7 +479,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                     AnimatedVisibility(lookOpen) { LookPanel(file, e) { f -> editTargets(f) } }
                     val n = effectCount(e)
                     SectionHeader(if (n > 0) stringResource(R.string.sub_effects_count, n) else stringResource(R.string.sub_effects), effectsOpen) { effectsOpen = !effectsOpen }
-                    AnimatedVisibility(effectsOpen) { EffectsPanel(e) { f -> edit(active, f) } }
+                    AnimatedVisibility(effectsOpen) { EffectsPanel(e, file) { f -> edit(active, f) } }
                 }
             }
         }
@@ -454,7 +524,8 @@ private fun GridRow(
         isMarked -> MaterialTheme.colorScheme.secondaryContainer
         else -> Color.Transparent
     }
-    val dim = if (e.comment) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
+    val fast = !e.comment && com.mediaforge.app.subs.ReadOps.cps(e) > com.mediaforge.app.subs.ReadOps.max()
+    val dim = if (e.comment) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f) else if (fast) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
     Row(
         Modifier.fillMaxWidth().background(bg).combinedClickable(onClick = onClick, onLongClick = onLong).padding(horizontal = 8.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,

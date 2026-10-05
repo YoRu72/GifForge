@@ -128,3 +128,24 @@ fun drawLayers(c: Canvas, layers: List<RenderedLayer>, tMs: Long? = null) {
         c.drawBitmap(l.bmp, 0f, 0f, p)
     }
 }
+
+/** String resource of a blend mode's name (labels above stay as the English fallback). */
+fun LayerBlend.labelRes(): Int = when (this) {
+    LayerBlend.NORMAL -> com.mediaforge.app.R.string.blend_normal
+    LayerBlend.MULTIPLY -> com.mediaforge.app.R.string.blend_multiply
+    LayerBlend.SCREEN -> com.mediaforge.app.R.string.blend_screen
+    LayerBlend.OVERLAY -> com.mediaforge.app.R.string.blend_overlay
+    LayerBlend.DARKEN -> com.mediaforge.app.R.string.blend_darken
+    LayerBlend.LIGHTEN -> com.mediaforge.app.R.string.blend_lighten
+    LayerBlend.ADD -> com.mediaforge.app.R.string.blend_add
+    LayerBlend.DIFFERENCE -> com.mediaforge.app.R.string.blend_difference
+    LayerBlend.EXCLUSION -> com.mediaforge.app.R.string.blend_exclusion
+    LayerBlend.COLOR_DODGE -> com.mediaforge.app.R.string.blend_color_dodge
+    LayerBlend.COLOR_BURN -> com.mediaforge.app.R.string.blend_color_burn
+    LayerBlend.HARD_LIGHT -> com.mediaforge.app.R.string.blend_hard_light
+    LayerBlend.SOFT_LIGHT -> com.mediaforge.app.R.string.blend_soft_light
+    LayerBlend.HUE -> com.mediaforge.app.R.string.blend_hue
+    LayerBlend.SATURATION -> com.mediaforge.app.R.string.blend_saturation
+    LayerBlend.COLOR -> com.mediaforge.app.R.string.blend_color
+    LayerBlend.LUMINOSITY -> com.mediaforge.app.R.string.blend_luminosity
+}
