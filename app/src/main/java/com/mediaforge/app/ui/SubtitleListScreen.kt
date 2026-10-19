@@ -162,12 +162,30 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
     var shiftOpen by remember { mutableStateOf(false) }
     var fixOpen by remember { mutableStateOf(false) }
     var stylesOpen by remember { mutableStateOf(false) } // 19.a styles manager
+    var tppOpen by remember { mutableStateOf(false) }    // 23.b timing post-processor
+    var selOpen by remember { mutableStateOf(false) }    // AEGX6 select lines
+    var propsOpen by remember { mutableStateOf(false) }  // 19.b script properties + 23.d resampler
+    val vinfo by androidx.compose.runtime.produceState<com.mediaforge.app.media.VideoInfo?>(null, video) {
+        value = video?.let { com.mediaforge.app.media.readVideoInfo(ctx, it) }
+    }
     var syncOpen by remember { mutableStateOf(false) }
     if (syncOpen) SyncDialog(events, active, { syncOpen = false }) { a, ta, b, tb ->
         val r = com.mediaforge.app.subs.TimeOps.linearSync(file.events, a, ta, b, tb)
         syncOpen = false
         if (r == null) Toast.makeText(ctx, R.string.sy_failed, Toast.LENGTH_LONG).show()
         else { file = file.copy(events = r); dirty = true; Toast.makeText(ctx, R.string.sh_done, Toast.LENGTH_SHORT).show() }
+    }
+    if (tppOpen) TimingPostDialog(file, marked, video, onDismiss = { tppOpen = false }) { out ->
+        if (out != file.events) { file = file.copy(events = out); dirty = true }
+        tppOpen = false
+    }
+    if (selOpen) SelectLinesDialog(file, marked, onDismiss = { selOpen = false }) { m ->
+        marked = m; selOpen = false
+        Toast.makeText(ctx, ctx.getString(R.string.sel_count, m.size), Toast.LENGTH_SHORT).show()
+    }
+    if (propsOpen) PropertiesDialog(file, vinfo?.width ?: 0, vinfo?.height ?: 0, onDismiss = { propsOpen = false }) { f2 ->
+        if (f2 != file) { file = f2; dirty = true }
+        propsOpen = false
     }
     if (stylesOpen) StylesDialog(file, marked, onDismiss = { stylesOpen = false }) { f2 -> if (f2 != file) { file = f2; dirty = true } }
     if (fixOpen) FixDialog(events, { fixOpen = false }) { out, n ->
@@ -343,6 +361,9 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                             item(R.string.sy_menu, events.size > 1) { syncOpen = true }
                             item(R.string.fx_menu, ed && events.isNotEmpty()) { fixOpen = true }
                             item(R.string.stl_menu) { stylesOpen = true }
+                            item(R.string.pr_menu) { propsOpen = true }
+                            item(R.string.sel_menu, events.isNotEmpty()) { selOpen = true }
+                            item(R.string.tpp_menu, events.isNotEmpty()) { tppOpen = true }
                             item(R.string.ar_repair, ed && events.isNotEmpty()) {
                                 val r = com.mediaforge.app.subs.ArabicTools.guessRepair(events.map { it.text })
                                 if (r == null) Toast.makeText(ctx, R.string.ar_repair_none, Toast.LENGTH_SHORT).show()
