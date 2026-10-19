@@ -44,7 +44,7 @@ object SrtFormat : SubFormat {
             val rgb = m.groupValues[1]
             "{\\c&H${rgb.substring(4, 6)}${rgb.substring(2, 4)}${rgb.substring(0, 2)}&}".uppercase(Locale.US).replace("\\C&H", "\\c&H")
         }
-        t = t.replace(Regex("</font\\s*>", RegexOption.IGNORE_CASE), "{\\c}")
+        t = t.replace(Regex("</font\\s*>", RegexOption.IGNORE_CASE), "{\\\\c}") // "\\\\" = one literal backslash in a replacement
         for (x in TAG_MAP) {
             t = t.replace(Regex("<$x>", RegexOption.IGNORE_CASE), "{\\\\${x}1}")
             t = t.replace(Regex("</$x>", RegexOption.IGNORE_CASE), "{\\\\${x}0}")
@@ -59,7 +59,7 @@ object SrtFormat : SubFormat {
             if (e.comment) continue
             sb.append(n++).append('\n')
             sb.append(fmt(e.startMs)).append(" --> ").append(fmt(e.endMs)).append('\n')
-            sb.append(assToSrt(e.text).trim('\n').replace(Regex("\n{2,}"), "\n")).append("\n\n")
+            sb.append(assToSrt(e.text, colors = true).trim('\n').replace(Regex("\n{2,}"), "\n")).append("\n\n")
         }
         return sb.toString()
     }
@@ -70,11 +70,16 @@ object SrtFormat : SubFormat {
     }
 
     private val SIMPLE = Regex("""\\([ibus])(\d+)""")
+    private val COLOUR = Regex("""\\1?c(?:&H([0-9a-fA-F]{1,8})&?)?(?=\\|$)""")
 
-    /** Drops override blocks but keeps italic/bold/underline/strike as HTML-style tags. */
-    fun assToSrt(t: String, keys: Set<String> = setOf("i", "b", "u", "s"), escape: Boolean = false): String {
+    /**
+     * Drops override blocks but keeps italic/bold/underline/strike as HTML-style tags; with [colors] the primary
+     * colour (\c / \1c) becomes `<font color="#RRGGBB">` and a bare \c closes it.
+     */
+    fun assToSrt(t: String, keys: Set<String> = setOf("i", "b", "u", "s"), escape: Boolean = false, colors: Boolean = false): String {
         val sb = StringBuilder()
         val open = HashMap<String, Boolean>()
+        var font = false
         var i = 0
         while (i < t.length) {
             val c = t[i]
@@ -88,6 +93,15 @@ object SrtFormat : SubFormat {
                         if (on != (open[key] == true)) {
                             sb.append(if (on) "<$key>" else "</$key>")
                             open[key] = on
+                        }
+                    }
+                    if (colors) for (m in COLOUR.findAll(t.substring(i + 1, j))) {
+                        if (font) { sb.append("</font>"); font = false }
+                        val hex = m.groupValues[1]
+                        if (hex.isNotEmpty()) {
+                            val v = hex.padStart(6, '0').takeLast(6) // BBGGRR
+                            sb.append("<font color=\"#").append(v.substring(4, 6)).append(v.substring(2, 4)).append(v.substring(0, 2)).append("\">")
+                            font = true
                         }
                     }
                     i = j + 1
@@ -111,6 +125,7 @@ object SrtFormat : SubFormat {
             i++
         }
         for ((k, on) in open) if (on) sb.append("</$k>")
+        if (font) sb.append("</font>")
         return sb.toString()
     }
 }

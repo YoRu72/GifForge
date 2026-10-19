@@ -36,6 +36,15 @@ data class ShapeElement(
 ) {
     val isLine: Boolean get() = kind == ShapeKind.LINE || kind == ShapeKind.ARROW
 
+    /** Pinch resize. A picture scales uniformly (the factor is limited so neither side leaves 0.02..1.5 and it never stretches). */
+    fun scaled(k: Float): ShapeElement {
+        if (kind != ShapeKind.IMAGE) return copy(w = (w * k).coerceIn(0.02f, 1.5f), h = (h * k).coerceIn(0.02f, 1.5f))
+        val lo = maxOf(0.02f / w, 0.02f / h)
+        val hi = minOf(1.5f / w, 1.5f / h)
+        val f = if (lo <= hi) k.coerceIn(lo, hi) else 1f
+        return copy(w = w * f, h = h * f)
+    }
+
     companion object {
         fun default(kind: ShapeKind, id: Long): ShapeElement = when (kind) {
             ShapeKind.LINE -> ShapeElement(id, kind, w = 0.5f, h = 0.05f, stroke = 0xFFF44336.toInt(), strokePct = 1.5f)

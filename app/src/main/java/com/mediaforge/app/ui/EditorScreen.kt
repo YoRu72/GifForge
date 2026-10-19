@@ -346,11 +346,9 @@ fun EditorScreen(uri: Uri, onBack: () -> Unit, fpsHint: Int? = null, fullClip: B
                                     val dw = fr.w * (cr.r - cr.l)
                                     val dh = fr.h * (cr.b - cr.t)
                                     state.updateElement(selEl.id) {
-                                        it.copy(
+                                        it.scaled(zoom).copy(
                                             cx = (it.cx + pan.x / dw).coerceIn(0f, 1f),
                                             cy = (it.cy + pan.y / dh).coerceIn(0f, 1f),
-                                            w = (it.w * zoom).coerceIn(0.02f, 1.5f),
-                                            h = (it.h * zoom).coerceIn(0.02f, 1.5f),
                                             rotation = normDeg(it.rotation + rot),
                                         )
                                     }

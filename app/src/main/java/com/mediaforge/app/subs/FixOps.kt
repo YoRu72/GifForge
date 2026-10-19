@@ -1,60 +1,136 @@
 package com.mediaforge.app.subs
 
-/** SE2 + AR6 first part: Fix Common Errors rules. Pure functions; the dialog counts each rule, then applies the chosen ones. */
-enum class FixRule { EMPTY, SPACES, OVERLAP, SHORT, SPEED, LONG, AR_PUNCT, AR_DIGITS }
+/**
+ * SE2 + AR6: Subtitle Edit style "Fix common errors". Every rule can be switched off, every single fix can be unticked
+ * in the preview, and running again with the unticked fixes in `skip` gives exactly the previewed result.
+ * Comment lines are never touched; override blocks {...} and the codes \N \n \h are never edited.
+ */
+enum class FixRule {
+    EMPTY,      // drop lines with no visible text; trim stray \N
+    SPACES,     // double spaces, spaces at the ends and around \N
+    AR_PUNCT,   // , ; ? -> ، ؛ ؟ and "..." -> «...» in right-to-left lines; visual-order punctuation moved to the end
+    AR_DIGITS,  // ٠١٢ / ۰۱۲ -> 0 1 2
+    LONE_I,     // English "i" / "i'm" -> "I" / "I'm" (left-to-right lines only)
+    OVERLAP,    // a line ends after the next one starts (same layer)
+    SHORT_GAP,  // gap shorter than the minimum gap (flicker)
+    SHORT,      // shown too briefly
+    SPEED,      // more characters per second than the reading-speed profile allows
+    LONG,       // shown too long
+}
 
 object FixOps {
-    const val MIN_MS = 500L
-    const val MAX_MS = 7000L
-    private val TAG = Regex("\\{[^}]*\\}")
-    private val ARABIC = Regex("[\\u0600-\\u06FF]")
+    data class Options(
+        val minMs: Long = 500,
+        val maxMs: Long = 7000,
+        val gapMs: Long = 24,
+        val maxCps: Double = 17.0,
+    )
 
-    /** Applies [f] to the visible text only; override blocks {...} stay untouched. */
-    private fun plainMap(s: String, f: (String) -> String): String {
-        val sb = StringBuilder(); var last = 0
-        for (m in TAG.findAll(s)) { sb.append(f(s.substring(last, m.range.first))).append(m.value); last = m.range.last + 1 }
-        return sb.append(f(s.substring(last))).toString()
+    /** [line] = index in the list as opened (stable across rules). [after] null = the line is deleted. */
+    data class Fix(val rule: FixRule, val line: Int, val before: AssEvent, val after: AssEvent?) {
+        val key: String get() = rule.name + "#" + line
     }
-    private fun visible(s: String) = TAG.replace(s, "").replace("\\N", "").replace("\\n", "").replace("\\h", "").isBlank()
 
-    fun apply(events: List<AssEvent>, rule: FixRule): List<AssEvent> = when (rule) {
-        FixRule.EMPTY -> events.filterNot { !it.comment && visible(it.text) }
-        FixRule.SPACES -> events.map { e -> e.copy(text = plainMap(e.text) { it.replace(Regex(" {2,}"), " ").replace(" \\N", "\\N").replace("\\N ", "\\N") }.trim()) }
-        FixRule.OVERLAP -> events.mapIndexed { i, e ->
-            val n = events.getOrNull(i + 1)
-            if (!e.comment && n != null && !n.comment && n.startMs > e.startMs && e.endMs > n.startMs) e.copy(endMs = n.startMs) else e
+    class Result(val events: List<AssEvent>, val fixes: List<Fix>) {
+        fun count(r: FixRule) = fixes.count { it.rule == r }
+    }
+
+    private class Item(val line: Int, var e: AssEvent?)
+
+    private val TAG = Regex("""\{[^}]*\}""")
+    private fun visible(t: String) = TAG.replace(t, "").replace("\\N", "").replace("\\n", "").replace("\\h", "").trim()
+
+    fun run(events: List<AssEvent>, rules: Set<FixRule>, opt: Options = Options(), skip: Set<String> = emptySet()): Result {
+        val items = events.mapIndexed { i, e -> Item(i, e) }
+        val fixes = ArrayList<Fix>()
+
+        fun record(it: Item, r: FixRule, before: AssEvent, after: AssEvent?) {
+            val fx = Fix(r, it.line, before, after)
+            fixes += fx
+            if (fx.key !in skip) it.e = after
         }
-        FixRule.SHORT -> events.mapIndexed { i, e ->
-            if (e.comment || e.endMs - e.startMs >= MIN_MS) e else {
-                val room = events.getOrNull(i + 1)?.takeIf { !it.comment && it.startMs > e.startMs }?.startMs ?: Long.MAX_VALUE
-                val end = minOf(e.startMs + MIN_MS, room)
-                if (end > e.endMs) e.copy(endMs = end) else e
+
+        fun textRule(r: FixRule, f: (String) -> String) {
+            if (r !in rules) return
+            for (it in items) {
+                val e = it.e ?: continue
+                if (e.comment) continue
+                val t = f(e.text)
+                if (t != e.text) record(it, r, e, e.copy(text = t))
             }
         }
-        // too fast: give the line more time (never into the next line); lines with no room are left for the owner
-        FixRule.SPEED -> events.mapIndexed { i, e ->
-            if (e.comment || ReadOps.cps(e) <= ReadOps.max()) e else {
-                val need = Math.ceil(ReadOps.chars(e.text) * 1000.0 / ReadOps.max()).toLong()
-                val room = events.getOrNull(i + 1)?.takeIf { !it.comment && it.startMs > e.startMs }?.startMs ?: Long.MAX_VALUE
-                val end = minOf(e.startMs + need, room)
-                if (end > e.endMs) e.copy(endMs = end) else e
+
+        if (FixRule.EMPTY in rules) for (it in items) {
+            val e = it.e ?: continue
+            if (e.comment) continue
+            if (visible(e.text).isEmpty() && !e.text.contains("\\p")) record(it, FixRule.EMPTY, e, null) // \p drawings are not empty
+            else trimBreaks(e.text).let { t -> if (t != e.text) record(it, FixRule.EMPTY, e, e.copy(text = t)) }
+        }
+        textRule(FixRule.SPACES) { spaces(it) }
+        textRule(FixRule.AR_PUNCT) { ArabicTools.arabicPunctuation(it) }
+        textRule(FixRule.AR_DIGITS) { t -> mapOutsideCodes(t) { westernDigits(it) } }
+        textRule(FixRule.LONE_I) { loneI(it) }
+
+        // timing rules: per layer, in time order (lines of other layers may overlap on purpose)
+        fun timeRule(r: FixRule, f: (cur: AssEvent, next: AssEvent?) -> AssEvent) {
+            if (r !in rules) return
+            val groups = items.filter { it.e?.comment == false }.groupBy { it.e!!.layer }
+            for ((_, group) in groups) {
+                val ordered = group.sortedWith(compareBy({ it.e!!.startMs }, { it.line }))
+                for ((k, it) in ordered.withIndex()) {
+                    val e = it.e ?: continue
+                    val n = f(e, ordered.getOrNull(k + 1)?.e)
+                    if (n != e) record(it, r, e, n)
+                }
             }
         }
-        FixRule.LONG -> events.map { e -> if (!e.comment && e.endMs - e.startMs > MAX_MS) e.copy(endMs = e.startMs + MAX_MS) else e }
-        FixRule.AR_PUNCT -> events.map { e ->
-            if (!ARABIC.containsMatchIn(e.text)) e else e.copy(text = plainMap(e.text) { it.replace(',', '،').replace(';', '؛').replace('?', '؟') })
+        fun room(e: AssEvent, nx: AssEvent?) = if (nx != null && nx.startMs >= e.startMs) nx.startMs - opt.gapMs else Long.MAX_VALUE
+
+        timeRule(FixRule.OVERLAP) { e, nx ->
+            // same start = two speakers / top + bottom on purpose: not an error
+            if (nx != null && e.endMs > nx.startMs && nx.startMs > e.startMs) e.copy(endMs = maxOf(e.startMs + 1, nx.startMs - opt.gapMs)) else e
         }
-        FixRule.AR_DIGITS -> events.map { e ->
-            e.copy(text = plainMap(e.text) { s -> buildString { for (c in s) append(if (c in '\u0660'..'\u0669') '0' + (c - '\u0660') else if (c in '\u06F0'..'\u06F9') '0' + (c - '\u06F0') else c) } })
+        timeRule(FixRule.SHORT_GAP) { e, nx ->
+            if (nx != null && nx.startMs - e.endMs in 1 until opt.gapMs && nx.startMs - opt.gapMs > e.startMs) e.copy(endMs = nx.startMs - opt.gapMs) else e
         }
+        timeRule(FixRule.SHORT) { e, nx ->
+            if (e.durationMs >= opt.minMs) e else minOf(e.startMs + opt.minMs, room(e, nx)).let { end -> if (end > e.endMs) e.copy(endMs = end) else e }
+        }
+        timeRule(FixRule.SPEED) { e, nx ->
+            val need = Math.ceil(ReadOps.chars(e.text) * 1000.0 / opt.maxCps).toLong()
+            if (opt.maxCps <= 0.0 || e.durationMs >= need) e
+            else minOf(e.startMs + need, room(e, nx)).let { end -> if (end > e.endMs) e.copy(endMs = end) else e }
+        }
+        timeRule(FixRule.LONG) { e, _ -> if (e.durationMs > opt.maxMs) e.copy(endMs = e.startMs + opt.maxMs) else e }
+
+        return Result(items.mapNotNull { it.e }, fixes)
     }
 
-    /** How many lines the rule would change (removed lines count too). */
-    fun count(events: List<AssEvent>, rule: FixRule): Int {
-        val r = apply(events, rule)
-        return if (r.size != events.size) events.size - r.size else events.indices.count { events[it] != r[it] }
+    /** Leading/trailing/doubled \N removed (override blocks at the start stay first). */
+    fun trimBreaks(t: String): String {
+        val lead = Regex("""^(\{[^}]*\})*""").find(t)?.value.orEmpty()
+        var body = t.substring(lead.length)
+        while (true) {
+            val b = body.trim(' ').removePrefix("\\N").removeSuffix("\\N").replace("\\N\\N", "\\N").replace(Regex("""\\N\s+\\N"""), "\\\\N")
+            if (b == body) break
+            body = b
+        }
+        return lead + body
     }
 
-    fun applyAll(events: List<AssEvent>, rules: Set<FixRule>): List<AssEvent> =
-        FixRule.values().filter { it in rules }.fold(events) { acc, r -> apply(acc, r) }
+    fun spaces(t: String): String = t
+        .replace(Regex("[ \\t]{2,}"), " ")
+        .replace(Regex(""" *\\N *"""), "\\\\N")
+        .trim(' ')
+
+    fun westernDigits(s: String): String = buildString {
+        for (c in s) append(if (c in '\u0660'..'\u0669') '0' + (c - '\u0660') else if (c in '\u06F0'..'\u06F9') '0' + (c - '\u06F0') else c)
+    }
+
+    private val LONE = Regex("""(?<![\p{L}\p{N}'’])i(?![\p{L}\p{N}])""")
+    fun loneI(t: String): String {
+        val plain = AssLook.plainText(t)
+        if (RtlFix.isRtl(plain) || plain.none { it in 'a'..'z' }) return t
+        return mapOutsideCodes(t) { LONE.replace(it, "I") }
+    }
 }

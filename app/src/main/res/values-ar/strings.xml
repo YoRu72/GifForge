@@ -497,7 +497,7 @@
     <string name="sh_image">صورة</string>
     <string name="el_add_image">إضافة صورة (PNG وJPG وWebP وSVG…)</string>
     <string name="el_image_failed">تعذّرت قراءة الصورة</string>
-    <string name="el_image_note">يتحوّل SVG إلى صورة حادّة عند الاستيراد. التحريك والتحجيم والتدوير والشفافية والمزج والتوقيت كأي طبقة.</string>
+    <string name="el_image_note">يتحوّل SVG إلى صورة حادّة عند الاستيراد. التحريك والتحجيم والدوران والشفافية والمزج والتوقيت كأي طبقة.</string>
     <string name="st_title">مسارات الترجمة في الفيديو</string>
     <string name="st_extracting">جارٍ استخراج الترجمة...</string>
     <string name="st_none">لا مسارات ترجمة مضمّنة في هذا الفيديو.</string>
@@ -544,13 +544,11 @@
     <string name="fx_empty">حذف الأسطر الفارغة</string>
     <string name="fx_spaces">إزالة المسافات الزائدة</string>
     <string name="fx_overlap">إصلاح تداخل التوقيت</string>
-    <string name="fx_short">إطالة الأسطر الأقصر من نصف ثانية</string>
-    <string name="fx_long">تقصير الأسطر الأطول من 7 ثوانٍ</string>
-    <string name="fx_ar_punct">علامات الترقيم العربية ، ؛ ؟</string>
+    <string name="fx_short">إطالة ما قصُر عرضه</string>
+    <string name="fx_long">تقصير ما طال عرضه</string>
+    <string name="fx_ar_punct">الترقيم العربي (، ؛ ؟ « ») في الأسطر اليمينية</string>
     <string name="fx_ar_digits">الأرقام إلى 1234567</string>
-    <string name="fx_count">%1$d سطر</string>
     <string name="fx_none">لا شيء يحتاج إصلاحًا</string>
-    <string name="fx_done">تم الإصلاح</string>
     <string name="sy_title">مزامنة بنقطتين</string>
     <string name="sy_menu">مزامنة بنقطتين</string>
     <string name="sy_hint">حدّد البداية الجديدة لسطرين، وتُمدَّد بقية الأوقات بما يوافقهما.</string>
@@ -585,4 +583,21 @@
     <string name="sl_in_above">نزول من الأعلى</string>
     <string name="sl_out_left">خروج إلى اليسار</string>
     <string name="sl_out_right">خروج إلى اليمين</string>
+    <string name="fx_short_gap">توسيع الفجوات الضيّقة</string>
+    <string name="fx_lone_i">الإنجليزية: i المفردة ← I</string>
+    <string name="fx_min_dur">أدنى مدّة (ms)</string>
+    <string name="fx_max_dur">أقصى مدّة (ms)</string>
+    <string name="fx_min_gap">أدنى فجوة (ms)</string>
+    <string name="fx_apply_n">تطبيق (%1$d)</string>
+    <string name="fx_removed">يُحذف السطر</string>
+    <string name="fx_line">السطر %1$d</string>
+    <string name="fx_done_n">الإصلاحات المطبّقة: %1$d</string>
+    <string name="ar_rtl_line">سطر يميني</string>
+    <string name="ar_fix_punct">ترقيم عربي</string>
+    <string name="ar_iso_ltr">عزل يساري</string>
+    <string name="ar_iso_rtl">عزل يميني</string>
+    <string name="ar_clear_marks">حذف علامات الاتجاه</string>
+    <string name="ar_repair">إصلاح العربية المشوّهة</string>
+    <string name="ar_repair_none">لا عربيّة مشوّهة</string>
+    <string name="ar_repair_done">الأسطر المُصلَحة: %1$d (نصّ %2$s قُرئ بترميز %3$s)</string>
 </resources>

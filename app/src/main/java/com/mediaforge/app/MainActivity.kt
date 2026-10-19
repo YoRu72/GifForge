@@ -64,7 +64,10 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
         setContent {
             val pref = Prefs.lang.value
-            val lctx = remember(pref) { AppLang.wrap(this@MainActivity, pref) }
+            // the activity handles rotation itself (manifest configChanges, so open scripts and players survive it);
+            // re-wrap on every new configuration so screen size and orientation stay current under the app language
+            val sysConf = LocalConfiguration.current
+            val lctx = remember(pref, sysConf) { AppLang.wrap(this@MainActivity, pref) }
             CompositionLocalProvider(
                 LocalContext provides lctx,
                 LocalConfiguration provides lctx.resources.configuration,

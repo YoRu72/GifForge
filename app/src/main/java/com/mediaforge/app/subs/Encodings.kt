@@ -88,16 +88,31 @@ object Encodings {
         if (n < 8) return null
         var evenZero = 0
         var oddZero = 0
+        var evenLow = 0
+        var oddLow = 0
+        val evenHist = IntArray(256)
+        val oddHist = IntArray(256)
+        // "low" = a byte below 0x20 that is not tab/LF/CR. UTF-8 and 8-bit text never contain them, but they are the
+        // high byte of UTF-16 ASCII (0x00), Greek (0x03), Cyrillic (0x04), Hebrew (0x05) and Arabic (0x06).
+        fun low(x: Byte) = (x.toInt() and 0xFF) < 0x20 && x != 9.toByte() && x != 10.toByte() && x != 13.toByte()
         var i = 0
         while (i < n) {
             if (bytes[i] == 0.toByte()) evenZero++
             if (bytes[i + 1] == 0.toByte()) oddZero++
+            if (low(bytes[i])) evenLow++
+            if (low(bytes[i + 1])) oddLow++
+            evenHist[bytes[i].toInt() and 0xFF]++
+            oddHist[bytes[i + 1].toInt() and 0xFF]++
             i += 2
         }
         val half = n / 2
+        fun top2(h: IntArray) = h.sortedDescending().let { it[0] + it[1] }
         return when {
             oddZero > half * 0.3 && evenZero < half * 0.02 -> Charsets.UTF_16LE
             evenZero > half * 0.3 && oddZero < half * 0.02 -> Charsets.UTF_16BE
+            // non-Latin text with few spaces: the high bytes are one script byte (+ 0x00), the low bytes vary
+            oddLow > half * 0.5 && top2(oddHist) > half * 0.85 && evenLow < half * 0.3 -> Charsets.UTF_16LE
+            evenLow > half * 0.5 && top2(evenHist) > half * 0.85 && oddLow < half * 0.3 -> Charsets.UTF_16BE
             else -> null
         }
     }
@@ -150,32 +165,59 @@ object Encodings {
         var lower = 0
         var cased = 0
         var alAl = 0
-        var marks = 0
+        var marks = 0 // combining marks that follow a letter or another mark (Arabic tashkeel, Hebrew points, accents)
+        var orphans = 0 // combining marks after a space, digit or punctuation: a sign of the wrong charset
+        var prevLetterOrMark = false
+        var cyr = 0
+        var greek = 0
+        var tonos = 0 // modern Greek puts an accent on almost every word; Hebrew misread as Greek has none
+        var sigma = 0
+        var spaces = 0
+        var han = 0 // Chinese/Japanese text has almost no ASCII spaces between ideographs; Greek or Hebrew misread as GBK/Big5 has many
+        var cyrRare = 0 // й ш щ ъ: about 2-5 % of Russian/Ukrainian/Bulgarian letters, 15 %+ in Hebrew read as Cyrillic
+        var cyrExt = 0 // ђ ѓ є ѕ і ї ј љ њ ћ ќ ў џ...: a few % in Ukrainian/Serbian, far more in mis-decoded Greek
+        var flips = 0 // an upper-case letter right after a lower-case one ("пРИВЕТ"): rare in real text, common in mojibake
         var prev = 0
         val scripts = HashMap<Character.UnicodeScript, Int>()
         var i = 0
         while (i < text.length) {
             val cp = text.codePointAt(i)
             i += Character.charCount(cp)
-            if (cp < 0x80) { prev = cp; continue }
+            if (cp < 0x80) { if (cp == 0x20) spaces++; prev = cp; prevLetterOrMark = Character.isLetter(cp); continue }
             nonAscii++
             if (!Character.isDefined(cp) || Character.isISOControl(cp) || cp == 0xFFFD) bad++
             if (Character.isLetter(cp)) {
                 letters++
-                scripts.merge(Character.UnicodeScript.of(cp), 1) { a, c -> a + c }
-                if (Character.isLowerCase(cp)) { lower++; cased++ } else if (Character.isUpperCase(cp)) cased++
+                val sc = Character.UnicodeScript.of(cp)
+                scripts.merge(sc, 1) { a, c -> a + c }
+                if (sc == Character.UnicodeScript.HAN) han++
+                if (Character.isLowerCase(cp)) { lower++; cased++ } else if (Character.isUpperCase(cp)) {
+                    cased++
+                    if (prev >= 0x80 && Character.isLowerCase(prev)) flips++
+                }
             }
-            if (cp in 0x064B..0x0652 || cp == 0x0640) marks++
+            val isMark = Character.getType(cp) == Character.NON_SPACING_MARK.toInt()
+            if (isMark) { if (prevLetterOrMark) marks++ else orphans++ }
+            if (cp in 0x0386..0x03CE) { greek++; if (cp == 0x0386 || cp in 0x0388..0x038F || cp in 0x03AC..0x03AF || cp in 0x03CC..0x03CE) tonos++ }
+            if (prev == 0x03C2 && Character.isLetter(cp)) sigma++ // final sigma inside a word: not Greek
+            if (cp in 0x0400..0x045F) { cyr++; if (Character.toLowerCase(cp) in intArrayOf(0x0439, 0x0448, 0x0449, 0x044A)) cyrRare++; if ((cp < 0x0410 || cp > 0x044F) && cp != 0x0401 && cp != 0x0451) cyrExt++ }
             if (cp == 0x0644 && prev == 0x0627) alAl++ // ال
+            prevLetterOrMark = Character.isLetter(cp) || (isMark && prevLetterOrMark) || cp == 0x0640 // tatweel carries marks too
             prev = cp
         }
         if (nonAscii == 0) return 0.0
         val dominant = scripts.values.maxOrNull() ?: 0
-        var s = letters.toDouble() / nonAscii - 2.0 * bad / nonAscii
+        var s = (letters + marks).toDouble() / nonAscii - 2.0 * bad / nonAscii
         s += 0.5 * dominant / max(1, letters)
-        if (cased > 0) s += 0.5 * lower.toDouble() / cased
+        // casing can only cost points (all caps, mid-word capitals), so caseless scripts (Arabic, Hebrew) are not behind
+        if (cased > 0) s -= 0.5 * (cased - lower).toDouble() / cased + 3.0 * flips / cased
         s += 2.0 * alAl / max(1, letters)
-        s -= 1.0 * marks / max(1, letters)
+        s -= 2.0 * orphans / max(1, letters)
+        if (cyr > 0 && cyrExt > cyr * 0.12) s -= 2.0 * cyrExt / cyr
+        if (cyr > 0 && cyrRare > cyr * 0.12) s -= 2.0 * cyrRare / cyr
+        if (han > 0 && spaces > han * 0.15) s -= 1.0
+        if (greek >= 8 && tonos == 0) s -= 0.5
+        s -= 1.0 * sigma / max(1, greek) * 4
         return s
     }
 }

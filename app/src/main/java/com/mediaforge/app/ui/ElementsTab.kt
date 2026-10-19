@@ -115,7 +115,7 @@ fun ElementsTab(state: EditorState, player: Player) {
 
         LabeledSlider(stringResource(R.string.el_width), "${(sel.w * 100).roundToInt()}%", sel.w, 0.02f..1.5f, 0) { v ->
             // a picture keeps its proportions: height follows width
-            edit { if (it.kind == ShapeKind.IMAGE && it.w > 0f) it.copy(w = v, h = it.h * v / it.w) else it.copy(w = v) }
+            edit { if (it.kind == ShapeKind.IMAGE && it.w > 0f) it.scaled(v / it.w) else it.copy(w = v) }
         }
         if (sel.kind != ShapeKind.LINE && sel.kind != ShapeKind.IMAGE) {
             LabeledSlider(

@@ -30,6 +30,7 @@ android {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
         jniLibs.useLegacyPackaging = true
     }
+    testOptions { unitTests.isReturnDefaultValues = true } // 17.a2: JVM tests of subs/ (no device needed)
 }
 
 dependencies {
@@ -49,6 +50,7 @@ dependencies {
     implementation("io.coil-kt:coil-video:2.6.0")
     implementation("androidx.documentfile:documentfile:1.0.1")
     implementation("com.caverock:androidsvg-aar:1.4") // A20.a: SVG import (rasterised once)
+    testImplementation("junit:junit:4.13.2")
     // A17: FFmpeg engine for video export. Preferred: our own build (app/libs/ffmpeg-kit.aar, made by the
     // "Build FFmpeg engine" workflow: libx264, libx265, libvpx, libass). Fallback: the ffmpegKit property in
     // gradle.properties; blank = the app builds without video export (VideoExporter.available() = false).

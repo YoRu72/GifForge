@@ -25,3 +25,12 @@ Style: concise formal Arabic, no filler, no colloquial. Buttons = imperative or 
 | Tab | تبويب | لسان |
 | Settings | الإعدادات | |
 | Font directory | دليل الخطوط | |
+| Shift times | إزاحة التوقيت | تحريك الوقت |
+| Gap (between lines) | فجوة | فراغ |
+| Duration | مدّة | |
+| Direction mark (RLM/LRM) | علامة اتجاه (RLM / LRM كما هي) | |
+| Isolate (RLI/LRI) | عزل يميني / عزل يساري | |
+| Right-to-left line | سطر من اليمين / الأسطر اليمينية | |
+| Fix common errors | إصلاح الأخطاء الشائعة | |
+| Garbled text (mojibake) | نصّ مشوّه | نص مخربط |
+| Frame rate | معدّل الإطارات | |

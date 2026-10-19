@@ -33,3 +33,17 @@ fun formatClock(ms: Long, hh: Boolean = true, sep: Char = '.'): String {
 fun decodeEntities(s: String): String = s
     .replace("&lt;", "<").replace("&gt;", ">").replace("&nbsp;", "\\h")
     .replace("&lrm;", "\u200E").replace("&rlm;", "\u200F").replace("&amp;", "&")
+
+private val CODES = Regex("""\{[^}]*\}|\\[Nnh]""")
+
+/** Applies [f] to the plain-text runs of an ASS line, leaving override blocks {...} and the escapes \N \n \h as they are. */
+fun mapOutsideCodes(text: String, f: (String) -> String): String {
+    val out = StringBuilder()
+    var last = 0
+    for (m in CODES.findAll(text)) {
+        out.append(f(text.substring(last, m.range.first))).append(m.value)
+        last = m.range.last + 1
+    }
+    out.append(f(text.substring(last)))
+    return out.toString()
+}

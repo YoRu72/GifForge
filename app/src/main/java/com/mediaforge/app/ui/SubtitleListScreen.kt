@@ -168,10 +168,9 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
         if (r == null) Toast.makeText(ctx, R.string.sy_failed, Toast.LENGTH_LONG).show()
         else { file = file.copy(events = r); dirty = true; Toast.makeText(ctx, R.string.sh_done, Toast.LENGTH_SHORT).show() }
     }
-    if (fixOpen) FixDialog(events, { fixOpen = false }) { rules ->
-        val out = com.mediaforge.app.subs.FixOps.applyAll(file.events, rules)
+    if (fixOpen) FixDialog(events, { fixOpen = false }) { out, n ->
         file = file.copy(events = out); active = active.coerceIn(if (out.isEmpty()) -1 else 0, out.size - 1); marked = emptySet(); dirty = true; fixOpen = false
-        Toast.makeText(ctx, R.string.fx_done, Toast.LENGTH_SHORT).show()
+        Toast.makeText(ctx, ctx.getString(R.string.fx_done_n, n), Toast.LENGTH_SHORT).show()
     }
     fun scopeSet(s: ShiftScope): Set<Int> = when (s) {
         ShiftScope.ALL -> events.indices.toSet()
@@ -341,6 +340,15 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                             item(R.string.sh_menu, events.isNotEmpty()) { shiftOpen = true }
                             item(R.string.sy_menu, events.size > 1) { syncOpen = true }
                             item(R.string.fx_menu, ed && events.isNotEmpty()) { fixOpen = true }
+                            item(R.string.ar_repair, ed && events.isNotEmpty()) {
+                                val r = com.mediaforge.app.subs.ArabicTools.guessRepair(events.map { it.text })
+                                if (r == null) Toast.makeText(ctx, R.string.ar_repair_none, Toast.LENGTH_SHORT).show()
+                                else {
+                                    val (f2, n) = com.mediaforge.app.subs.ArabicTools.repairFile(file, r)
+                                    if (n > 0) { file = f2; dirty = true }
+                                    Toast.makeText(ctx, ctx.getString(R.string.ar_repair_done, n, r.real, r.readAs), Toast.LENGTH_LONG).show()
+                                }
+                            }
                             item(R.string.ln_sort_start, ed && events.size > 1) { put(LineOps.sort(events, LineOps.SortBy.START), 0) }
                             item(R.string.ln_sort_end, ed && events.size > 1) { put(LineOps.sort(events, LineOps.SortBy.END), 0) }
                             item(R.string.ln_sort_style, ed && events.size > 1) { put(LineOps.sort(events, LineOps.SortBy.STYLE), 0) }
@@ -468,6 +476,10 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                         label = { Text(stringResource(if (trOn) R.string.tr_translation else R.string.sub_text)) }, modifier = Modifier.fillMaxWidth(),
                         textStyle = LocalTextStyle.current.copy(textDirection = TextDirection.Content),
                     )
+                    // AR3: Arabic tools for the caret / line (Arabic UI, right-to-left lines, translate mode)
+                    if (com.mediaforge.app.l10n.AppLang.isArabic() || trOn || com.mediaforge.app.subs.RtlFix.isRtl(com.mediaforge.app.subs.AssLook.plainText(e.text))) {
+                        ArabicToolsRow(tf) { v -> tf = v; cur[0] = v.selection.end; if (v.text != e.text) edit(active) { it.copy(text = v.text) } }
+                    }
                     if (trOn) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         androidx.compose.material3.AssistChip(onClick = { edit(active) { it.copy(text = originals[active]) } }, label = { Text(stringResource(R.string.tr_copy_original)) })
                         androidx.compose.material3.AssistChip(onClick = { edit(active) { it.copy(text = "") } }, label = { Text(stringResource(R.string.tr_clear)) })
