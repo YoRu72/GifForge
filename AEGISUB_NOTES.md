@@ -75,3 +75,43 @@ Other facts: `\bord` after `\xbord/\ybord` overrides both; `\blur` preferred ove
 3. Touch timing UI: two big draggable handles on the waveform + nudge buttons (+-1 frame, +-10 ms), Snap toggle, tap-to-set from playhead (A/B like text timing in step 15).
 4. Shift Times / Post-Processor operate on a list of AssEvent and return a new list (pure functions -> easy undo and unit tests).
 5. Still to study in part 3: Kanji Timer, Resolution Resampler, Translation/Styling assistants, Spell Checker, Paste Over, Select Lines are summarised in the roadmap (23.d-23.f, 18.e); their exact option lists will be read when those steps start.
+
+---
+# Part 3 (s18w): the source itself - structure and every command, mapped to MediaForge
+Source: `git clone --depth 1 github.com/TypesettingTools/Aegisub` (read 2026-10-19). Files named below are in that tree.
+
+## 1. Structure of the program
+| Aegisub part (files) | What it holds | MediaForge |
+|---|---|---|
+| `libaegisub/ass/*`, `src/ass_*.cpp` (AssFile, AssDialogue, AssStyle, AssOverride, ass_karaoke) | the script model, override-tag parser, karaoke syllables | `subs/SubModel.kt`, `AssFormat.kt`, `AssLook.kt`, `Karaoke.kt` (karaoke = straight port of `libaegisub/ass/karaoke.cpp`) |
+| `src/subtitle_format_*.cpp` (ass, ssa, srt, microdvd, ttxt, txt, ebu3264, encore, transtation) | readers/writers | `subs/*Format.kt` (+ VTT, SBV, LRC, TTML that Aegisub lacks; EBU-STL, Encore, Transtation, TTXT not yet) |
+| `src/subs_edit_box.cpp`, `base_grid.cpp`, `grid_column.cpp` | edit box + grid | `ui/SubtitleListScreen.kt` |
+| `src/command/*.cpp` (app, audio, edit, grid, keyframe, subtitle, time, timecode, tool, video, vis_tool) | ~230 commands, every menu item and hotkey | menu of the subtitle screen; full map in section 2 |
+| `src/dialog_*.cpp` | tools: style manager/editor, properties, shift times, timing processor, selection, search/replace, resample, fonts collector, attachments, export, translation/styling assistants, spell checker, kanji timer, paste over, dummy video, autosave | see section 2 |
+| `src/audio_*` (provider, renderer waveform/spectrum, timing dialogue/karaoke) | audio display and timing | not yet (AEG-B, FEAT5) |
+| `src/video_*`, `visual_tool_*` (cross, drag, rotatez, rotatexy, scale, clip, vector_clip) | video display and visual typesetting | `ui/SubVideoPane.kt` (+ Look panel position); visual tools = AEG-D |
+| `src/subtitles_provider_libass.cpp` | rendering through libass | `media/AssPreview.kt` (own Canvas renderer) + libass only in the FFmpeg burn-in |
+| `src/auto4_*`, `automation/` | Lua 5.2 (LuaJIT) automation, karaoke templater, macros | not yet (AEG-E, FX10 recipes first) |
+| `src/libresrc/default_config.json` | all defaults | defaults copied where tools exist (Timing Post-Processor, Shift Times, style catalog per format) |
+
+Two design facts confirmed in the source: (1) for formats without styles Aegisub applies a style catalog (`Subtitle Format/SRT/Default Style Catalog`) - MediaForge's base style (s18w) is the same idea; (2) the Timing Post-Processor works in a fixed order lead-in -> lead-out -> make adjacent (bias 0.9) -> keyframe snap, with defaults 100/350 ms, gap 300, overlap 50, keyframe 200/150 before/after start and 200/250 for the end - `subs/AegisubOps.kt` follows it line for line, including the "only into lines it did not already overlap" rule of `safe_time`.
+
+## 2. Command map (command id -> status)
+Legend: [x] in MediaForge, [~] partly, [ ] not yet, [-] not for a phone.
+- subtitle/new, open, save, save/as, open/charset, open/autosave [x] (charset picker = A25 left), subtitle/properties [x] s18w, subtitle/attachment [ ] (AEGX8), subtitle/spellcheck [ ] (AEGX7), subtitle/select/all [x] long-press marks, subtitle/insert/before|after [x], .../videotime [x] (Set start / tap chain), subtitle/find [x]
+- edit/undo, redo, find_replace [x]; edit/line/delete, duplicate, copy, cut, paste [~] (no clipboard of whole lines yet); edit/line/split/before|after|preserve [x] split at caret, split/estimate [ ], split/video [~] (Set end + next), split/by_karaoke [x] s18w; edit/line/join/concatenate [x], join/keep_first [ ], join/as_karaoke [x] s18w; edit/line/paste/over [ ] (AEGX6); edit/line/recombine [ ]; edit/color/* and edit/style/bold|italic|underline|strikeout [~] Look panel (no underline/strike buttons); edit/font [x]; edit/revert, clear, clear/text, insert_original [~] (translate mode copy/clear)
+- grid/sort/start|end|style [x], sort/actor|effect|layer [~] (actor in code, not in menu), grid/move/up|down [x], grid/swap [ ], grid/tags/hide|show|simplify [~] (grid always hides tags)
+- time/shift [x] (s18p + frames rescale), time/lead/in|out|both [x] s18w via Refine timing, time/continuous/start|end [x] via "make adjacent", time/snap/start_video|end_video [x] Set start/end, time/snap/scene [x] s18w keyframe snap, time/length/increase|decrease [x] nudges, time/frame/current [ ], time/next|prev [x] line arrows
+- tool/style/manager [x] s18w, tool/style/assistant [ ] (AEGX8), tool/time/postprocess [x] s18w, tool/time/kanji [-] (Japanese), tool/translation_assistant [x] translate mode, tool/resampleres [x] s18w (no added borders yet), tool/font_collector [ ] (19.d), tool/line/select [x] s18w, tool/export [ ] (AEGX5)
+- keyframe/open|save|close [~] keyframes read from the video itself (no external keyframe files yet); timecode/* [ ] (AEGX1, VFR)
+- video/open, close, play, play/line, stop, frame/next|prev [x]; frame/next|prev/keyframe, boundary, large [ ]; video/jump [ ]; video/frame/save, copy [ ] (AEGX4); video/zoom/*, aspect/*, show_overscan [ ] (AEGX3); video/open/dummy [ ] (AEGX1); video/details [~]
+- video/tool/cross, drag [~] (Look panel pad + X/Y), rotate/z, rotate/xy, scale, clip, vector_clip and vclip/* [ ] (AEG-D, FX5, FX7)
+- audio/* [ ] (AEG-B: waveform, spectrum, audio timing, karaoke on the waveform)
+- am/* automation manager [ ] (AEG-E)
+- app/* [-] desktop window commands; app/language, options [x] Settings
+
+## 3. Next by value for the owner (from this map)
+1. AEG-B waveform with tap timing (audio/*), it also feeds karaoke timing by ear.
+2. AEG-D visual typesetting tools on the video pane (drag, rotate, scale, rect + vector clip) = video/tool/*.
+3. AEGX8 attachments + fonts collector (embed the Arabic fonts into the .ass so others see the same look).
+4. edit/line/paste/over + select by pattern done; swap, keep-first join, split/estimate are one-hour items.

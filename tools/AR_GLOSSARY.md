@@ -34,3 +34,15 @@ Style: concise formal Arabic, no filler, no colloquial. Buttons = imperative or 
 | Fix common errors | إصلاح الأخطاء الشائعة | |
 | Garbled text (mojibake) | نصّ مشوّه | نص مخربط |
 | Frame rate | معدّل الإطارات | |
+| Timing post-processor | تهذيب التوقيت | معالجة لاحقة |
+| Lead-in / lead-out | تقديم البداية / تأخير النهاية | |
+| Keyframe (video) | إطار مفتاحي | |
+| Style (ASS) | نمط | أسلوب |
+| Base style | النمط الأساسي | |
+| Select lines / marks | تحديد الأسطر / التحديد | |
+| Remove from marks | إخراج من التحديد | حذف من التحديد (يوهم حذف الأسطر) |
+| Karaoke | كاريوكي | كاراوكي |
+| Syllable (karaoke) | مقطع | |
+| Motion tracking | تتبّع الحركة | |
+| Resolution (PlayRes) | دقّة الملف | |
+| Translator | المترجم | |
