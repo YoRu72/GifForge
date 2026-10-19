@@ -165,6 +165,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
     var tppOpen by remember { mutableStateOf(false) }    // 23.b timing post-processor
     var selOpen by remember { mutableStateOf(false) }    // AEGX6 select lines
     var propsOpen by remember { mutableStateOf(false) }  // 19.b script properties + 23.d resampler
+    var motionOpen by remember { mutableStateOf(false) } // MOT1/MOT2 motion tracking of the active line
     var karaTap by remember { mutableStateOf(0) }        // karaoke tap timing: index of the syllable the next tap starts (0 = off)
     val vinfo by androidx.compose.runtime.produceState<com.mediaforge.app.media.VideoInfo?>(null, video) {
         value = video?.let { com.mediaforge.app.media.readVideoInfo(ctx, it) }
@@ -175,6 +176,13 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
         syncOpen = false
         if (r == null) Toast.makeText(ctx, R.string.sy_failed, Toast.LENGTH_LONG).show()
         else { file = file.copy(events = r); dirty = true; Toast.makeText(ctx, R.string.sh_done, Toast.LENGTH_SHORT).show() }
+    }
+    val mv = video
+    if (motionOpen && mv != null && active in events.indices) MotionDialog(file, events[active], mv, vinfo?.fps ?: 25f, onDismiss = { motionOpen = false }) { out ->
+        val at = active
+        file = file.copy(events = file.events.take(at) + out + file.events.drop(at + 1)); dirty = true; marked = emptySet()
+        motionOpen = false
+        Toast.makeText(ctx, ctx.getString(R.string.mt_done, out.size), Toast.LENGTH_SHORT).show()
     }
     if (tppOpen) TimingPostDialog(file, marked, video, onDismiss = { tppOpen = false }) { out ->
         if (out != file.events) { file = file.copy(events = out); dirty = true }
@@ -365,6 +373,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                             item(R.string.pr_menu) { propsOpen = true }
                             item(R.string.sel_menu, events.isNotEmpty()) { selOpen = true }
                             item(R.string.tpp_menu, events.isNotEmpty()) { tppOpen = true }
+                            item(R.string.mt_menu, ed && video != null && active in events.indices) { motionOpen = true }
                             item(R.string.ka_split_line, ed && active in events.indices && com.mediaforge.app.subs.Karaoke.hasKaraoke(events[active].text)) {
                                 val parts = com.mediaforge.app.subs.Karaoke.splitLine(events[active])
                                 put(events.take(active) + parts + events.drop(active + 1), active)

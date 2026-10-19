@@ -688,4 +688,20 @@
     <string name="ka_tap_done">تمّ توقيت الكاريوكي</string>
     <string name="ka_split_line">تقسيم السطر بمقاطع الكاريوكي</string>
     <string name="ka_join_lines">دمج المحدّد كاريوكي</string>
+    <string name="mt_menu">تتبّع الحركة…</string>
+    <string name="mt_title">تتبّع الحركة</string>
+    <string name="mt_auto">آليّ</string>
+    <string name="mt_manual">يدويّ</string>
+    <string name="mt_auto_hint">انقر الجسم في الإطار الأول ثم «تتبّع»، فيتبعه السطر محافظًا على بُعده عنه.</string>
+    <string name="mt_manual_hint">تنقّل في السطر وانقر موضع الجسم في كل لحظة تختارها، فيسير السطر مستقيمًا بين النقرات.</string>
+    <string name="mt_patch">منطقة التتبّع</string>
+    <string name="mt_track">تتبّع</string>
+    <string name="mt_tracked">الإطارات المتتبَّعة: %1$d</string>
+    <string name="mt_lost">فُقد الجسم عند %1$s، فيتبعه السطر إلى هناك. اختر منطقة أوسع أو أوضح وأعد التتبّع.</string>
+    <string name="mt_output">النتيجة</string>
+    <string name="mt_out_move">أسطر قليلة (\\move)</string>
+    <string name="mt_out_frames">سطر لكل إطار</string>
+    <string name="mt_tolerance">الانحراف المسموح</string>
+    <string name="mt_apply">تطبيق</string>
+    <string name="mt_done">الأسطر الناتجة: %1$d</string>
 </resources>

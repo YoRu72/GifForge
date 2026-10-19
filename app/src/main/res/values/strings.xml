@@ -675,4 +675,20 @@
     <string name="ka_tap_done">Karaoke timed</string>
     <string name="ka_split_line">Split line by karaoke</string>
     <string name="ka_join_lines">Join marked lines as karaoke</string>
+    <string name="mt_menu">Motion tracking…</string>
+    <string name="mt_title">Motion tracking</string>
+    <string name="mt_auto">Automatic</string>
+    <string name="mt_manual">By hand</string>
+    <string name="mt_auto_hint">Tap the object on the first frame, then Track. The line follows it and keeps its distance.</string>
+    <string name="mt_manual_hint">Move through the line and tap where the object is at each chosen moment; the line moves straight between the taps.</string>
+    <string name="mt_patch">Tracked area</string>
+    <string name="mt_track">Track</string>
+    <string name="mt_tracked">Frames tracked: %1$d</string>
+    <string name="mt_lost">Lost at %1$s: the line follows up to there. Pick a larger or clearer area and track again.</string>
+    <string name="mt_output">Result</string>
+    <string name="mt_out_move">Few lines (\\move)</string>
+    <string name="mt_out_frames">One line per frame</string>
+    <string name="mt_tolerance">Allowed deviation</string>
+    <string name="mt_apply">Apply</string>
+    <string name="mt_done">Lines made: %1$d</string>
 </resources>

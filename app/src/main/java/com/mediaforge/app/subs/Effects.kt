@@ -120,6 +120,15 @@ object Effects {
         }.toList()
     }
 
+    /** [tr] seen from [fromMs] for [durMs]: the value at the cut, the keyframes inside, the value at the end (times from 0). */
+    fun slice(tr: Track, fromMs: Long, durMs: Long): Track {
+        val to = fromMs + durMs
+        val inside = tr.keys.filter { it.timeMs > fromMs && it.timeMs < to }.map { it.copy(timeMs = it.timeMs - fromMs) }
+        val firstCurve = tr.keys.lastOrNull { it.timeMs <= fromMs }?.curve ?: Curve.LINEAR
+        val keys = listOf(Keyframe(0, tr.valueAt(fromMs), firstCurve)) + inside + Keyframe(durMs.coerceAtLeast(1), tr.valueAt(to))
+        return Track(tr.prop, keys)
+    }
+
     fun strip(text: String): String = BLOCK.replaceFirst(text, "")
 
     /** Text with the effect block replaced by one built from [tracks] (removed when there are none). */
