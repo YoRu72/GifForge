@@ -26,27 +26,34 @@ object AssPreview {
         file: SubFile,
         shown: List<AssEvent>,
         tMs: Long,
+        videoHeight: Int = 0,
         typefaceFor: (String, Boolean) -> Typeface,
     ) {
         val s = h.toFloat() / file.playResY.coerceAtLeast(1)
+        // ScaledBorderAndShadow: no = outline, shadow and blur are in VIDEO pixels (libass). Scaling them by the script
+        // resolution instead (old preview) made a 2 px outline on a 288-line script 4x too thick on a 1080p video.
+        val bs = if (file.scaledBorderAndShadow || videoHeight <= 0) s else h.toFloat() / videoHeight
         for (e in shown.sortedBy { it.layer }) {
             val text = AssLook.plainText(e.text)
             if (text.isBlank()) continue
             val look = AssLook.resolve(file.style(e.style) ?: AssStyle(), e, tMs)
-            drawOne(canvas, w, h, s, file, text, look, typefaceFor)
+            drawOne(canvas, w, h, s, bs, file, text, look, typefaceFor)
         }
     }
 
     private fun drawOne(
-        canvas: Canvas, w: Int, h: Int, s: Float, file: SubFile, text: String, l: ResolvedLook,
+        canvas: Canvas, w: Int, h: Int, s: Float, bs: Float, file: SubFile, text: String, l: ResolvedLook,
         typefaceFor: (String, Boolean) -> Typeface,
     ) {
         val alpha = (l.opacity * 255f).toInt().coerceIn(0, 255)
         if (alpha == 0) return
 
         val size = (l.size * s).coerceAtLeast(4f)
-        val paint = newTextPaint(text, typefaceFor(l.fontName, l.bold), size)
-        paint.isFakeBoldText = l.bold
+        val face = typefaceFor(l.fontName, l.bold)
+        val paint = newTextPaint(text, face, size)
+        // synthesise bold only when the font has no bold face of its own (libass does the same); a real bold face
+        // plus fake bold drew every letter twice as heavy, which made the outline look like a thick smear
+        paint.isFakeBoldText = l.bold && !face.isBold
         paint.textSkewX = if (l.italic) -0.25f else 0f
         // Letter spacing breaks Arabic joining (ligatures switch off), so it is only applied to other scripts.
         if (l.spacing != 0f && !hasArabic(text)) paint.letterSpacing = l.spacing * s / size // ar-ok
@@ -90,31 +97,37 @@ object AssPreview {
         if (l.scaleX != 100f || l.scaleY != 100f) canvas.scale(l.scaleX / 100f, l.scaleY / 100f)
         canvas.translate(x0 - ax, y0 - ay)
 
-        val border = (l.border * s).coerceAtLeast(0f)
-        if (l.blur > 0f) paint.maskFilter = BlurMaskFilter(maxOf(l.blur * s * 2f, 1f), BlurMaskFilter.Blur.NORMAL)
+        val border = (l.border * bs).coerceAtLeast(0f)
+        // libass blurs the outline and the shadow; the fill is blurred only when there is no outline. Blurring the
+        // fill as well (the old preview did) turned every line into a soft dark halo that looked like a drop shadow.
+        val blurMask = if (l.blur > 0f) BlurMaskFilter(maxOf(l.blur * bs * 1.7f, 0.5f), BlurMaskFilter.Blur.NORMAL) else null
+        val outlined = border > 0f && !l.boxed
+        paint.strokeJoin = Paint.Join.ROUND
+        paint.strokeCap = Paint.Cap.ROUND
 
         if (l.boxed) {
-            val pad = maxOf(border, 2f * s)
-            val box = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = l.outline; if (l.blur > 0f) maskFilter = paint.maskFilter }
+            val pad = maxOf(border, 2f * bs)
+            val box = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = l.outline; maskFilter = blurMask }
             canvas.drawRect(-pad, -pad, bw + pad, bh + pad, box)
         }
         if (l.shadow > 0f && Color.alpha(l.back) > 0) {
             canvas.save()
-            canvas.translate(l.shadow * s, l.shadow * s)
+            canvas.translate(l.shadow * bs, l.shadow * bs)
             paint.color = l.back
-            paint.strokeJoin = Paint.Join.ROUND
+            paint.maskFilter = blurMask
             paint.strokeWidth = border * 2f
-            paint.style = if (border > 0f && !l.boxed) Paint.Style.FILL_AND_STROKE else Paint.Style.FILL
+            paint.style = if (outlined) Paint.Style.FILL_AND_STROKE else Paint.Style.FILL
             layout.draw(canvas)
             canvas.restore()
         }
-        if (border > 0f && !l.boxed) {
+        if (outlined) {
+            paint.maskFilter = blurMask
             paint.style = Paint.Style.STROKE
-            paint.strokeJoin = Paint.Join.ROUND
-            paint.strokeWidth = border * 2f
+            paint.strokeWidth = border * 2f // centred on the glyph edge: the inner half is covered by the fill
             paint.color = l.outline
             layout.draw(canvas)
         }
+        paint.maskFilter = if (outlined) null else blurMask
         paint.style = Paint.Style.FILL
         paint.color = l.primary
         layout.draw(canvas)

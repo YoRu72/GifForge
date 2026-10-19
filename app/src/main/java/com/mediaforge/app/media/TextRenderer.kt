@@ -21,7 +21,7 @@ data class TextOverlay(
     val sizePct: Float = 8f,          // text height as % of frame height
     val color: Int = Color.WHITE,
     val strokeColor: Int = Color.BLACK,
-    val strokeRatio: Float = 0.10f,   // outline thickness as fraction of text size
+    val strokeRatio: Float = 0.05f,   // outline thickness as fraction of text size (0.10 looked heavy on Arabic marks)
     val align: Int = ALIGN_CENTER,
     val posX: Float = 0.5f,           // center of text block, 0..1
     val posY: Float = 0.85f,
@@ -39,6 +39,7 @@ fun drawOverlays(canvas: Canvas, w: Int, h: Int, overlays: List<TextOverlay>) {
         if (size < 1f) continue
         val paint = newTextPaint(o.text, FontStore.typeface(o.fontPath, o.bold, o.fontVars), size)
         paint.strokeJoin = Paint.Join.ROUND
+        paint.strokeCap = Paint.Cap.ROUND
         val align = physicalAlignment(o.text, o.align)
         val maxW = (w * 0.94f).toInt().coerceAtLeast(1)
         val probe = buildLayout(o.text, paint, maxW, align)

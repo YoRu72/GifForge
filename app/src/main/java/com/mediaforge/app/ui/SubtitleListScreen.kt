@@ -161,6 +161,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
     var tracksOpen by remember { mutableStateOf(false) }
     var shiftOpen by remember { mutableStateOf(false) }
     var fixOpen by remember { mutableStateOf(false) }
+    var stylesOpen by remember { mutableStateOf(false) } // 19.a styles manager
     var syncOpen by remember { mutableStateOf(false) }
     if (syncOpen) SyncDialog(events, active, { syncOpen = false }) { a, ta, b, tb ->
         val r = com.mediaforge.app.subs.TimeOps.linearSync(file.events, a, ta, b, tb)
@@ -168,6 +169,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
         if (r == null) Toast.makeText(ctx, R.string.sy_failed, Toast.LENGTH_LONG).show()
         else { file = file.copy(events = r); dirty = true; Toast.makeText(ctx, R.string.sh_done, Toast.LENGTH_SHORT).show() }
     }
+    if (stylesOpen) StylesDialog(file, marked, onDismiss = { stylesOpen = false }) { f2 -> if (f2 != file) { file = f2; dirty = true } }
     if (fixOpen) FixDialog(events, { fixOpen = false }) { out, n ->
         file = file.copy(events = out); active = active.coerceIn(if (out.isEmpty()) -1 else 0, out.size - 1); marked = emptySet(); dirty = true; fixOpen = false
         Toast.makeText(ctx, ctx.getString(R.string.fx_done_n, n), Toast.LENGTH_SHORT).show()
@@ -340,6 +342,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                             item(R.string.sh_menu, events.isNotEmpty()) { shiftOpen = true }
                             item(R.string.sy_menu, events.size > 1) { syncOpen = true }
                             item(R.string.fx_menu, ed && events.isNotEmpty()) { fixOpen = true }
+                            item(R.string.stl_menu) { stylesOpen = true }
                             item(R.string.ar_repair, ed && events.isNotEmpty()) {
                                 val r = com.mediaforge.app.subs.ArabicTools.guessRepair(events.map { it.text })
                                 if (r == null) Toast.makeText(ctx, R.string.ar_repair_none, Toast.LENGTH_SHORT).show()

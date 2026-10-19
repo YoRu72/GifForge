@@ -79,10 +79,11 @@ fun SubVideoPane(
     var durationMs by remember(uri) { mutableLongStateOf(0L) }
     var frameMs by remember(uri) { mutableStateOf(1000f / 25f) }
     var aspect by remember(uri) { mutableStateOf(0f) }
+    var videoH by remember(uri) { mutableStateOf(0) } // real video height: border/shadow in video pixels when ScaledBorderAndShadow is off
     LaunchedEffect(uri) {
         readVideoInfo(ctx, uri)?.let { i ->
             durationMs = i.durationMs
-            if (i.width > 0 && i.height > 0) aspect = i.width.toFloat() / i.height
+            if (i.width > 0 && i.height > 0) { aspect = i.width.toFloat() / i.height; videoH = i.height }
             i.fps?.takeIf { it in 5f..240f }?.let { frameMs = 1000f / it }
         }
     }
@@ -120,7 +121,7 @@ fun SubVideoPane(
                 SubtitleOverlay(
                     file = file, shown = shown, posMs = pos,
                     aspect = if (aspect > 0f) aspect else file.playResX.toFloat() / file.playResY.coerceAtLeast(1),
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(), videoHeight = videoH,
                 )
             }
             TransportBar(player, durationMs.coerceAtLeast(1L), 0L, durationMs.coerceAtLeast(1L))

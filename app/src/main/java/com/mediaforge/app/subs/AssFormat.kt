@@ -122,6 +122,17 @@ object AssFormat : SubFormat {
         else -> 2
     }
 
+    /** One `Style:` line (the standard v4+ column order), e.g. to keep a base style in the app settings. */
+    fun styleToLine(st: AssStyle): String = styleLine(st)
+
+    /** Reads a line made by [styleToLine]; null when it is not a complete style line. */
+    fun styleFromLine(line: String): AssStyle? {
+        val v = line.trim().removePrefix("Style:").trim()
+        val f = v.split(",", limit = DEFAULT_STYLE_COLS.size).map { it.trim() }
+        if (v.isEmpty() || f.size < DEFAULT_STYLE_COLS.size) return null
+        return styleFrom(DEFAULT_STYLE_COLS, f, false)
+    }
+
     private fun styleFrom(cols: List<String>, f: List<String>, legacy: Boolean): AssStyle {
         fun s(name: String): String? = cols.indexOf(name).let { if (it in f.indices) f[it] else null }
         fun i(name: String, d: Int) = s(name)?.toIntOrNull() ?: d

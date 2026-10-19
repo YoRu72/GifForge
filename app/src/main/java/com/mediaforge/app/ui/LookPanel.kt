@@ -135,7 +135,7 @@ fun LookPanel(file: SubFile, e: AssEvent, onChange: ((AssEvent) -> AssEvent) -> 
 
 /** 3x3 pad in numpad order (7 8 9 / 4 5 6 / 1 2 3): where the text sits in the frame. Physical, never mirrored. */
 @Composable
-private fun AnPad(selected: Int, onPick: (Int) -> Unit) {
+internal fun AnPad(selected: Int, onPick: (Int) -> Unit) {
     val glyphs = listOf("\u2196", "\u2191", "\u2197", "\u2190", "\u25CF", "\u2192", "\u2199", "\u2193", "\u2198")
     ForceLtr {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -160,7 +160,7 @@ private fun AnPad(selected: Int, onPick: (Int) -> Unit) {
 
 /** Fonts of the app library by family name, each shown in its own face, plus import of a new font file. */
 @Composable
-private fun FontPickerDialog(onPick: (String) -> Unit, onClose: () -> Unit) {
+internal fun FontPickerDialog(onPick: (String) -> Unit, onClose: () -> Unit) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var faces by remember { mutableStateOf<List<FontFace>?>(null) }

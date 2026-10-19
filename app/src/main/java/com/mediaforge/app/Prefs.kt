@@ -30,10 +30,11 @@ object Prefs {
     val fontSample = StrPref("font_sample", "12345abcd")   // preview text in the font directory
     val readProfile = IntPref("read_profile", 1)       // reading-speed limit: 0 relaxed 12, 1 standard 17, 2 Netflix 20, 3 fast 25 chars/s
     val recentSubs = StrPref("recent_subs", "")            // recent subtitle uris, one per line
+    val subBaseStyle = StrPref("sub_base_style", "")       // translator's base style as one ASS "Style:" line ("" = StyleOps.FACTORY)
 
     private val ints = listOf(lang, themeMode, defFps, defQuality, defClipSec, defMaxWidth, readProfile)
     private val bools = listOf(dynamicColor, defLoop, defFast, autoSave, keepAwake, subAutosave)
-    private val strs = listOf(namePrefix, fontSample, recentSubs)
+    private val strs = listOf(namePrefix, fontSample, recentSubs, subBaseStyle)
 
     fun init(ctx: Context) {
         if (sp != null) return

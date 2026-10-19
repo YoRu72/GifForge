@@ -30,7 +30,9 @@ fun readSubDoc(ctx: Context, uri: Uri, charset: String? = null): SubDoc? {
     val bytes = ctx.contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: return null
     val name = displayName(ctx, uri)
     val p = SubFormats.parseBytes(bytes, name, charset) ?: return null
-    return SubDoc(name, p.format, p.file, p.charset, p.bom)
+    // formats without styles (SRT, VTT, SBV, LRC, MicroDVD, TTML, TXT) open in the translator's base style
+    val file = if (p.format.id == "ass") p.file else com.mediaforge.app.subs.StyleOps.withBase(p.file, baseStyle())
+    return SubDoc(name, p.format, file, p.charset, p.bom)
 }
 
 fun writeSubDoc(ctx: Context, uri: Uri, doc: SubDoc, file: SubFile): Boolean = try {
@@ -42,8 +44,11 @@ fun writeSubDoc(ctx: Context, uri: Uri, doc: SubDoc, file: SubFile): Boolean = t
 
 fun newSubDoc(): SubDoc {
     val f = com.mediaforge.app.subs.SubFormats.byId("ass") ?: com.mediaforge.app.subs.AssFormat
-    return SubDoc("new.ass", f, SubFile.blank(), "UTF-8", false)
+    return SubDoc("new.ass", f, com.mediaforge.app.subs.StyleOps.withBase(SubFile.blank(), baseStyle()), "UTF-8", false)
 }
+
+/** The base style chosen in Settings (font, size, outline, shadow... for every new or imported script). */
+fun baseStyle(): com.mediaforge.app.subs.AssStyle = com.mediaforge.app.subs.StyleOps.base(com.mediaforge.app.Prefs.subBaseStyle.value)
 
 /** Recent subtitle/video files, newest first, kept in preferences (uri per line). */
 object Recents {

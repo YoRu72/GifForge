@@ -53,7 +53,7 @@ private class FrameBuffers {
  * alignment, position and the effect keyframes at [posMs]. [aspect] is the video's width / height.
  */
 @Composable
-fun SubtitleOverlay(file: SubFile, shown: List<AssEvent>, posMs: Long, aspect: Float, modifier: Modifier = Modifier) {
+fun SubtitleOverlay(file: SubFile, shown: List<AssEvent>, posMs: Long, aspect: Float, modifier: Modifier = Modifier, videoHeight: Int = 0) {
     val ctx = LocalContext.current
     val refs by produceState(emptyMap<String, String>(), ctx) {
         value = withContext(Dispatchers.IO) { fontRefMap(ctx) }
@@ -68,7 +68,7 @@ fun SubtitleOverlay(file: SubFile, shown: List<AssEvent>, posMs: Long, aspect: F
         val bh = (bw / aspect).toInt().coerceAtLeast(2)
         val bmp = buffers.get(bw, bh)
         bmp.eraseColor(0)
-        AssPreview.draw(android.graphics.Canvas(bmp), bw, bh, file, shown, posMs) { name, bold -> faceFor(refs, name, bold) }
+        AssPreview.draw(android.graphics.Canvas(bmp), bw, bh, file, shown, posMs, videoHeight) { name, bold -> faceFor(refs, name, bold) }
         val left = (size.width - vw) / 2f
         val top = (size.height - vh) / 2f
         drawIntoCanvas { c -> c.nativeCanvas.drawBitmap(bmp, null, RectF(left, top, left + vw, top + vh), null) }

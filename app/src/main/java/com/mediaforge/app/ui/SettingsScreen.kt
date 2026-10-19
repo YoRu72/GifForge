@@ -104,6 +104,14 @@ fun SettingsScreen(onBack: () -> Unit, onFonts: () -> Unit) {
             }
 
             Divider2()
+            Header(stringResource(R.string.stl_base_title))
+            Text(stringResource(R.string.stl_base_note), style = MaterialTheme.typography.bodySmall)
+            var baseOpen by remember { mutableStateOf(false) }
+            StyleSample(baseStyle())
+            Button(onClick = { baseOpen = true }) { Text(stringResource(R.string.stl_base_edit)) }
+            if (baseOpen) BaseStyleDialog { baseOpen = false }
+
+            Divider2()
             Header(stringResource(R.string.set_read))
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(R.string.rp_relaxed, R.string.rp_standard, R.string.rp_netflix, R.string.rp_fast).forEachIndexed { i, n ->
