@@ -658,4 +658,21 @@
     <string name="pr_wrap2">None (only \\N)</string>
     <string name="pr_wrap3">Smart, bottom line wider</string>
     <string name="pr_scaled">Scale outline and shadow with the resolution</string>
+    <string name="ka_title">Karaoke</string>
+    <string name="ka_none">This line has no karaoke timing yet.</string>
+    <string name="ka_make">Make karaoke (one syllable per word)</string>
+    <string name="ka_k">Fill (\\k)</string>
+    <string name="ka_kf">Sweep (\\kf)</string>
+    <string name="ka_ko">Outline (\\ko)</string>
+    <string name="ka_merge">Merge with previous</string>
+    <string name="ka_remove">Remove karaoke</string>
+    <string name="ka_cut">Cut the syllable here:</string>
+    <string name="ka_no_cut">A joined Arabic word is never cut, so its letters keep their shapes.</string>
+    <string name="ka_tap_start">Tap timing</string>
+    <string name="ka_tap_hint">Play the line, then press \"Syllable\" at the start of each syllable.</string>
+    <string name="ka_tap_next">Next tap starts syllable %1$d of %2$d</string>
+    <string name="ka_tap_chip">Syllable</string>
+    <string name="ka_tap_done">Karaoke timed</string>
+    <string name="ka_split_line">Split line by karaoke</string>
+    <string name="ka_join_lines">Join marked lines as karaoke</string>
 </resources>

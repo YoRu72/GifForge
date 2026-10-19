@@ -165,6 +165,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
     var tppOpen by remember { mutableStateOf(false) }    // 23.b timing post-processor
     var selOpen by remember { mutableStateOf(false) }    // AEGX6 select lines
     var propsOpen by remember { mutableStateOf(false) }  // 19.b script properties + 23.d resampler
+    var karaTap by remember { mutableStateOf(0) }        // karaoke tap timing: index of the syllable the next tap starts (0 = off)
     val vinfo by androidx.compose.runtime.produceState<com.mediaforge.app.media.VideoInfo?>(null, video) {
         value = video?.let { com.mediaforge.app.media.readVideoInfo(ctx, it) }
     }
@@ -364,6 +365,15 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                             item(R.string.pr_menu) { propsOpen = true }
                             item(R.string.sel_menu, events.isNotEmpty()) { selOpen = true }
                             item(R.string.tpp_menu, events.isNotEmpty()) { tppOpen = true }
+                            item(R.string.ka_split_line, ed && active in events.indices && com.mediaforge.app.subs.Karaoke.hasKaraoke(events[active].text)) {
+                                val parts = com.mediaforge.app.subs.Karaoke.splitLine(events[active])
+                                put(events.take(active) + parts + events.drop(active + 1), active)
+                            }
+                            item(R.string.ka_join_lines, ed && marked.size >= 2) {
+                                val sel = marked.sorted(); val first = sel.first(); val rest = sel.drop(1).toSet()
+                                val joined = com.mediaforge.app.subs.Karaoke.joinLines(sel.map { events[it] })
+                                put(events.mapIndexed { i, ev -> if (i == first) joined else ev }.filterIndexed { i, _ -> i !in rest }, first)
+                            }
                             item(R.string.ar_repair, ed && events.isNotEmpty()) {
                                 val r = com.mediaforge.app.subs.ArabicTools.guessRepair(events.map { it.text })
                                 if (r == null) Toast.makeText(ctx, R.string.ar_repair_none, Toast.LENGTH_SHORT).show()
@@ -413,6 +423,17 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                             it.copy(startMs = s0, endMs = maxOf(s0 + 1L, it.endMs + de))
                         }
                     },
+                    onKaraTap = { t: Long ->
+                        val ev = file.events[active]
+                        val k = com.mediaforge.app.subs.Karaoke.parse(ev.text)
+                        val syls = com.mediaforge.app.subs.Karaoke.normalize(k.syls, ev.durationMs)
+                        if (karaTap < syls.size) {
+                            val out = com.mediaforge.app.subs.Karaoke.setStart(syls, karaTap, t - ev.startMs)
+                            edit(active) { it.copy(text = com.mediaforge.app.subs.Karaoke.build(com.mediaforge.app.subs.Kara(k.prefix, out))) }
+                            karaTap += 1
+                        }
+                        if (karaTap >= syls.size) { karaTap = 0; Toast.makeText(ctx, R.string.ka_tap_done, Toast.LENGTH_SHORT).show() }
+                    }.takeIf { karaTap > 0 && active in events.indices },
                 )
                 HorizontalDivider()
             }
@@ -516,6 +537,11 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                     val n = effectCount(e)
                     SectionHeader(if (n > 0) stringResource(R.string.sub_effects_count, n) else stringResource(R.string.sub_effects), effectsOpen) { effectsOpen = !effectsOpen }
                     AnimatedVisibility(effectsOpen) { EffectsPanel(e, file) { f -> edit(active, f) } }
+                    var karaOpen by rememberSaveable(active) { mutableStateOf(com.mediaforge.app.subs.Karaoke.hasKaraoke(e.text)) }
+                    SectionHeader(stringResource(R.string.ka_title), karaOpen) { karaOpen = !karaOpen }
+                    AnimatedVisibility(karaOpen) {
+                        KaraokePanel(e, video != null, karaTap, { karaTap = it }) { t -> edit(active) { it.copy(text = t) } }
+                    }
                 }
             }
         }

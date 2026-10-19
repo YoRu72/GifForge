@@ -10,6 +10,11 @@ import com.mediaforge.app.subs.AssLook
 import com.mediaforge.app.subs.AssStyle
 import com.mediaforge.app.subs.ResolvedLook
 import com.mediaforge.app.subs.SubFile
+import com.mediaforge.app.subs.Karaoke
+import com.mediaforge.app.subs.Syl
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
 import kotlin.math.ceil
 
 /**
@@ -37,12 +42,34 @@ object AssPreview {
             val text = AssLook.plainText(e.text)
             if (text.isBlank()) continue
             val look = AssLook.resolve(file.style(e.style) ?: AssStyle(), e, tMs)
-            drawOne(canvas, w, h, s, bs, file, text, look, typefaceFor)
+            drawOne(canvas, w, h, s, bs, file, text, look, karaFor(e, tMs), typefaceFor)
         }
     }
 
+    /** Karaoke state of a line at the playhead: each syllable's character range in the plain text. */
+    private class KaraInfo(val ranges: List<IntRange>, val syls: List<Syl>, val t: Long)
+
+    private fun karaFor(e: AssEvent, tMs: Long): KaraInfo? {
+        if (!Karaoke.hasKaraoke(e.text)) return null
+        val k = Karaoke.parse(e.text)
+        if (!k.isKaraoke) return null
+        var at = AssLook.plainText(k.prefix).length
+        val ranges = k.syls.map { s -> val n = AssLook.plainText(s.text).length; (at until at + n).also { at += n } }
+        return KaraInfo(ranges, k.syls, tMs - e.startMs)
+    }
+
+    /** [text] with one colour per syllable (what [color] returns for syllable i). */
+    private fun spans(text: String, k: KaraInfo, color: (Int) -> Int): CharSequence {
+        val sp = SpannableString(text)
+        for ((i, r) in k.ranges.withIndex()) {
+            if (r.isEmpty() || r.first >= text.length) continue
+            sp.setSpan(ForegroundColorSpan(color(i)), r.first, minOf(r.last + 1, text.length), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        return sp
+    }
+
     private fun drawOne(
-        canvas: Canvas, w: Int, h: Int, s: Float, bs: Float, file: SubFile, text: String, l: ResolvedLook,
+        canvas: Canvas, w: Int, h: Int, s: Float, bs: Float, file: SubFile, text: String, l: ResolvedLook, kara: KaraInfo?,
         typefaceFor: (String, Boolean) -> Typeface,
     ) {
         val alpha = (l.opacity * 255f).toInt().coerceIn(0, 255)
@@ -120,17 +147,46 @@ object AssPreview {
             layout.draw(canvas)
             canvas.restore()
         }
+        // karaoke (\k \kf \ko): sung syllables in the primary colour, the rest in the secondary colour; \ko hides the
+        // outline until its syllable starts; \kf sweeps the primary colour across the syllable in the reading direction
+        val k = kara
+        fun started(i: Int) = k != null && k.t >= k.syls[i].startMs
+        fun done(i: Int) = k != null && k.t >= k.syls[i].startMs + k.syls[i].durMs
         if (outlined) {
             paint.maskFilter = blurMask
             paint.style = Paint.Style.STROKE
             paint.strokeWidth = border * 2f // centred on the glyph edge: the inner half is covered by the fill
             paint.color = l.outline
-            layout.draw(canvas)
+            if (k != null && k.syls.any { it.tag == "\\ko" }) {
+                buildLayout(spans(text, k) { i -> if (k.syls[i].tag == "\\ko" && !started(i)) Color.TRANSPARENT else l.outline }, paint, boxW, align).draw(canvas)
+            } else layout.draw(canvas)
         }
         paint.maskFilter = if (outlined) null else blurMask
         paint.style = Paint.Style.FILL
         paint.color = l.primary
-        layout.draw(canvas)
+        if (k == null) layout.draw(canvas)
+        else {
+            val sung = buildLayout(spans(text, k) { i -> if (done(i) || (started(i) && k.syls[i].tag != "\\kf")) l.primary else l.secondary }, paint, boxW, align)
+            sung.draw(canvas)
+            val cur = k.syls.indices.firstOrNull { k.syls[it].tag == "\\kf" && started(it) && !done(it) }
+            val r = cur?.let { k.ranges[it] }
+            if (cur != null && r != null && !r.isEmpty() && r.first < text.length) {
+                val sy = k.syls[cur]
+                val u = ((k.t - sy.startMs).toFloat() / sy.durMs.coerceAtLeast(1)).coerceIn(0f, 1f)
+                val line = sung.getLineForOffset(r.first)
+                val xa = sung.getPrimaryHorizontal(r.first)
+                // end of the syllable; if it wraps to the next line, sweep to the end of this line (reading direction)
+                val rtl = sung.getParagraphDirection(line) == android.text.Layout.DIR_RIGHT_TO_LEFT
+                val lineEnd = if (rtl) sung.getLineLeft(line) else sung.getLineRight(line)
+                val xb = if (sung.getLineForOffset(r.last) == line) sung.getPrimaryHorizontal(minOf(r.last + 1, text.length)).let { if (it == xa) lineEnd else it } else lineEnd
+                val xs = xa + (xb - xa) * u
+                val only = buildLayout(spans(text, k) { i -> if (i == cur) l.primary else Color.TRANSPARENT }, paint, boxW, align)
+                canvas.save()
+                canvas.clipRect(minOf(xa, xs), sung.getLineTop(line).toFloat(), maxOf(xa, xs), sung.getLineBottom(line).toFloat())
+                only.draw(canvas)
+                canvas.restore()
+            }
+        }
         paint.maskFilter = null
         canvas.restoreToCount(saved)
     }

@@ -39,7 +39,7 @@ internal fun newTextPaint(text: CharSequence, tf: Typeface, size: Float): TextPa
         if (hasArabic(text)) isElegantTextHeight = true
     }
 
-internal fun buildLayout(text: String, paint: TextPaint, width: Int, align: Layout.Alignment): StaticLayout {
+internal fun buildLayout(text: CharSequence, paint: TextPaint, width: Int, align: Layout.Alignment): StaticLayout {
     val b = StaticLayout.Builder.obtain(text, 0, text.length, paint, width.coerceAtLeast(1))
         .setAlignment(align)
         .setTextDirection(TextDirectionHeuristics.FIRSTSTRONG_LTR)

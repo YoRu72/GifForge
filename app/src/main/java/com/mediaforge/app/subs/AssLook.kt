@@ -9,6 +9,7 @@ data class ResolvedLook(
     val bold: Boolean,
     val italic: Boolean,
     val primary: Int,
+    val secondary: Int,      // karaoke: colour of syllables not sung yet
     val outline: Int,
     val back: Int,
     val alignment: Int,      // numpad 1..9
@@ -47,6 +48,7 @@ object AssLook {
     private val POS = Regex("""\\pos\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)""")
     private val MOVE = Regex("""\\move\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*(?:,\s*(-?\d+)\s*,\s*(-?\d+)\s*)?\)""")
     private val C1 = Regex("""\\1?c&H([0-9A-Fa-f]{1,8})&?""")
+    private val C2 = Regex("""\\2c&H([0-9A-Fa-f]{1,8})&?""")
     private val C3 = Regex("""\\3c&H([0-9A-Fa-f]{1,8})&?""")
     private val C4 = Regex("""\\4c&H([0-9A-Fa-f]{1,8})&?""")
     private val BORD = Regex("""\\bord(\d+(?:\.\d+)?)""")
@@ -87,6 +89,7 @@ object AssLook {
             bold = B.find(tags)?.groupValues?.get(1)?.let { it != "0" } ?: style.bold,
             italic = I.find(tags)?.groupValues?.get(1)?.let { it != "0" } ?: style.italic,
             primary = col(C1) ?: style.primary,
+            secondary = col(C2) ?: style.secondary,
             outline = col(C3) ?: style.outline,
             back = col(C4) ?: style.back,
             alignment = an,

@@ -67,6 +67,7 @@ fun SubVideoPane(
     onSetEnd: (Long) -> Unit,
     onTapChain: (Long) -> Unit,
     onNudge: (startDelta: Long, endDelta: Long) -> Unit,
+    onKaraTap: ((Long) -> Unit)? = null,   // karaoke tap timing: the next syllable starts at the playhead
 ) {
     val ctx = LocalContext.current
     val player = remember(uri) {
@@ -133,6 +134,7 @@ fun SubVideoPane(
                 AssistChip(onClick = { onSetEnd(player.currentPosition) }, label = { Text(stringResource(R.string.sv_set_end)) })
                 AssistChip(onClick = { onTapChain(player.currentPosition) }, label = { Text(stringResource(R.string.sv_tap_chain)) })
                 AssistChip(onClick = { player.pause(); player.seekTo(events.getOrNull(active)?.startMs ?: 0L); player.play() }, label = { Text(stringResource(R.string.sv_play_line)) })
+                if (onKaraTap != null) AssistChip(onClick = { onKaraTap(player.currentPosition) }, label = { Text(stringResource(R.string.ka_tap_chip)) })
                 FilterChip(selected = loopLine, onClick = { loopLine = !loopLine }, label = { Text(stringResource(R.string.sv_loop_line)) })
                 FilterChip(selected = follow, onClick = { follow = !follow }, label = { Text(stringResource(R.string.sv_follow)) })
             }
