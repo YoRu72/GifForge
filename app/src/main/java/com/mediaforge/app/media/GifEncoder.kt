@@ -41,6 +41,7 @@ data class GifOptions(
     val flipH: Boolean = false,
     val flipV: Boolean = false,
     val mute: Boolean = false,        // video export: drop the audio
+    val audioUri: android.net.Uri? = null, // video export: this file's AAC audio instead of the source's (FEAT1 replace audio)
 )
 
 /** Rotate/flip of a finished frame (FEAT1). Returns [b] itself when nothing is to be done. */

@@ -50,6 +50,8 @@ fun SettingsTab(state: EditorState, info: VideoInfo?) {
         Text(stringResource(R.string.st_video), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(selected = state.mute, onClick = { state.mute = !state.mute }, label = { Text(stringResource(R.string.st_mute)) })
+            val audioPicker = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { u -> if (u != null) { state.audioUri = u; state.mute = false } }
+            FilterChip(selected = state.audioUri != null, onClick = { if (state.audioUri != null) state.audioUri = null else audioPicker.launch(arrayOf("audio/*", "video/*")) }, label = { Text(stringResource(if (state.audioUri != null) R.string.st_audio_replaced else R.string.st_replace_audio)) })
             listOf(R.string.st_small to 30, R.string.st_balanced to 60, R.string.st_best to 95).forEach { (l, q) ->
                 FilterChip(selected = state.quality == q, onClick = { state.quality = q }, label = { Text(stringResource(l)) })
             }

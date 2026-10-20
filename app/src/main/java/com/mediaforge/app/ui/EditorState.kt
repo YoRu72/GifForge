@@ -33,6 +33,7 @@ class EditorState {
     var flipH by mutableStateOf(false)
     var flipV by mutableStateOf(false)
     var mute by mutableStateOf(false)
+    var audioUri by mutableStateOf<android.net.Uri?>(null)
 
     val crop = CropState()
     var overlays by mutableStateOf<List<TextOverlay>>(emptyList())
@@ -108,7 +109,7 @@ class EditorState {
         crop = crop.rect.takeIf { !it.isFull },
         topBar = topBar, bottomBar = bottomBar, elements = elements,
         maxWidth = maxWidth, mode = playMode,
-        rotate = rotate, flipH = flipH, flipV = flipV, mute = mute,
+        rotate = rotate, flipH = flipH, flipV = flipV, mute = mute, audioUri = audioUri,
     )
 }
 

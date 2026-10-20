@@ -801,4 +801,9 @@
     <string name="sa_title">مساعد الأنماط</string>
     <string name="sa_current">النمط الحالي: %1$s</string>
     <string name="home_recent">متابعة</string>
+    <string name="st_replace_audio">إبدال الصوت…</string>
+    <string name="st_audio_replaced">أُبدل الصوت (انقر للتراجع)</string>
+    <string name="ver_menu">النسخ السابقة…</string>
+    <string name="ver_title">النسخ السابقة (انقر للاستعادة)</string>
+    <string name="ver_none">لا نسخ سابقة بعد؛ تُحفظ نسخة كل بضع دقائق من التحرير.</string>
 </resources>

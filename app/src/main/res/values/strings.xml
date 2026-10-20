@@ -788,4 +788,9 @@
     <string name="sa_title">Styling assistant</string>
     <string name="sa_current">Current style: %1$s</string>
     <string name="home_recent">Continue</string>
+    <string name="st_replace_audio">Replace audio…</string>
+    <string name="st_audio_replaced">Audio replaced (tap to undo)</string>
+    <string name="ver_menu">Earlier versions…</string>
+    <string name="ver_title">Earlier versions (tap to restore)</string>
+    <string name="ver_none">No earlier versions yet; one is kept every few minutes of editing.</string>
 </resources>

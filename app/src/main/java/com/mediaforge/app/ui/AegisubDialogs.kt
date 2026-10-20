@@ -335,3 +335,34 @@ fun StylingAssistantDialog(file: SubFile, start: Int, onDismiss: () -> Unit, onS
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } },
     )
 }
+
+// ---------------------------------------------------------------- Version history (AEGX10)
+
+@Composable
+fun VersionsDialog(name: String, onDismiss: () -> Unit, onRestore: (SubFile) -> Unit) {
+    val ctx = LocalContext.current
+    val versions by produceState<List<com.mediaforge.app.media.Autosave.Version>?>(null, name) {
+        value = withContext(Dispatchers.IO) { com.mediaforge.app.media.Autosave.versions(ctx, name) }
+    }
+    val fmt = remember { java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.US) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.ver_title)) },
+        text = {
+            val v = versions
+            when {
+                v == null -> Text(stringResource(R.string.gc_loading))
+                v.isEmpty() -> Text(stringResource(R.string.ver_none))
+                else -> LazyColumn(Modifier.heightIn(max = 420.dp)) {
+                    items(v) { ver ->
+                        Row(Modifier.fillMaxWidth().clickable { com.mediaforge.app.media.Autosave.load(ver)?.let(onRestore) }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            ForceLtr { Text(fmt.format(java.util.Date(ver.timeMs)), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium) }
+                            Text(ctx.resources.getQuantityString(R.plurals.sub_lines, ver.lines, ver.lines), style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } },
+    )
+}
