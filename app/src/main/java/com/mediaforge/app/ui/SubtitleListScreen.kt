@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -564,6 +565,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                                 i, e, showStyle, isActive = i == active, translated = if (trOn) (e.text != originals[i] && e.text.isNotBlank()) else null, isMarked = i in marked, marking = marked.isNotEmpty(),
                                 onClick = { if (marked.isNotEmpty()) marked = if (i in marked) marked - i else marked + i else active = i },
                                 onLong = { marked = if (i in marked) marked - i else marked + i },
+                                styleColor = if (file.styles.size > 1) (file.style(e.style)?.primary ?: 0) else 0,
                             )
                         }
                     }
@@ -671,7 +673,7 @@ private fun GridHeader(showStyle: Boolean) {
 @Composable
 private fun GridRow(
     i: Int, e: AssEvent, showStyle: Boolean, isActive: Boolean, translated: Boolean?, isMarked: Boolean, marking: Boolean,
-    onClick: () -> Unit, onLong: () -> Unit,
+    onClick: () -> Unit, onLong: () -> Unit, styleColor: Int = 0,
 ) {
     val bg = when {
         isActive -> MaterialTheme.colorScheme.primaryContainer
@@ -685,6 +687,9 @@ private fun GridRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val mono = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, fontStyle = if (e.comment) FontStyle.Italic else FontStyle.Normal)
+        // a thin stripe in the style's primary colour: styles are told apart at a glance
+        if (styleColor != 0) Box(Modifier.width(3.dp).height(22.dp).background(Color(styleColor))) else Box(Modifier.width(3.dp))
+        Box(Modifier.width(5.dp))
         if (marking) Checkbox(isMarked, { onLong() }, Modifier.width(30.dp)) else Text("${i + 1}", Modifier.width(30.dp), style = mono, color = if (translated == true) MaterialTheme.colorScheme.primary else if (translated == false) MaterialTheme.colorScheme.error else dim)
         ForceLtr {
             Text(formatAssTime(e.startMs), Modifier.width(66.dp), style = mono, color = dim, maxLines = 1)
@@ -695,6 +700,14 @@ private fun GridRow(
             plain(e.text), Modifier.weight(1f).clipToBounds(), maxLines = 1, overflow = TextOverflow.Ellipsis, color = dim,
             style = MaterialTheme.typography.bodyMedium.copy(textDirection = TextDirection.Content, fontStyle = if (e.comment) FontStyle.Italic else FontStyle.Normal),
         )
+        // reading speed badge: chars/s, red when above the profile
+        if (!e.comment) {
+            val cps = com.mediaforge.app.subs.ReadOps.cps(e)
+            if (cps > 0.0) Text(
+                "%.0f".format(java.util.Locale.US, cps), Modifier.padding(start = 4.dp).background(if (fast) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceVariant, androidx.compose.foundation.shape.RoundedCornerShape(4.dp)).padding(horizontal = 4.dp, vertical = 1.dp),
+                style = mono, color = if (fast) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 

@@ -800,4 +800,5 @@
     <string name="sa_menu">مساعد الأنماط…</string>
     <string name="sa_title">مساعد الأنماط</string>
     <string name="sa_current">النمط الحالي: %1$s</string>
+    <string name="home_recent">متابعة</string>
 </resources>

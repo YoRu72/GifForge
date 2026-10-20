@@ -118,6 +118,10 @@ private fun AppRoot(incomingFont: Uri?, onFontHandled: () -> Unit) {
     val g = gif
     when {
         v != null -> {
+            LaunchedEffect(v) {
+                runCatching { ctx.contentResolver.takePersistableUriPermission(v, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+                Prefs.set(Prefs.recentVideos, com.mediaforge.app.ui.Recents.push(Prefs.recentVideos.value, v, 4))
+            }
             BackHandler { video = null } // returns to the finder if that's where you came from
             EditorScreen(uri = v, onBack = { video = null })
         }

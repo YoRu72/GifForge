@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -53,6 +54,17 @@ fun HomeScreen(onVideo: (Uri) -> Unit, onGif: (Uri) -> Unit, onBrowse: () -> Uni
             Spacer(Modifier.height(24.dp))
             SectionCard(Icons.Filled.VideoLibrary, stringResource(R.string.home_edit_title), stringResource(R.string.home_edit_sub)) {
                 picker.launch(arrayOf("video/*", "image/gif"))
+            }
+            // continue with a recent video (the editor remembers the last four)
+            val recent = Recents.get(com.mediaforge.app.Prefs.recentVideos.value)
+            if (recent.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                Text(stringResource(R.string.home_recent), style = MaterialTheme.typography.labelLarge)
+                androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    recent.forEach { u ->
+                        androidx.compose.material3.AssistChip(onClick = { if (isGif(ctx, u)) onGif(u) else onVideo(u) }, label = { Text(displayName(ctx, u), maxLines = 1) })
+                    }
+                }
             }
             Spacer(Modifier.height(12.dp))
             SectionCard(Icons.Filled.Folder, stringResource(R.string.home_finder_title), stringResource(R.string.home_finder_sub), onBrowse)

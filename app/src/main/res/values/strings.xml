@@ -787,4 +787,5 @@
     <string name="sa_menu">Styling assistant…</string>
     <string name="sa_title">Styling assistant</string>
     <string name="sa_current">Current style: %1$s</string>
+    <string name="home_recent">Continue</string>
 </resources>
