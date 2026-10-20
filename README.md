@@ -4,6 +4,6 @@ See ROADMAP.md (source of truth), AEGISUB_NOTES.md, SUBTITLEEDIT_NOTES.md, MOTIO
 
 Build: push to GitHub; Actions > Build APK runs the Arabic guard, the string gate, the unit tests and the build, then publishes the APK to the release `beta` (direct download) and as the artifact `MediaForge-debug-apk`.
 
-Arabic: Settings > Language. Arabic strings live in app/src/main/res/values-ar and follow tools/AR_GLOSSARY.md (concise classical Arabic). Numbers are always Western digits.
+Arabic: Settings > Language. Arabic strings live in app/src/main/res/values-ar and follow tools/AR_GLOSSARY.md (concise classical Arabic). Numbers are always .
 
 Checks (all in CI before the build): `tools/check_arabic.sh` (no letter spacing / font features that break lam-alef), `tools/check_strings.py` (string keys, Arabic parity, format arguments, plurals, digits), `gradle testDebugUnitTest` (formats, encodings, editing, Fix common errors, styles, Aegisub tools, karaoke, motion tracking).
