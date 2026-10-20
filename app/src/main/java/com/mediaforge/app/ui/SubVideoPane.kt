@@ -43,6 +43,7 @@ import com.mediaforge.app.media.readVideoInfo
 import com.mediaforge.app.subs.AssEvent
 import com.mediaforge.app.subs.SubFile
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /** Controls the workspace needs from the video: the line timing buttons read the playhead and move the active line. */
 class SubVideoControls(
@@ -72,11 +73,26 @@ fun SubVideoPane(
     onVisual: ((dx: Float, dy: Float, zoom: Float, rot: Float) -> Unit)? = null, // AEG-D: drag/pinch/twist the active line on the picture
     onStartAt: ((Long) -> Unit)? = null,   // waveform handles (absolute ms)
     onEndAt: ((Long) -> Unit)? = null,
+    onColor: ((Int) -> Unit)? = null,      // AEGX2: eyedropper result (ARGB)
 ) {
     var typeset by remember { mutableStateOf(false) } // visual typesetting mode: gestures edit the line instead of seeking
     var safeArea by remember { mutableStateOf(false) }
     var wave by remember { mutableStateOf(true) }
     var snap by remember { mutableStateOf(true) }
+    var eyedrop by remember { mutableStateOf(false) } // AEGX2: next tap on the picture picks a colour
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val refsForFrame by androidx.compose.runtime.produceState(emptyMap<String, String>(), ctx) { value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { fontRefMap(ctx) } }
+    /** The current frame at full video size, the shown lines drawn on it when [withSubs]. */
+    suspend fun frameBitmap(withSubs: Boolean): android.graphics.Bitmap? = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val src = com.mediaforge.app.media.FrameGrabber.frameAt(ctx, uri, player.currentPosition, 4096) ?: return@withContext null
+        val out = src.copy(android.graphics.Bitmap.Config.ARGB_8888, true)
+        if (withSubs) {
+            val t = player.currentPosition
+            val shown = events.filter { !it.comment && t >= it.startMs && t < it.endMs }
+            com.mediaforge.app.media.AssPreview.draw(android.graphics.Canvas(out), out.width, out.height, file, shown, t, out.height) { n, b -> faceFor(refsForFrame, n, b) }
+        }
+        out
+    }
     val ctx = LocalContext.current
     val player = remember(uri) {
         ExoPlayer.Builder(ctx).build().apply {
@@ -130,6 +146,18 @@ fun SubVideoPane(
                 val asp = if (aspect > 0f) aspect else file.playResX.toFloat() / file.playResY.coerceAtLeast(1)
                 SubtitleOverlay(file = file, shown = shown, posMs = pos, aspect = asp, modifier = Modifier.fillMaxSize(), videoHeight = videoH)
                 if (safeArea) SafeAreaOverlay(asp)
+                if (eyedrop && onColor != null) Box(Modifier.fillMaxSize().pointerInput(asp) {
+                    androidx.compose.foundation.gestures.detectTapGestures { o ->
+                        val vw: Float; val vh: Float
+                        if (size.width.toFloat() / size.height > asp) { vh = size.height.toFloat(); vw = vh * asp } else { vw = size.width.toFloat(); vh = vw / asp }
+                        val fx = ((o.x - (size.width - vw) / 2f) / vw).coerceIn(0f, 1f); val fy = ((o.y - (size.height - vh) / 2f) / vh).coerceIn(0f, 1f)
+                        scope.launch {
+                            val b = frameBitmap(false) ?: return@launch
+                            val c = b.getPixel((fx * (b.width - 1)).toInt(), (fy * (b.height - 1)).toInt())
+                            onColor(c or (0xFF shl 24)); eyedrop = false
+                        }
+                    }
+                })
                 if (typeset && onVisual != null) {
                     // one gesture = one edit: script px per screen px from the picture's drawn size
                     androidx.compose.foundation.Canvas(
@@ -178,6 +206,14 @@ fun SubVideoPane(
                 FilterChip(selected = wave, onClick = { wave = !wave }, label = { Text(stringResource(R.string.sv_wave)) })
                 if (wave) FilterChip(selected = snap, onClick = { snap = !snap }, label = { Text(stringResource(R.string.sv_snap)) })
                 FilterChip(selected = safeArea, onClick = { safeArea = !safeArea }, label = { Text(stringResource(R.string.sv_safe)) })
+                if (onColor != null) FilterChip(selected = eyedrop, onClick = { eyedrop = !eyedrop }, label = { Text(stringResource(R.string.sv_eyedrop)) })
+                AssistChip(onClick = {
+                    scope.launch {
+                        val b = frameBitmap(true)
+                        val u = b?.let { com.mediaforge.app.media.savePng(ctx, it) }
+                        android.widget.Toast.makeText(ctx, if (u != null) R.string.sv_frame_saved else R.string.sv_frame_failed, android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }, label = { Text(stringResource(R.string.sv_save_frame)) })
             }
             Row(
                 Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 6.dp),

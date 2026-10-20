@@ -722,4 +722,9 @@
     <string name="fx_ar_tatweel">Remove kashida (ـ)</string>
     <string name="fx_ar_tashkeel">Remove tashkeel</string>
     <string name="fx_ar_letters">Unify alef, yeh and kaf forms (for search)</string>
+    <string name="sv_eyedrop">Pick colour</string>
+    <string name="sv_color_set">Text colour taken from the picture</string>
+    <string name="sv_save_frame">Save frame</string>
+    <string name="sv_frame_saved">Frame saved to Pictures/MediaForge</string>
+    <string name="sv_frame_failed">Could not save the frame</string>
 </resources>

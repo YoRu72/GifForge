@@ -735,4 +735,9 @@
     <string name="fx_ar_tatweel">حذف الكشيدة (ـ)</string>
     <string name="fx_ar_tashkeel">حذف التشكيل</string>
     <string name="fx_ar_letters">توحيد صور الألف والياء والكاف (للبحث)</string>
+    <string name="sv_eyedrop">التقاط لون</string>
+    <string name="sv_color_set">أُخذ لون النصّ من الصورة</string>
+    <string name="sv_save_frame">حفظ الإطار</string>
+    <string name="sv_frame_saved">حُفظ الإطار في Pictures/MediaForge</string>
+    <string name="sv_frame_failed">تعذّر حفظ الإطار</string>
 </resources>

@@ -488,6 +488,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                     onVisual = { dx, dy, z, r -> if (active in events.indices) edit(active) { com.mediaforge.app.subs.AssLook.visualEdit(file, it, dx, dy, z, r) } },
                     onStartAt = { t -> if (active in events.indices) edit(active) { it.copy(startMs = t) } },
                     onEndAt = { t -> if (active in events.indices) edit(active) { it.copy(endMs = t) } },
+                    onColor = { c -> if (active in events.indices) { editTargets { it.copy(text = com.mediaforge.app.subs.AssLook.setTag(it.text, "c", com.mediaforge.app.subs.AssLook.colorTag(c))) }; Toast.makeText(ctx, R.string.sv_color_set, Toast.LENGTH_SHORT).show() } },
                 )
                 HorizontalDivider()
             }

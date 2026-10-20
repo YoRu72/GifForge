@@ -48,11 +48,19 @@ jobs:
           gradle-version: 8.7
       - name: Unit tests (subtitle formats, encodings, undo, find, effects, tools)
         run: gradle testDebugUnitTest --no-daemon
+      - name: Test summary (shown in the log)
+        if: failure()
+        run: |
+          for f in $(find app/build/test-results -name '*.xml'); do
+            grep -l "<failure" "$f" >/dev/null && { echo "== $f"; grep -A3 "<failure" "$f" | head -40; }
+          done; true
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: test-report
-          path: app/build/reports/tests/
+          path: |
+            app/build/reports/tests/
+            app/build/test-results/
       - run: gradle assembleDebug --no-daemon
       - name: APK size report
         run: |
