@@ -37,7 +37,22 @@ data class GifOptions(
     val bottomBar: CaptionBar? = null,
     val maxWidth: Int = 0,            // 0 = keep size; otherwise shrink wider frames to this width
     val mode: PlayMode = PlayMode.NORMAL,
+    val rotate: Int = 0,              // FEAT1: 0/90/180/270 clockwise, applied to the finished frame (export only)
+    val flipH: Boolean = false,
+    val flipV: Boolean = false,
+    val mute: Boolean = false,        // video export: drop the audio
 )
+
+/** Rotate/flip of a finished frame (FEAT1). Returns [b] itself when nothing is to be done. */
+fun orientFrame(b: Bitmap, rotate: Int, flipH: Boolean, flipV: Boolean): Bitmap {
+    if (rotate % 360 == 0 && !flipH && !flipV) return b
+    val m = android.graphics.Matrix()
+    if (flipH || flipV) m.postScale(if (flipH) -1f else 1f, if (flipV) -1f else 1f, b.width / 2f, b.height / 2f)
+    if (rotate % 360 != 0) m.postRotate(rotate.toFloat())
+    val out = Bitmap.createBitmap(b, 0, 0, b.width, b.height, m, true)
+    if (out !== b) b.recycle()
+    return out
+}
 
 /**
  * Turns a raw decoded frame into the final frame: crop -> shapes/text (with opacity + blend over the
@@ -77,7 +92,7 @@ class FrameComposer(private val opts: GifOptions) {
             val composed = composeWithBars(bmp, opts.topBar, opts.bottomBar)
             if (composed !== bmp) { bmp.recycle(); bmp = composed }
         }
-        return bmp
+        return orientFrame(bmp, opts.rotate, opts.flipH, opts.flipV)
     }
 
     fun release() {

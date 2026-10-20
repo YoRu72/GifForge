@@ -29,6 +29,10 @@ class EditorState {
     var speed by mutableFloatStateOf(1f)
     var loop by mutableStateOf(Prefs.defLoop.value)
     var fast by mutableStateOf(Prefs.defFast.value)
+    var rotate by mutableIntStateOf(0)      // FEAT1 output orientation
+    var flipH by mutableStateOf(false)
+    var flipV by mutableStateOf(false)
+    var mute by mutableStateOf(false)
 
     val crop = CropState()
     var overlays by mutableStateOf<List<TextOverlay>>(emptyList())
@@ -104,6 +108,7 @@ class EditorState {
         crop = crop.rect.takeIf { !it.isFull },
         topBar = topBar, bottomBar = bottomBar, elements = elements,
         maxWidth = maxWidth, mode = playMode,
+        rotate = rotate, flipH = flipH, flipV = flipV, mute = mute,
     )
 }
 

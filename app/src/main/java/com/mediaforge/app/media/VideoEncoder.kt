@@ -65,7 +65,7 @@ object VideoEncoder {
             muxer = MediaMuxer(out.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
 
             // audio: copied as is when the picture plays forward at normal speed (the track must be added before the muxer starts)
-            val wantAudio = opts.mode == PlayMode.NORMAL && opts.speed in 0.99f..1.01f
+            val wantAudio = !opts.mute && opts.mode == PlayMode.NORMAL && opts.speed in 0.99f..1.01f
             val audioEx = if (wantAudio) MediaExtractor().also { it.setDataSource(context, uri, null) } else null
             val audioTrackIn = audioEx?.let { ex -> (0 until ex.trackCount).firstOrNull { ex.getTrackFormat(it).getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true } } ?: -1
             var audioTrackOut = -1

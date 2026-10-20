@@ -40,6 +40,21 @@ fun SettingsTab(state: EditorState, info: VideoInfo?) {
         LabeledSlider(stringResource(R.string.st_speed), "%.2fx".format(state.speed), state.speed, 0.25f..3f, 0) {
             state.speed = (it * 20).roundToInt() / 20f
         }
+        Text(stringResource(R.string.st_orient), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(0, 90, 180, 270).forEach { r -> FilterChip(selected = state.rotate == r, onClick = { state.rotate = r }, label = { Text(if (r == 0) stringResource(R.string.st_rot_none) else "$r\u00B0") }) }
+            FilterChip(selected = state.flipH, onClick = { state.flipH = !state.flipH }, label = { Text(stringResource(R.string.st_flip_h)) })
+            FilterChip(selected = state.flipV, onClick = { state.flipV = !state.flipV }, label = { Text(stringResource(R.string.st_flip_v)) })
+        }
+        Text(stringResource(R.string.st_orient_note), style = MaterialTheme.typography.bodySmall)
+        Text(stringResource(R.string.st_video), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(selected = state.mute, onClick = { state.mute = !state.mute }, label = { Text(stringResource(R.string.st_mute)) })
+            listOf(R.string.st_small to 30, R.string.st_balanced to 60, R.string.st_best to 95).forEach { (l, q) ->
+                FilterChip(selected = state.quality == q, onClick = { state.quality = q }, label = { Text(stringResource(l)) })
+            }
+        }
+        Text(stringResource(R.string.st_video_note), style = MaterialTheme.typography.bodySmall)
         Text(stringResource(R.string.st_playback), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             PlayMode.entries.forEach { m ->

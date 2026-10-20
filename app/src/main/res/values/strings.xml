@@ -761,4 +761,15 @@
     <string name="ex_as_video">As video (MP4)</string>
     <string name="rs_with_audio">with sound</string>
     <string name="rs_no_audio">silent (speed or reverse changed)</string>
+    <string name="st_orient">Output orientation</string>
+    <string name="st_rot_none">No rotation</string>
+    <string name="st_flip_h">Mirror</string>
+    <string name="st_flip_v">Upside down</string>
+    <string name="st_orient_note">Applied to the exported GIF or video; the live preview stays as the source. \"See blended frame\" shows the result.</string>
+    <string name="st_video">Video export</string>
+    <string name="st_mute">Mute</string>
+    <string name="st_small">Small file</string>
+    <string name="st_balanced">Balanced</string>
+    <string name="st_best">Best quality</string>
+    <string name="st_video_note">The quality slider above sets the video bitrate too; these presets set it in one tap.</string>
 </resources>

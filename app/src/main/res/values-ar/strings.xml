@@ -774,4 +774,15 @@
     <string name="ex_as_video">فيديو (MP4)</string>
     <string name="rs_with_audio">مع الصوت</string>
     <string name="rs_no_audio">بلا صوت (غُيّرت السرعة أو الاتجاه)</string>
+    <string name="st_orient">اتجاه الناتج</string>
+    <string name="st_rot_none">بلا دوران</string>
+    <string name="st_flip_h">قلب أفقي</string>
+    <string name="st_flip_v">قلب رأسي</string>
+    <string name="st_orient_note">يُطبَّق على GIF أو الفيديو المصدَّر، وتبقى المعاينة الحيّة كالمصدر. «الإطار الممزوج» يُظهر الناتج.</string>
+    <string name="st_video">تصدير الفيديو</string>
+    <string name="st_mute">كتم الصوت</string>
+    <string name="st_small">ملف صغير</string>
+    <string name="st_balanced">متوازن</string>
+    <string name="st_best">أعلى جودة</string>
+    <string name="st_video_note">مؤشّر الجودة أعلاه يحدّد معدّل بتّ الفيديو أيضًا، وهذه الخيارات تضبطه بنقرة.</string>
 </resources>
