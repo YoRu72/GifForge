@@ -25,6 +25,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material.icons.filled.Redo
 import androidx.compose.material.icons.filled.Search
@@ -204,6 +205,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
         val tg = (if (marked.isNotEmpty()) marked.sorted() else listOf(active)).filter { it in events.indices }
         file = file.copy(events = com.mediaforge.app.subs.PasteOver.applyAll(events, tg, clipboard, fields)); dirty = true; pasteOverOpen = false
     }
+    if (qcOpen) QcDialog(file, onDismiss = { qcOpen = false }) { i -> active = i; qcOpen = false }
     if (fontsOpen) FontsCollectorDialog(file, onDismiss = { fontsOpen = false }) { f2 -> if (f2 != file) { file = f2; dirty = true } }
     if (stylesOpen) StylesDialog(file, marked, onDismiss = { stylesOpen = false }) { f2 -> if (f2 != file) { file = f2; dirty = true } }
     if (fixOpen) FixDialog(events, { fixOpen = false }) { out, n ->
@@ -262,11 +264,13 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
         }
     }
     var pendingExport by remember { mutableStateOf<Pair<com.mediaforge.app.subs.SubFormat, EncChoice>?>(null) }
+    var exportFilters by remember { mutableStateOf(setOf<com.mediaforge.app.subs.ExportFilters.Filter>()) }
+    var qcOpen by remember { mutableStateOf(false) } // 23.c quality list
     val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { u ->
         val pe = pendingExport
         if (u != null && pe != null) {
             val ok = try {
-                val bytes = com.mediaforge.app.subs.Encodings.encode(pe.first.write(file), pe.second.charset, pe.second.bom)
+                val bytes = com.mediaforge.app.subs.Encodings.encode(pe.first.write(com.mediaforge.app.subs.ExportFilters.apply(file, exportFilters)), pe.second.charset, pe.second.bom)
                 ctx.contentResolver.openOutputStream(u, "wt")?.use { it.write(bytes) } != null
             } catch (e: Exception) { false }
             Toast.makeText(ctx, if (ok) R.string.sub_saved else R.string.sub_save_failed, Toast.LENGTH_SHORT).show()
@@ -275,9 +279,9 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
     }
     if (chooser) ExportChooser(
         hasVideo = video != null, engineReady = com.mediaforge.app.media.VideoExporter.available(), defaultFormatId = cd.format.id, onDismiss = { chooser = false },
-        onExportFile = { id, enc ->
+        onExportFile = { id, enc, filters ->
             val f = com.mediaforge.app.subs.SubFormats.byId(id) ?: cd.format
-            pendingExport = f to enc; chooser = false
+            pendingExport = f to enc; exportFilters = filters; chooser = false
             exporter.launch(cd.name.substringBeforeLast('.') + "." + (f.extensions.firstOrNull() ?: "txt"))
         },
         onExportVideo = { m, st ->
@@ -422,6 +426,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                                 }
                                 3 -> { // tools
                                     item(R.string.fx_menu, ed && events.isNotEmpty()) { fixOpen = true }
+                                    item(R.string.qc_menu, events.isNotEmpty()) { qcOpen = true }
                                     item(R.string.ar_repair, ed && events.isNotEmpty()) {
                                         val r = com.mediaforge.app.subs.ArabicTools.guessRepair(events.map { it.text })
                                         if (r == null) Toast.makeText(ctx, R.string.ar_repair_none, Toast.LENGTH_SHORT).show()
@@ -490,6 +495,27 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                     onEndAt = { t -> if (active in events.indices) edit(active) { it.copy(endMs = t) } },
                     onColor = { c -> if (active in events.indices) { editTargets { it.copy(text = com.mediaforge.app.subs.AssLook.setTag(it.text, "c", com.mediaforge.app.subs.AssLook.colorTag(c))) }; Toast.makeText(ctx, R.string.sv_color_set, Toast.LENGTH_SHORT).show() } },
                 )
+                HorizontalDivider()
+            }
+            // A25: the encoding was guessed (not UTF): say which and offer the other plausible ones
+            var encBarOff by rememberSaveable(cd.name) { mutableStateOf(false) }
+            if (!encBarOff && !dirty && cd.uri != null && !cd.charset.uppercase().startsWith("UTF")) {
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(stringResource(R.string.enc_read_as, cd.charset), style = MaterialTheme.typography.labelSmall)
+                    (cd.alternatives + com.mediaforge.app.subs.Encodings.choices.filter { it !in cd.alternatives && it != cd.charset }).take(6).forEach { cs ->
+                        androidx.compose.material3.AssistChip(onClick = {
+                            val u = cd.uri ?: return@AssistChip
+                            scope0.launch {
+                                val d = withContext(Dispatchers.IO) { readSubDoc(ctx, u, cs) }
+                                if (d != null) { cd = d; file = d.file; active = if (d.file.events.isEmpty()) -1 else 0; marked = emptySet() }
+                            }
+                        }, label = { Text(cs, style = MaterialTheme.typography.labelSmall) })
+                    }
+                    IconButton(onClick = { encBarOff = true }) { Icon(Icons.Filled.Close, stringResource(R.string.fd_close)) }
+                }
                 HorizontalDivider()
             }
             if (findOpen) {

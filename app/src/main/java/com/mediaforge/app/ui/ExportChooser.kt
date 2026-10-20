@@ -69,7 +69,7 @@ fun ExportChooser(
     engineReady: Boolean,
     defaultFormatId: String,
     onDismiss: () -> Unit,
-    onExportFile: (formatId: String, enc: EncChoice) -> Unit,
+    onExportFile: (formatId: String, enc: EncChoice, filters: Set<com.mediaforge.app.subs.ExportFilters.Filter>) -> Unit,
     onExportVideo: (ExportMode, VideoExportSettings) -> Unit,
 ) {
     var mode by rememberSaveable { mutableStateOf(ExportMode.FILE) }
@@ -81,6 +81,7 @@ fun ExportChooser(
     var height by rememberSaveable { mutableStateOf(0) }
     var audioCopy by rememberSaveable { mutableStateOf(true) }
     var lang by rememberSaveable { mutableStateOf("ara") }
+    var filters by remember { mutableStateOf(setOf<com.mediaforge.app.subs.ExportFilters.Filter>()) } // AEGX5
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -100,7 +101,15 @@ fun ExportChooser(
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     encChoices.forEachIndexed { i, c -> FilterChip(selected = encIdx == i, onClick = { encIdx = i }, label = { Text(c.label) }) }
                 }
-                Button(onClick = { onExportFile(fmt, encChoices[encIdx]) }, Modifier.fillMaxWidth()) { Text(stringResource(R.string.ex_do_file)) }
+                Text(stringResource(R.string.ex_filters), style = MaterialTheme.typography.titleSmall)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(
+                        com.mediaforge.app.subs.ExportFilters.Filter.CLEAN_TAGS to R.string.ex_f_clean, com.mediaforge.app.subs.ExportFilters.Filter.STRIP_COMMENTS to R.string.ex_f_comments,
+                        com.mediaforge.app.subs.ExportFilters.Filter.STRIP_EFFECTS to R.string.ex_f_effects, com.mediaforge.app.subs.ExportFilters.Filter.STRIP_KARAOKE to R.string.ex_f_karaoke,
+                        com.mediaforge.app.subs.ExportFilters.Filter.STRIP_MF_NOTES to R.string.ex_f_notes, com.mediaforge.app.subs.ExportFilters.Filter.SORT_BY_TIME to R.string.ex_f_sort,
+                    ).forEach { (f, l) -> FilterChip(f in filters, { filters = if (f in filters) filters - f else filters + f }, { Text(stringResource(l)) }) }
+                }
+                Button(onClick = { onExportFile(fmt, encChoices[encIdx], filters) }, Modifier.fillMaxWidth()) { Text(stringResource(R.string.ex_do_file)) }
             } else {
                 val soft = mode == ExportMode.SOFT
                 Text(stringResource(R.string.ex_container), style = MaterialTheme.typography.titleSmall)

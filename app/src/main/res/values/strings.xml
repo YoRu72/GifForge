@@ -727,4 +727,24 @@
     <string name="sv_save_frame">Save frame</string>
     <string name="sv_frame_saved">Frame saved to Pictures/MediaForge</string>
     <string name="sv_frame_failed">Could not save the frame</string>
+    <string name="ex_filters">Before writing</string>
+    <string name="ex_f_clean">Clean tags</string>
+    <string name="ex_f_comments">Drop comment lines</string>
+    <string name="ex_f_effects">Freeze animations (\\t, \\move)</string>
+    <string name="ex_f_karaoke">Drop karaoke tags</string>
+    <string name="ex_f_notes">Drop MediaForge notes</string>
+    <string name="ex_f_sort">Sort by time</string>
+    <string name="qc_menu">Quality check…</string>
+    <string name="qc_title">Quality check</string>
+    <string name="qc_none">Nothing to report.</string>
+    <string name="qc_overlap">Overlaps the next line</string>
+    <string name="qc_gap">Gap too short</string>
+    <string name="qc_fast">Too fast (chars/s)</string>
+    <string name="qc_long_line">Line too long (chars)</string>
+    <string name="qc_many_lines">Too many lines</string>
+    <string name="qc_short">Shown too briefly</string>
+    <string name="qc_long">Shown too long</string>
+    <string name="qc_empty">Empty line</string>
+    <string name="qc_style">Style not in the file</string>
+    <string name="enc_read_as">Read as %1$s. Wrong letters? Try:</string>
 </resources>

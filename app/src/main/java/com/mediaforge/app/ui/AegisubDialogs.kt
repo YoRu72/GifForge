@@ -264,3 +264,39 @@ fun PasteOverDialog(onDismiss: () -> Unit, onApply: (Set<com.mediaforge.app.subs
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }
+
+// ---------------------------------------------------------------- QC list (23.c)
+
+private fun qcLabel(k: com.mediaforge.app.subs.Qc.Kind): Int = when (k) {
+    com.mediaforge.app.subs.Qc.Kind.OVERLAP -> R.string.qc_overlap
+    com.mediaforge.app.subs.Qc.Kind.SHORT_GAP -> R.string.qc_gap
+    com.mediaforge.app.subs.Qc.Kind.TOO_FAST -> R.string.qc_fast
+    com.mediaforge.app.subs.Qc.Kind.TOO_LONG_LINE -> R.string.qc_long_line
+    com.mediaforge.app.subs.Qc.Kind.TOO_MANY_LINES -> R.string.qc_many_lines
+    com.mediaforge.app.subs.Qc.Kind.SHORT -> R.string.qc_short
+    com.mediaforge.app.subs.Qc.Kind.LONG -> R.string.qc_long
+    com.mediaforge.app.subs.Qc.Kind.EMPTY -> R.string.qc_empty
+    com.mediaforge.app.subs.Qc.Kind.MISSING_STYLE -> R.string.qc_style
+}
+
+/** Reports only; tapping an issue jumps to its line. Limits follow the reading-speed profile. */
+@Composable
+fun QcDialog(file: SubFile, onDismiss: () -> Unit, onJump: (Int) -> Unit) {
+    val issues = remember(file) { com.mediaforge.app.subs.Qc.run(file, com.mediaforge.app.subs.Qc.Limits(maxCps = com.mediaforge.app.subs.ReadOps.max())) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.qc_title)) },
+        text = {
+            if (issues.isEmpty()) Text(stringResource(R.string.qc_none))
+            else androidx.compose.foundation.lazy.LazyColumn(Modifier.heightIn(max = 480.dp)) {
+                androidx.compose.foundation.lazy.items(issues) { i ->
+                    Column(Modifier.fillMaxWidth().clickable { onJump(i.line) }.padding(vertical = 6.dp)) {
+                        Text(stringResource(R.string.fx_line, i.line + 1) + " - " + stringResource(qcLabel(i.kind)) + (if (i.value.isNotEmpty()) " (" + i.value + ")" else ""), style = MaterialTheme.typography.bodyMedium)
+                        Text(com.mediaforge.app.subs.AssLook.plainText(file.events[i.line].text).replace('\n', ' '), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } },
+    )
+}

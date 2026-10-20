@@ -740,4 +740,24 @@
     <string name="sv_save_frame">حفظ الإطار</string>
     <string name="sv_frame_saved">حُفظ الإطار في Pictures/MediaForge</string>
     <string name="sv_frame_failed">تعذّر حفظ الإطار</string>
+    <string name="ex_filters">قبل الكتابة</string>
+    <string name="ex_f_clean">تنظيف الوسوم</string>
+    <string name="ex_f_comments">حذف أسطر التعليق</string>
+    <string name="ex_f_effects">تثبيت الحركات (\\t و\\move)</string>
+    <string name="ex_f_karaoke">حذف وسوم الكاريوكي</string>
+    <string name="ex_f_notes">حذف ملاحظات MediaForge</string>
+    <string name="ex_f_sort">ترتيب بالوقت</string>
+    <string name="qc_menu">فحص الجودة…</string>
+    <string name="qc_title">فحص الجودة</string>
+    <string name="qc_none">لا ملاحظات.</string>
+    <string name="qc_overlap">يتداخل مع السطر التالي</string>
+    <string name="qc_gap">الفجوة ضيّقة</string>
+    <string name="qc_fast">أسرع من حدّ القراءة (حرف/ث)</string>
+    <string name="qc_long_line">السطر أطول من الحدّ (حرفًا)</string>
+    <string name="qc_many_lines">أسطر أكثر من الحدّ</string>
+    <string name="qc_short">قصير العرض</string>
+    <string name="qc_long">طويل العرض</string>
+    <string name="qc_empty">سطر فارغ</string>
+    <string name="qc_style">نمط غير موجود في الملف</string>
+    <string name="enc_read_as">قُرئ بترميز %1$s. أحرفٌ خاطئة؟ جرّب:</string>
 </resources>

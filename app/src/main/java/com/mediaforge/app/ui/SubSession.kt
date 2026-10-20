@@ -15,6 +15,8 @@ class SubDoc(
     val file: SubFile,
     val charset: String,
     val bom: Boolean,
+    val alternatives: List<String> = emptyList(), // A25: other plausible charsets when the encoding was guessed
+    val uri: android.net.Uri? = null,
 )
 
 fun displayName(ctx: Context, uri: Uri): String = try {
@@ -32,7 +34,7 @@ fun readSubDoc(ctx: Context, uri: Uri, charset: String? = null): SubDoc? {
     val p = SubFormats.parseBytes(bytes, name, charset) ?: return null
     // formats without styles (SRT, VTT, SBV, LRC, MicroDVD, TTML, TXT) open in the translator's base style
     val file = if (p.format.id == "ass") p.file else com.mediaforge.app.subs.StyleOps.withBase(p.file, baseStyle())
-    return SubDoc(name, p.format, file, p.charset, p.bom)
+    return SubDoc(name, p.format, file, p.charset, p.bom, p.alternatives, uri)
 }
 
 fun writeSubDoc(ctx: Context, uri: Uri, doc: SubDoc, file: SubFile): Boolean = try {
