@@ -61,8 +61,8 @@
     <string name="set_delete_fonts_title">Delete all imported fonts?</string>
     <string name="set_delete_fonts_body">Text using these fonts falls back to the default font. System fonts are not touched.</string>
     <string name="set_deleted_fonts">Deleted all imported fonts</string>
-    <string name="set_importing">Importing...</string>
-    <string name="set_scanning">Scanning folder...</string>
+    <string name="set_importing">Importing…</string>
+    <string name="set_scanning">Scanning the folder…</string>
     <string name="set_storage">Storage</string>
     <string name="set_temp_files">Temporary files: %1$s</string>
     <string name="set_clear_temp">Clear temporary files</string>
@@ -107,7 +107,7 @@
     <string name="ed_title">Editor</string>
     <string name="export">Export</string>
     <string name="ed_see_blend">See blended frame</string>
-    <string name="ed_encoding">Encoding... %1$d%%</string>
+    <string name="ed_encoding">Encoding… %1$d%%</string>
     <string name="ed_failed">Failed: %1$s</string>
     <string name="ed_cancelled">Export cancelled</string>
     <string name="tab_trim">Trim</string>
@@ -116,7 +116,7 @@
     <string name="tab_bars">Bars</string>
     <string name="tab_shapes">Shapes</string>
     <string name="tab_settings">Settings</string>
-    <string name="loading_video">Loading video...</string>
+    <string name="loading_video">Loading the video…</string>
     <string name="trim_start">Start %1$s</string>
     <string name="trim_end">End %1$s</string>
     <string name="trim_len">Length %1$s - %2$d frames</string>
@@ -235,7 +235,7 @@
     <string name="gh_prepare_fail">Couldn\'t prepare this GIF for the full editor.</string>
     <string name="gh_open_quick">Open the quick GIF editor (trim + crop)</string>
     <string name="gh_back">Back</string>
-    <string name="gh_preparing">Preparing your GIF for editing...</string>
+    <string name="gh_preparing">Preparing the GIF for editing…</string>
     <string name="gc_open_fail">Couldn\'t open this file</string>
     <string name="gc_read_fail">Couldn\'t read this GIF</string>
     <string name="gc_cancelled">Cancelled</string>
@@ -244,8 +244,8 @@
     <string name="gc_export">Export</string>
     <string name="gc_cancel">Cancel</string>
     <string name="gc_quality">Quality</string>
-    <string name="gc_loading">Loading GIF...</string>
-    <string name="gc_working">Working... %1$d%%</string>
+    <string name="gc_loading">Loading the GIF…</string>
+    <string name="gc_working">Working… %1$d%%</string>
     <string name="gt_single">This GIF has a single frame, so there is nothing to trim.</string>
     <string name="gt_title">Trim</string>
     <string name="gt_hint">The preview above plays the whole GIF. Use the sliders and the stills below to choose the part to keep.</string>
@@ -346,7 +346,7 @@
     <string name="ex_lang_ar">Arabic</string>
     <string name="ex_lang_en">English</string>
     <string name="ex_lang_und">Undefined</string>
-    <string name="ex_exporting">Exporting video...</string>
+    <string name="ex_exporting">Exporting the video…</string>
     <string name="ex_done">Video exported</string>
     <string name="ex_failed">Export failed</string>
     <string name="ex_engine_missing">The video engine is not in this build. Set ffmpegKit in gradle.properties and rebuild.</string>

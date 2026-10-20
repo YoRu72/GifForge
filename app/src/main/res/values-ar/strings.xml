@@ -64,10 +64,10 @@
     <string name="set_preview_reset">إعادة نص المعاينة</string>
     <string name="set_delete_fonts">حذف كل الخطوط المستوردة</string>
     <string name="set_delete_fonts_title">حذف كل الخطوط المستوردة؟</string>
-    <string name="set_delete_fonts_body">يعود النص المستخدِم لهذه الخطوط إلى الخط الافتراضي. لا تتأثر خطوط النظام.</string>
+    <string name="set_delete_fonts_body">يرجع النصّ الذي يستعمل هذه الخطوط إلى الخطّ الافتراضي، ولا تُمسّ خطوط النظام.</string>
     <string name="set_deleted_fonts">حُذفت كل الخطوط المستوردة</string>
-    <string name="set_importing">جارٍ الاستيراد…</string>
-    <string name="set_scanning">جارٍ فحص المجلد…</string>
+    <string name="set_importing">يُستورد…</string>
+    <string name="set_scanning">يُفحص المجلد…</string>
     <string name="set_storage">التخزين</string>
     <string name="set_temp_files">الملفات المؤقتة: %1$s</string>
     <string name="set_clear_temp">مسح الملفات المؤقتة</string>
@@ -85,7 +85,7 @@
     <string name="fonts_tab_mine">خطوطي (%1$s)</string>
     <string name="fonts_tab_system">النظام (%1$s)</string>
     <string name="fonts_none_match">لا نتائج مطابقة للبحث</string>
-    <string name="fonts_none_mine">لا توجد خطوط بعد. اضغط + لاستيراد TTF أو OTF أو TTC أو WOFF أو WOFF2 أو ZIP.</string>
+    <string name="fonts_none_mine">لا خطوط بعد. اضغط + لاستيراد TTF أو OTF أو TTC أو WOFF أو WOFF2 أو ZIP.</string>
     <string name="fonts_none_system">لا توجد خطوط نظام</string>
     <string name="fonts_default">الخط الافتراضي</string>
     <string name="fonts_delete_title">حذف ملف الخط؟</string>
@@ -116,7 +116,7 @@
     <string name="ed_title">المحرّر</string>
     <string name="export">تصدير</string>
     <string name="ed_see_blend">عرض الإطار الممزوج</string>
-    <string name="ed_encoding">جارٍ الترميز… %1$d%%</string>
+    <string name="ed_encoding">يُرمَّز… %1$d%%</string>
     <string name="ed_failed">تعذّر التصدير: %1$s</string>
     <string name="ed_cancelled">أُلغي التصدير</string>
     <string name="tab_trim">قصّ المدّة</string>
@@ -125,7 +125,7 @@
     <string name="tab_bars">أشرطة</string>
     <string name="tab_shapes">أشكال</string>
     <string name="tab_settings">الإعدادات</string>
-    <string name="loading_video">جارٍ تحميل الفيديو…</string>
+    <string name="loading_video">يُحمَّل الفيديو…</string>
     <string name="trim_start">البداية %1$s</string>
     <string name="trim_end">النهاية %1$s</string>
     <string name="trim_len">المدّة %1$s - %2$d إطارًا</string>
@@ -145,7 +145,7 @@
     <string name="crop_reset">إعادة الاقتصاص</string>
     <string name="ly_opacity">شفافية الطبقة</string>
     <string name="ly_blend">نمط المزج</string>
-    <string name="ly_blend_hint">يُمزج النص بالفيديو في الناتج. للتحقق اضغط «عرض الإطار الممزوج» أسفل الفيديو.</string>
+    <string name="ly_blend_hint">يُمزج النصّ بالفيديو في الناتج. للتحقّق اضغط «الإطار الممزوج» أسفل الفيديو.</string>
     <string name="st_speed">السرعة</string>
     <string name="st_playback">التشغيل</string>
     <string name="st_original">الأصلي</string>
@@ -248,7 +248,7 @@
     <string name="gh_prepare_fail">تعذّر تجهيز GIF للمحرّر الكامل.</string>
     <string name="gh_open_quick">فتح المحرّر السريع (قصّ واقتصاص)</string>
     <string name="gh_back">رجوع</string>
-    <string name="gh_preparing">جارٍ تجهيز GIF للتحرير…</string>
+    <string name="gh_preparing">يُجهَّز GIF للتحرير…</string>
     <string name="gc_open_fail">تعذّر فتح الملف</string>
     <string name="gc_read_fail">تعذّرت قراءة GIF</string>
     <string name="gc_cancelled">أُلغي التصدير</string>
@@ -257,8 +257,8 @@
     <string name="gc_export">تصدير</string>
     <string name="gc_cancel">إلغاء</string>
     <string name="gc_quality">الجودة</string>
-    <string name="gc_loading">جارٍ التحميل…</string>
-    <string name="gc_working">جارٍ العمل… %1$d%%</string>
+    <string name="gc_loading">يُحمَّل GIF…</string>
+    <string name="gc_working">يُعمل… %1$d%%</string>
     <string name="gt_single">في GIF إطار واحد فقط، فلا شيء يُقصّ.</string>
     <string name="gt_title">القصّ</string>
     <string name="gt_hint">تعرض المعاينة GIF كاملًا. اختر الجزء المُبقى بالمنزلقين واللقطات أدناه.</string>
@@ -339,7 +339,7 @@
     <string name="el_add_emoji">إضافة رمز تعبيري</string>
     <string name="el_emoji_note">الرموز التعبيرية طبقات نص؛ حرّكها وغيّر حجمها من تبويب النص.</string>
     <string name="el_yours">أشكالك</string>
-    <string name="el_empty">أضف شكلًا ثم اسحبه على المعاينة. اقرص لتغيير الحجم، وأدِر بإصبعين للدوران.</string>
+    <string name="el_empty">أضف شكلًا ثم اسحبه على المعاينة؛ ضمّ الأصابع للتحجيم، وأدِرها للدوران.</string>
     <string name="el_filled">معبّأ</string>
     <string name="el_fill_color">لون التعبئة</string>
     <string name="el_fill_opacity">شفافية التعبئة</string>
@@ -359,7 +359,7 @@
     <string name="ex_lang_ar">العربية</string>
     <string name="ex_lang_en">الإنجليزية</string>
     <string name="ex_lang_und">غير محدّدة</string>
-    <string name="ex_exporting">جارٍ تصدير الفيديو…</string>
+    <string name="ex_exporting">يُصدَّر الفيديو…</string>
     <string name="ex_done">تمّ تصدير الفيديو</string>
     <string name="ex_failed">تعذّر التصدير</string>
     <string name="ex_engine_missing">محرّك الفيديو غير مضمَّن في هذا الإصدار. اضبط ffmpegKit في gradle.properties وأعد البناء.</string>
@@ -489,17 +489,17 @@
     <string name="fd_replace_all">استبدال الكل</string>
     <string name="fd_replaced">تغيّر %1$d سطر</string>
     <string name="rc_title">عُثر على تغييرات غير محفوظة</string>
-    <string name="rc_text">حُفظت نسخة تلقائيًا من هذا الملف في الجلسة السابقة. هل تريد استعادتها؟</string>
+    <string name="rc_text">حُفظت نسخة تلقائيًا من هذا الملف في الجلسة السابقة. أتُستعاد؟</string>
     <string name="rc_restore">استعادة</string>
     <string name="rc_discard">تجاهل</string>
     <string name="set_sub_autosave">حفظ تلقائي لتعديلات الترجمة</string>
-    <string name="set_sub_autosave_note">تُحفظ نسخة استرداد بعد كل تعديل. عند الإيقاف لا يُكتب شيء وتُحذف النسخ الموجودة.</string>
+    <string name="set_sub_autosave_note">تُحفظ نسخة استرداد بعد كل تعديل. وعند الإيقاف لا يُكتب شيء وتُحذف النسخ.</string>
     <string name="sh_image">صورة</string>
     <string name="el_add_image">إضافة صورة (PNG وJPG وWebP وSVG…)</string>
     <string name="el_image_failed">تعذّرت قراءة الصورة</string>
     <string name="el_image_note">يتحوّل SVG إلى صورة حادّة عند الاستيراد. التحريك والتحجيم والدوران والشفافية والمزج والتوقيت كأي طبقة.</string>
     <string name="st_title">مسارات الترجمة في الفيديو</string>
-    <string name="st_extracting">جارٍ استخراج الترجمة...</string>
+    <string name="st_extracting">تُستخرج الترجمة…</string>
     <string name="st_none">لا مسارات ترجمة مضمّنة في هذا الفيديو.</string>
     <string name="st_track_n">المسار %1$d</string>
     <string name="st_image">صورية، لا تُحرَّر</string>
@@ -508,7 +508,7 @@
     <string name="sub_import">استيراد ملف ترجمة</string>
     <string name="sub_tracks">مسارات الترجمة</string>
     <string name="sub_add">إضافة سطر</string>
-    <string name="sub_imported">تم الاستيراد: %1$s</string>
+    <string name="sub_imported">استُورد: %1$s</string>
     <string name="blend_normal">عادي</string>
     <string name="blend_multiply">ضرب</string>
     <string name="blend_screen">حجب</string>
@@ -538,7 +538,7 @@
     <string name="sh_fps">تغيير معدّل الإطارات</string>
     <string name="sh_apply">تطبيق</string>
     <string name="sh_menu">إزاحة التوقيت</string>
-    <string name="sh_done">تم تعديل التوقيت</string>
+    <string name="sh_done">عُدّل التوقيت</string>
     <string name="fx_title">إصلاح الأخطاء الشائعة</string>
     <string name="fx_menu">إصلاح الأخطاء الشائعة</string>
     <string name="fx_empty">حذف الأسطر الفارغة</string>
@@ -563,7 +563,7 @@
     <string name="rp_standard">معتاد (17)</string>
     <string name="rp_netflix">نتفليكس (20)</string>
     <string name="rp_fast">سريع (25)</string>
-    <string name="set_read_note">حرف في الثانية. تحمرّ الأسطر الأعلى من الحدّ، ويمكن لإصلاح الأخطاء الشائعة منحها وقتًا أطول.</string>
+    <string name="set_read_note">حرفًا في الثانية. يحمرّ ما جاوز الحدّ، ويمنحه «إصلاح الأخطاء الشائعة» وقتًا أطول.</string>
     <string name="fx_speed">منح الأسطر السريعة وقتًا أطول</string>
     <string name="pre_title">حركات جاهزة</string>
     <string name="pre_pop">انبثاق</string>

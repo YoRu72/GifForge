@@ -96,6 +96,14 @@ def main():
         if AR_DIGITS.search(v):
             errors.append(f"'{k}' uses Arabic-Indic digits; write 1234567")
 
+    # AR-TR: style warnings (Sakkaki-style concision, glossary terms); see tools/AR_GLOSSARY.md
+    STYLE = [("يمكنك", "filler يمكنك"), ("قم ب", "قم بـ"), ("الرجاء", "الرجاء"), ("تأثير", "تأثير -> مؤثّر"), ("حافة", "حافة -> الحدّ"),
+             ("التدوير", "التدوير -> الدوران"), ("كاراوكي", "كاراوكي -> كاريوكي"), ("صورة متحركة", "-> GIF"), ("اقتطاع", "اقتطاع -> قصّ"),
+             ("...", "... -> …"), ("أسلوب", "أسلوب -> نمط"), ("هل تريد", "هل تريد -> أ...؟"), ("سوف ", "سوف"), ("يتم ", "يتم"), ("جارٍ ", "جارٍ -> مضارع مبني للمجهول")]
+    for k, v in ar_s.items():
+        for pat, why in STYLE:
+            if pat in v and not (pat == "تم " and v.startswith("كتم")):
+                warnings.append(f"ar '{k}': {why}")
     for k in sorted(set(en_s) - used_s - {"app_name"}):
         warnings.append(f"string '{k}' is not used in code")
     for k in sorted(set(en_p) - used_p):
