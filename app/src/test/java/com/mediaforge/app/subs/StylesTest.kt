@@ -72,3 +72,20 @@ class VisualEditTest {
         assertTrue(back.text, !back.text.contains("frz"))
     }
 }
+
+class TypewriterWipeTest {
+    @Test fun typewriterPerWord() {
+        val e = AssEvent(startMs = 0, endMs = 2000, text = "{\\an8}كتب الولد الدرس")
+        val t = AssLook.typewriter(e)
+        assertTrue(t, t.startsWith("{\\an8}كتب "))
+        assertEquals(2, Regex("""\\alpha&HFF&""").findAll(t).count())
+        assertEquals("كتب الولد الدرس", AssLook.plainText(t))
+        assertEquals("x", AssLook.typewriter(AssEvent(text = "x")))
+    }
+
+    @Test fun wipeClip() {
+        val f = SubFile.blank(1280, 720)
+        val t = AssLook.wipe(f, AssEvent(startMs = 0, endMs = 2000, text = "{\\an8}Hi"), AssLook.Wipe.LEFT)
+        assertEquals("{\\clip(0,0,0,720)\\t(0,500,\\clip(0,0,1280,720))\\an8}Hi", t)
+    }
+}

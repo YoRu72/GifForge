@@ -115,3 +115,9 @@ Legend: [x] in MediaForge, [~] partly, [ ] not yet, [-] not for a phone.
 2. AEG-D visual typesetting tools on the video pane (drag, rotate, scale, rect + vector clip) = video/tool/*.
 3. AEGX8 attachments + fonts collector (embed the Arabic fonts into the .ass so others see the same look).
 4. edit/line/paste/over + select by pattern done; swap, keep-first join, split/estimate are one-hour items.
+
+## 4. s18x progress on the command map
+- audio/view/waveform, audio/go_to, audio/scroll, audio/commit (drag handles = commit) [x]; audio/view/spectrum, audio/karaoke, audio/play/* [ ]
+- video/tool/drag, scale, rotate/z [x] ("Move on picture"); video/show_overscan [x]; video/frame/save/subs [x]; video/tool/clip, vector_clip, rotate/xy, cross [ ]
+- subtitle/attachment [x] (fonts only), tool/font_collector [x], tool/export [x] (filters), edit/line/paste/over [x], grid/swap [x], edit/color/* via eyedropper [~]
+- Still open from the map: audio spectrum, visual clip tools, styling assistant, spell checker, dummy video, timecodes, automation.

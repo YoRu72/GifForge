@@ -202,6 +202,45 @@ object AssLook {
         return setTag(e.text, "move", v)
     }
 
+    /**
+     * FX1 typewriter: the words appear one after another (per word, never per letter, so Arabic joining is kept, AR8).
+     * Plain ASS: every word gets {\alpha&HFF&\t(t,t+1,\alpha&H00&)}; the line's leading blocks stay first.
+     * Returns the text unchanged when it already has karaoke or fewer than two words.
+     */
+    fun typewriter(e: AssEvent, speedMs: Long = 120L): String {
+        if (Karaoke.hasKaraoke(e.text)) return e.text
+        val lead = Regex("""^(\{[^}]*\})*""").find(e.text)?.value.orEmpty()
+        val body = e.text.substring(lead.length)
+        if (body.contains("{")) return e.text // inline tags inside the text: leave it to the owner
+        val words = body.split(Regex("(?<= )")).filter { it.isNotEmpty() }
+        if (words.size < 2) return e.text
+        val total = (e.endMs - e.startMs).coerceAtLeast(2L)
+        val step = minOf(speedMs, (total / 2) / words.size).coerceAtLeast(20L)
+        return lead + words.mapIndexed { i, w ->
+            val t = i * step
+            if (i == 0) w else "{\\alpha&HFF&\\t($t,${t + 1},\\alpha&H00&)}" + w
+        }.joinToString("")
+    }
+
+    enum class Wipe { LEFT, RIGHT, UP, DOWN }
+
+    /** FX1 wipe: an animated rectangular \clip reveals the line over the first part of its time (libass animates \clip with \t). */
+    fun wipe(file: SubFile, e: AssEvent, kind: Wipe): String {
+        val w = file.playResX; val h = file.playResY
+        val d = (e.endMs - e.startMs).coerceAtLeast(2L); val a = minOf(500L, d / 2).coerceAtLeast(1L)
+        val from = when (kind) { Wipe.LEFT -> "0,0,0,$h"; Wipe.RIGHT -> "$w,0,$w,$h"; Wipe.UP -> "0,$h,$w,$h"; Wipe.DOWN -> "0,0,$w,0" }
+        val to = "0,0,$w,$h"
+        val clean = Regex("""\\clip\([^)]*\)""").replace(e.text, "").replace("{}", "")
+        return setTagRaw(clean, "\\clip($from)\\t(0,$a,\\clip($to))")
+    }
+
+    /** Puts raw tags into the look block (after the effect block), used for tags [setTag] does not know. */
+    private fun setTagRaw(text: String, tags: String): String {
+        val fx = LEAD_FX.find(text)?.value ?: ""
+        val rest = text.substring(fx.length)
+        return if (rest.startsWith("{")) fx + "{" + tags + rest.substring(1) else "$fx{$tags}$rest"
+    }
+
     private val LOOK_TAGS = listOf("fn", "fs", "b", "i", "an", "pos", "c", "3c")
 
     /** Removes every look tag the Look panel writes. */

@@ -127,6 +127,15 @@ fun EffectsPanel(event: AssEvent, file: com.mediaforge.app.subs.SubFile? = null,
                     FilterChip(false, { onChange { ev -> ev.copy(text = com.mediaforge.app.subs.AssLook.slide(file, ev, k)) } }, { Text(stringResource(slideLabel(k))) })
                 }
             }
+            Text(stringResource(R.string.wp_title), style = MaterialTheme.typography.labelLarge)
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(false, { onChange { ev -> ev.copy(text = com.mediaforge.app.subs.AssLook.typewriter(ev)) } }, { Text(stringResource(R.string.wp_typewriter)) })
+                listOf(
+                    com.mediaforge.app.subs.AssLook.Wipe.LEFT to R.string.wp_left, com.mediaforge.app.subs.AssLook.Wipe.RIGHT to R.string.wp_right,
+                    com.mediaforge.app.subs.AssLook.Wipe.UP to R.string.wp_up, com.mediaforge.app.subs.AssLook.Wipe.DOWN to R.string.wp_down,
+                ).forEach { (k, l) -> FilterChip(false, { onChange { ev -> ev.copy(text = com.mediaforge.app.subs.AssLook.wipe(file, ev, k)) } }, { Text(stringResource(l)) }) }
+            }
+            Text(stringResource(R.string.wp_note), style = MaterialTheme.typography.bodySmall)
         }
         Text(stringResource(R.string.fx_add), style = MaterialTheme.typography.labelLarge)
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -747,4 +747,11 @@
     <string name="qc_empty">Empty line</string>
     <string name="qc_style">Style not in the file</string>
     <string name="enc_read_as">Read as %1$s. Wrong letters? Try:</string>
+    <string name="wp_title">Reveal</string>
+    <string name="wp_typewriter">Word by word</string>
+    <string name="wp_left">Wipe from left</string>
+    <string name="wp_right">Wipe from right</string>
+    <string name="wp_up">Wipe upward</string>
+    <string name="wp_down">Wipe downward</string>
+    <string name="wp_note">Written as plain ASS (\\alpha per word, animated \\clip); the preview shows it after export. Words are never split, so Arabic stays joined.</string>
 </resources>

@@ -760,4 +760,11 @@
     <string name="qc_empty">سطر فارغ</string>
     <string name="qc_style">نمط غير موجود في الملف</string>
     <string name="enc_read_as">قُرئ بترميز %1$s. أحرفٌ خاطئة؟ جرّب:</string>
+    <string name="wp_title">الإظهار</string>
+    <string name="wp_typewriter">كلمةً كلمة</string>
+    <string name="wp_left">مسح من اليسار</string>
+    <string name="wp_right">مسح من اليمين</string>
+    <string name="wp_up">مسح إلى الأعلى</string>
+    <string name="wp_down">مسح إلى الأسفل</string>
+    <string name="wp_note">يُكتب ASS صِرفًا (\\alpha لكل كلمة و\\clip متحرّك)، ويظهر عند التصدير. لا تُقطع الكلمات، فتبقى العربية متّصلة.</string>
 </resources>
