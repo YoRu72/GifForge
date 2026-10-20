@@ -63,6 +63,9 @@ fun VideosScreen(
             videoPicker.launch(arrayOf("video/*", "image/gif"))
         }
         HubCard(Icons.Filled.Folder, stringResource(R.string.home_finder_title), stringResource(R.string.home_finder_sub), onBrowse)
+        var tools by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+        HubCard(Icons.Filled.VideoLibrary, stringResource(R.string.vt_title), stringResource(R.string.vt_sub)) { tools = true }
+        if (tools) VideoToolsDialog { tools = false }
         HubCard(Icons.Filled.Subtitles, stringResource(R.string.vid_open_sub), stringResource(R.string.vid_open_sub_sub)) {
             subPicker.launch(arrayOf("*/*"))
         }

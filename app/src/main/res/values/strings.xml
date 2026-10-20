@@ -772,4 +772,15 @@
     <string name="st_balanced">Balanced</string>
     <string name="st_best">Best quality</string>
     <string name="st_video_note">The quality slider above sets the video bitrate too; these presets set it in one tap.</string>
+    <string name="vt_title">Video tools</string>
+    <string name="vt_sub">Join clips, extract audio</string>
+    <string name="vt_join">Join clips</string>
+    <string name="vt_join_note">In this order, at the first clip\'s size; sound is kept when the clips share its format.</string>
+    <string name="vt_add_clips">Add clips</string>
+    <string name="vt_do_join">Join</string>
+    <string name="vt_audio">Extract audio</string>
+    <string name="vt_audio_note">The audio track is copied as is (AAC) to Music/MediaForge.</string>
+    <string name="vt_do_audio">Pick a video</string>
+    <string name="vt_audio_saved">Audio saved to Music/MediaForge</string>
+    <string name="vt_audio_failed">No AAC audio track in this video</string>
 </resources>

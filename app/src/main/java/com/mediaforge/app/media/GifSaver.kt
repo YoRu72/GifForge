@@ -76,3 +76,23 @@ suspend fun saveVideo(context: Context, file: File): Uri? = withContext(Dispatch
         }
     } catch (e: Exception) { null }
 }
+
+/** Saves an .m4a to Music/MediaForge. */
+suspend fun saveAudio(context: Context, file: File): Uri? = withContext(Dispatchers.IO) {
+    val name = "${com.mediaforge.app.Prefs.safePrefix()}${System.currentTimeMillis()}.m4a"
+    try {
+        if (Build.VERSION.SDK_INT >= 29) {
+            val values = ContentValues().apply {
+                put(MediaStore.Audio.Media.DISPLAY_NAME, name)
+                put(MediaStore.Audio.Media.MIME_TYPE, "audio/mp4")
+                put(MediaStore.Audio.Media.RELATIVE_PATH, "Music/MediaForge")
+            }
+            val uri = context.contentResolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, values) ?: return@withContext null
+            context.contentResolver.openOutputStream(uri)?.use { o -> file.inputStream().use { it.copyTo(o) } }
+            uri
+        } else {
+            val dir = context.getExternalFilesDir(Environment.DIRECTORY_MUSIC) ?: return@withContext null
+            val dest = File(dir, name); file.copyTo(dest, overwrite = true); Uri.fromFile(dest)
+        }
+    } catch (e: Exception) { null }
+}

@@ -785,4 +785,15 @@
     <string name="st_balanced">متوازن</string>
     <string name="st_best">أعلى جودة</string>
     <string name="st_video_note">مؤشّر الجودة أعلاه يحدّد معدّل بتّ الفيديو أيضًا، وهذه الخيارات تضبطه بنقرة.</string>
+    <string name="vt_title">أدوات الفيديو</string>
+    <string name="vt_sub">وصل المقاطع، استخراج الصوت</string>
+    <string name="vt_join">وصل المقاطع</string>
+    <string name="vt_join_note">بهذا الترتيب وبمقاس المقطع الأول، ويبقى الصوت إذا اتّفقت المقاطع في هيئته.</string>
+    <string name="vt_add_clips">إضافة مقاطع</string>
+    <string name="vt_do_join">وصل</string>
+    <string name="vt_audio">استخراج الصوت</string>
+    <string name="vt_audio_note">يُنسخ مسار الصوت كما هو (AAC) إلى Music/MediaForge.</string>
+    <string name="vt_do_audio">اختيار فيديو</string>
+    <string name="vt_audio_saved">حُفظ الصوت في Music/MediaForge</string>
+    <string name="vt_audio_failed">لا مسار صوت AAC في هذا الفيديو</string>
 </resources>
