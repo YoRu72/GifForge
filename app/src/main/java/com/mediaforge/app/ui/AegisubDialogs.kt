@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -288,8 +290,8 @@ fun QcDialog(file: SubFile, onDismiss: () -> Unit, onJump: (Int) -> Unit) {
         title = { Text(stringResource(R.string.qc_title)) },
         text = {
             if (issues.isEmpty()) Text(stringResource(R.string.qc_none))
-            else androidx.compose.foundation.lazy.LazyColumn(Modifier.heightIn(max = 480.dp)) {
-                androidx.compose.foundation.lazy.items(issues) { i ->
+            else LazyColumn(Modifier.heightIn(max = 480.dp)) {
+                items(issues) { i ->
                     Column(Modifier.fillMaxWidth().clickable { onJump(i.line) }.padding(vertical = 6.dp)) {
                         Text(stringResource(R.string.fx_line, i.line + 1) + " - " + stringResource(qcLabel(i.kind)) + (if (i.value.isNotEmpty()) " (" + i.value + ")" else ""), style = MaterialTheme.typography.bodyMedium)
                         Text(com.mediaforge.app.subs.AssLook.plainText(file.events[i.line].text).replace('\n', ' '), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)

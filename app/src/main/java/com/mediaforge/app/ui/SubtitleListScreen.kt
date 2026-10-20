@@ -167,6 +167,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
     var selOpen by remember { mutableStateOf(false) }    // AEGX6 select lines
     var propsOpen by remember { mutableStateOf(false) }  // 19.b script properties + 23.d resampler
     var fontsOpen by remember { mutableStateOf(false) }  // 19.c/19.d fonts collector
+    var qcOpen by remember { mutableStateOf(false) }     // 23.c quality list
     var menuSection by remember { mutableStateOf(0) }    // 0 root, 1 lines, 2 timing, 3 tools, 4 file
     var clipboard by remember { mutableStateOf<List<AssEvent>>(emptyList()) } // copied lines (AEGX6 paste over)
     var pasteOverOpen by remember { mutableStateOf(false) }
@@ -265,7 +266,6 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
     }
     var pendingExport by remember { mutableStateOf<Pair<com.mediaforge.app.subs.SubFormat, EncChoice>?>(null) }
     var exportFilters by remember { mutableStateOf(setOf<com.mediaforge.app.subs.ExportFilters.Filter>()) }
-    var qcOpen by remember { mutableStateOf(false) } // 23.c quality list
     val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { u ->
         val pe = pendingExport
         if (u != null && pe != null) {
