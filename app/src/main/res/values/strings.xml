@@ -754,4 +754,7 @@
     <string name="wp_up">Wipe upward</string>
     <string name="wp_down">Wipe downward</string>
     <string name="wp_note">Written as plain ASS (\\alpha per word, animated \\clip); the preview shows it after export. Words are never split, so Arabic stays joined.</string>
+    <string name="bp_open">Preview without video</string>
+    <string name="bp_close">Hide preview</string>
+    <string name="bp_note">Blank canvas at the script size</string>
 </resources>

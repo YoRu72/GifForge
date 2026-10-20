@@ -767,4 +767,7 @@
     <string name="wp_up">مسح إلى الأعلى</string>
     <string name="wp_down">مسح إلى الأسفل</string>
     <string name="wp_note">يُكتب ASS صِرفًا (\\alpha لكل كلمة و\\clip متحرّك)، ويظهر عند التصدير. لا تُقطع الكلمات، فتبقى العربية متّصلة.</string>
+    <string name="bp_open">معاينة بلا فيديو</string>
+    <string name="bp_close">إخفاء المعاينة</string>
+    <string name="bp_note">لوحة فارغة بمقاس الملف</string>
 </resources>

@@ -455,6 +455,14 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
     ) { pad ->
         Column(Modifier.fillMaxSize().padding(pad)) {
             // ---------------------------------------------------------------- video + timing (A13)
+            var blank by rememberSaveable { mutableStateOf(false) } // AEGX1 blank canvas when no video is attached
+            if (video == null) {
+                if (blank) { BlankPane(file, events, active) { blank = false }; HorizontalDivider() }
+                else Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    androidx.compose.material3.AssistChip(onClick = { videoPicker.launch(arrayOf("video/*")) }, label = { Text(stringResource(R.string.sv_attach)) })
+                    androidx.compose.material3.AssistChip(onClick = { blank = true }, label = { Text(stringResource(R.string.bp_open)) })
+                }
+            }
             video?.let { v ->
                 SubVideoPane(
                     uri = v, file = file, events = events, active = active, onActive = { active = it },
