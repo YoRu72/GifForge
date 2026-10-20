@@ -129,6 +129,7 @@ object AssLook {
         "pos", "move" -> Regex("""\\(?:pos|move)\([^)]*\)""")   // a line has one or the other
         "c" -> Regex("""\\1?c&H[0-9A-Fa-f]*&?""")
         "3c" -> Regex("""\\3c&H[0-9A-Fa-f]*&?""")
+        "fscx", "fscy", "frz" -> Regex("""\\$name-?[\d.]*""")
         else -> Regex("""\\$name(?![A-Za-z])[^\\}]*""")
     }
 
@@ -157,6 +158,29 @@ object AssLook {
         val x = when (hz) { 0 -> l.marginL.toFloat(); 2 -> w - l.marginR; else -> (w + l.marginL - l.marginR) / 2f }
         val y = when (vt) { 2 -> l.marginV.toFloat(); 1 -> h / 2f; else -> h - l.marginV }
         return x to y
+    }
+
+    /**
+     * AEG-D / 22.a-b: one visual-tool gesture on the video. [dx]/[dy] in script px move the line (\pos, from its
+     * anchor), [zoom] multiplies \fscx/\fscy, [rot] degrees add to \frz (screen clockwise = ASS negative).
+     */
+    fun visualEdit(file: SubFile, e: AssEvent, dx: Float, dy: Float, zoom: Float, rot: Float): AssEvent {
+        val style = file.style(e.style) ?: AssStyle()
+        val l = resolve(style, e, e.startMs)
+        var t = e.text
+        if (dx != 0f || dy != 0f) {
+            val (ax, ay) = anchor(file, style, e)
+            t = setTag(t, "pos", "(${Math.round(ax + dx)},${Math.round(ay + dy)})")
+        }
+        if (zoom != 1f) {
+            val sx = (l.scaleX * zoom).coerceIn(10f, 1000f); val sy = (l.scaleY * zoom).coerceIn(10f, 1000f)
+            t = setTag(setTag(t, "fscx", formatAssNumber(Math.round(sx).toFloat())), "fscy", formatAssNumber(Math.round(sy).toFloat()))
+        }
+        if (rot != 0f) {
+            val r = Math.round(l.rotation - rot).toFloat()
+            t = if (r == 0f) setTag(t, "frz", null) else setTag(t, "frz", formatAssNumber(r))
+        }
+        return e.copy(text = t)
     }
 
     enum class Slide { IN_LEFT, IN_RIGHT, IN_BELOW, IN_ABOVE, OUT_LEFT, OUT_RIGHT }

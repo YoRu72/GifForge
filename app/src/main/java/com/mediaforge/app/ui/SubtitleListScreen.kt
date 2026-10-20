@@ -165,6 +165,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
     var tppOpen by remember { mutableStateOf(false) }    // 23.b timing post-processor
     var selOpen by remember { mutableStateOf(false) }    // AEGX6 select lines
     var propsOpen by remember { mutableStateOf(false) }  // 19.b script properties + 23.d resampler
+    var fontsOpen by remember { mutableStateOf(false) }  // 19.c/19.d fonts collector
     var motionOpen by remember { mutableStateOf(false) } // MOT1/MOT2 motion tracking of the active line
     var karaTap by remember { mutableStateOf(0) }        // karaoke tap timing: index of the syllable the next tap starts (0 = off)
     val vinfo by androidx.compose.runtime.produceState<com.mediaforge.app.media.VideoInfo?>(null, video) {
@@ -196,6 +197,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
         if (f2 != file) { file = f2; dirty = true }
         propsOpen = false
     }
+    if (fontsOpen) FontsCollectorDialog(file, onDismiss = { fontsOpen = false }) { f2 -> if (f2 != file) { file = f2; dirty = true } }
     if (stylesOpen) StylesDialog(file, marked, onDismiss = { stylesOpen = false }) { f2 -> if (f2 != file) { file = f2; dirty = true } }
     if (fixOpen) FixDialog(events, { fixOpen = false }) { out, n ->
         file = file.copy(events = out); active = active.coerceIn(if (out.isEmpty()) -1 else 0, out.size - 1); marked = emptySet(); dirty = true; fixOpen = false
@@ -371,6 +373,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                             item(R.string.fx_menu, ed && events.isNotEmpty()) { fixOpen = true }
                             item(R.string.stl_menu) { stylesOpen = true }
                             item(R.string.pr_menu) { propsOpen = true }
+                            item(R.string.fc_menu) { fontsOpen = true }
                             item(R.string.sel_menu, events.isNotEmpty()) { selOpen = true }
                             item(R.string.tpp_menu, events.isNotEmpty()) { tppOpen = true }
                             item(R.string.mt_menu, ed && video != null && active in events.indices) { motionOpen = true }
@@ -443,6 +446,9 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                         }
                         if (karaTap >= syls.size) { karaTap = 0; Toast.makeText(ctx, R.string.ka_tap_done, Toast.LENGTH_SHORT).show() }
                     }.takeIf { karaTap > 0 && active in events.indices },
+                    onVisual = { dx, dy, z, r -> if (active in events.indices) edit(active) { com.mediaforge.app.subs.AssLook.visualEdit(file, it, dx, dy, z, r) } },
+                    onStartAt = { t -> if (active in events.indices) edit(active) { it.copy(startMs = t) } },
+                    onEndAt = { t -> if (active in events.indices) edit(active) { it.copy(endMs = t) } },
                 )
                 HorizontalDivider()
             }

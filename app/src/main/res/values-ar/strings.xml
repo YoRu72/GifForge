@@ -704,4 +704,21 @@
     <string name="mt_tolerance">الانحراف المسموح</string>
     <string name="mt_apply">تطبيق</string>
     <string name="mt_done">الأسطر الناتجة: %1$d</string>
+    <string name="sv_typeset">تحريك على الصورة</string>
+    <string name="sv_wave">الموجة</string>
+    <string name="sv_snap">محاذاة</string>
+    <string name="sv_safe">المنطقة الآمنة</string>
+    <string name="fc_menu">خطوط الملف…</string>
+    <string name="fc_title">خطوط الملف</string>
+    <string name="fc_note">ضمّن الخطّ في ملف .ass ليظهر الملف بهيئته في غير جهازك وفي Aegisub، واستخرج المضمّن منها إلى المكتبة.</string>
+    <string name="fc_embedded">مضمّن في الملف</string>
+    <string name="fc_in_library">في المكتبة</string>
+    <string name="fc_system">خطّ النظام</string>
+    <string name="fc_missing">مفقود</string>
+    <string name="fc_embed">تضمين</string>
+    <string name="fc_extract">إلى المكتبة</string>
+    <string name="fc_too_big">الخطّ أكبر من أن يُضمَّن</string>
+    <string name="fc_extracted">الخطوط المضافة إلى المكتبة: %1$d</string>
+    <string name="fc_none">لا خطوط في الملف بعد.</string>
+    <string name="fc_size">حجم الخطوط المضمّنة: %1$d KB</string>
 </resources>

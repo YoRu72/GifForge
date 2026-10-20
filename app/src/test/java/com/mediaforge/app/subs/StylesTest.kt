@@ -56,3 +56,19 @@ class StylesTest {
         assertTrue(StyleOps.rescale(st, 1f) === st)
     }
 }
+
+class VisualEditTest {
+    @Test fun dragScaleRotate() {
+        val f = SubFile.blank(1280, 720)
+        val e = AssEvent(text = "{\\an2}Hi")
+        val moved = AssLook.visualEdit(f, e, 10f, -20f, 1f, 0f)
+        // anchor of \an2 with default margins 10: x = 640, y = 710
+        assertEquals("{\\an2\\pos(650,690)}Hi", moved.text)
+        val scaled = AssLook.visualEdit(f, moved, 0f, 0f, 1.5f, 0f)
+        assertTrue(scaled.text, scaled.text.contains("\\fscx150\\fscy150"))
+        val rot = AssLook.visualEdit(f, scaled, 0f, 0f, 1f, 30f)
+        assertTrue(rot.text, rot.text.contains("\\frz-30"))
+        val back = AssLook.visualEdit(f, rot, 0f, 0f, 1f, -30f)
+        assertTrue(back.text, !back.text.contains("frz"))
+    }
+}

@@ -192,6 +192,10 @@ object FontStore {
     }
 
     /** Detects the real format from the file's bytes, converts web fonts, validates, and stores it. */
+    /** 19.c: a font taken out of an .ass attachment goes into the library under its attachment name. */
+    fun importBytes(ctx: Context, name: String, bytes: ByteArray): File? =
+        runCatching { processBytes(ctx, sanitize(name.substringBeforeLast('.', name)), bytes) }.getOrNull()
+
     private fun processBytes(ctx: Context, base: String, bytes: ByteArray): File? {
         val data: ByteArray = when (sniff(bytes) ?: return null) {
             "woff" -> Woff.toSfnt(bytes) ?: return null

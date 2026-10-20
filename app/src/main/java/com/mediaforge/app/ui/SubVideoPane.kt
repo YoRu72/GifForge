@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -68,7 +69,14 @@ fun SubVideoPane(
     onTapChain: (Long) -> Unit,
     onNudge: (startDelta: Long, endDelta: Long) -> Unit,
     onKaraTap: ((Long) -> Unit)? = null,   // karaoke tap timing: the next syllable starts at the playhead
+    onVisual: ((dx: Float, dy: Float, zoom: Float, rot: Float) -> Unit)? = null, // AEG-D: drag/pinch/twist the active line on the picture
+    onStartAt: ((Long) -> Unit)? = null,   // waveform handles (absolute ms)
+    onEndAt: ((Long) -> Unit)? = null,
 ) {
+    var typeset by remember { mutableStateOf(false) } // visual typesetting mode: gestures edit the line instead of seeking
+    var safeArea by remember { mutableStateOf(false) }
+    var wave by remember { mutableStateOf(true) }
+    var snap by remember { mutableStateOf(true) }
     val ctx = LocalContext.current
     val player = remember(uri) {
         ExoPlayer.Builder(ctx).build().apply {
@@ -119,13 +127,42 @@ fun SubVideoPane(
                     modifier = Modifier.fillMaxSize(),
                 )
                 val shown = events.filter { !it.comment && pos >= it.startMs && pos < it.endMs }
-                SubtitleOverlay(
-                    file = file, shown = shown, posMs = pos,
-                    aspect = if (aspect > 0f) aspect else file.playResX.toFloat() / file.playResY.coerceAtLeast(1),
-                    modifier = Modifier.fillMaxSize(), videoHeight = videoH,
-                )
+                val asp = if (aspect > 0f) aspect else file.playResX.toFloat() / file.playResY.coerceAtLeast(1)
+                SubtitleOverlay(file = file, shown = shown, posMs = pos, aspect = asp, modifier = Modifier.fillMaxSize(), videoHeight = videoH)
+                if (safeArea) SafeAreaOverlay(asp)
+                if (typeset && onVisual != null) {
+                    // one gesture = one edit: script px per screen px from the picture's drawn size
+                    androidx.compose.foundation.Canvas(
+                        Modifier.fillMaxSize().pointerInput(asp, file.playResX, file.playResY) {
+                            val vw: Float; val vh: Float
+                            if (size.width.toFloat() / size.height > asp) { vh = size.height.toFloat(); vw = vh * asp } else { vw = size.width.toFloat(); vh = vw / asp }
+                            val kx = file.playResX / vw; val ky = file.playResY / vh
+                            androidx.compose.foundation.gestures.detectTransformGestures { _, pan, zoom, rot ->
+                                onVisual(pan.x * kx, pan.y * ky, zoom, rot)
+                            }
+                        },
+                    ) { drawRect(androidx.compose.ui.graphics.Color(0x2200E5FF)) }
+                }
             }
             TransportBar(player, durationMs.coerceAtLeast(1L), 0L, durationMs.coerceAtLeast(1L))
+            // AEG-B: the audio display with the active line's handles
+            val peaksState = androidx.compose.runtime.produceState<Pair<com.mediaforge.app.media.Waveform.Peaks?, Boolean>>(null to true, uri, wave) {
+                if (!wave) { value = null to false; return@produceState }
+                value = (com.mediaforge.app.media.Waveform.cached(ctx, uri)) to true
+                if (value.first == null) kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    val p = com.mediaforge.app.media.Waveform.build(ctx, uri) { partial -> value = partial to true; true }
+                    value = p to false
+                } else value = value.first to false
+            }
+            val kfs by androidx.compose.runtime.produceState(emptyList<Long>(), uri) {
+                value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { com.mediaforge.app.media.Keyframes.read(ctx, uri) }
+            }
+            if (wave) WaveformBar(
+                peaks = peaksState.value.first, loading = peaksState.value.second, playheadMs = pos, durationMs = durationMs,
+                events = events, active = active, keyframes = kfs, snap = snap,
+                onSeek = { player.pause(); player.seekTo(it) },
+                onStart = { t -> onStartAt?.invoke(t) ?: onSetStart(t) }, onEnd = { t -> onEndAt?.invoke(t) ?: onSetEnd(t) },
+            )
             Row(
                 Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically,
@@ -137,6 +174,10 @@ fun SubVideoPane(
                 if (onKaraTap != null) AssistChip(onClick = { onKaraTap(player.currentPosition) }, label = { Text(stringResource(R.string.ka_tap_chip)) })
                 FilterChip(selected = loopLine, onClick = { loopLine = !loopLine }, label = { Text(stringResource(R.string.sv_loop_line)) })
                 FilterChip(selected = follow, onClick = { follow = !follow }, label = { Text(stringResource(R.string.sv_follow)) })
+                if (onVisual != null) FilterChip(selected = typeset, onClick = { typeset = !typeset }, label = { Text(stringResource(R.string.sv_typeset)) })
+                FilterChip(selected = wave, onClick = { wave = !wave }, label = { Text(stringResource(R.string.sv_wave)) })
+                if (wave) FilterChip(selected = snap, onClick = { snap = !snap }, label = { Text(stringResource(R.string.sv_snap)) })
+                FilterChip(selected = safeArea, onClick = { safeArea = !safeArea }, label = { Text(stringResource(R.string.sv_safe)) })
             }
             Row(
                 Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 6.dp),
@@ -163,3 +204,22 @@ fun SubVideoPane(
 
 @Composable
 private fun <T> rememberUpdatedStateCompat(v: T) = androidx.compose.runtime.rememberUpdatedState(v)
+
+/** AEGX3: title-safe (90 %) and action-safe (80 %) frames plus the rule of thirds, drawn on the picture area only. */
+@Composable
+private fun SafeAreaOverlay(aspect: Float) {
+    androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+        val vw: Float; val vh: Float
+        if (size.width / size.height > aspect) { vh = size.height; vw = vh * aspect } else { vw = size.width; vh = vw / aspect }
+        val l = (size.width - vw) / 2f; val t = (size.height - vh) / 2f
+        fun frame(k: Float, c: Color) {
+            val mx = vw * (1 - k) / 2f; val my = vh * (1 - k) / 2f
+            drawRect(c, androidx.compose.ui.geometry.Offset(l + mx, t + my), androidx.compose.ui.geometry.Size(vw - 2 * mx, vh - 2 * my), style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
+        }
+        frame(0.9f, Color(0xAAFFEB3B)); frame(0.8f, Color(0xAAFF5252))
+        for (i in 1..2) {
+            drawLine(Color(0x66FFFFFF), androidx.compose.ui.geometry.Offset(l + vw * i / 3f, t), androidx.compose.ui.geometry.Offset(l + vw * i / 3f, t + vh), 1f)
+            drawLine(Color(0x66FFFFFF), androidx.compose.ui.geometry.Offset(l, t + vh * i / 3f), androidx.compose.ui.geometry.Offset(l + vw, t + vh * i / 3f), 1f)
+        }
+    }
+}

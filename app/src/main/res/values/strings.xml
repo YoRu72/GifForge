@@ -691,4 +691,21 @@
     <string name="mt_tolerance">Allowed deviation</string>
     <string name="mt_apply">Apply</string>
     <string name="mt_done">Lines made: %1$d</string>
+    <string name="sv_typeset">Move on picture</string>
+    <string name="sv_wave">Waveform</string>
+    <string name="sv_snap">Snap</string>
+    <string name="sv_safe">Safe area</string>
+    <string name="fc_menu">Fonts of the script…</string>
+    <string name="fc_title">Fonts of the script</string>
+    <string name="fc_note">Embed a font in the .ass so the script looks the same elsewhere and in Aegisub; extract embedded fonts into the library.</string>
+    <string name="fc_embedded">Embedded in the file</string>
+    <string name="fc_in_library">In the library</string>
+    <string name="fc_system">System font</string>
+    <string name="fc_missing">Missing</string>
+    <string name="fc_embed">Embed</string>
+    <string name="fc_extract">To library</string>
+    <string name="fc_too_big">Font too large to embed</string>
+    <string name="fc_extracted">Fonts added to the library: %1$d</string>
+    <string name="fc_none">The script uses no fonts yet.</string>
+    <string name="fc_size">Embedded fonts: %1$d KB</string>
 </resources>
