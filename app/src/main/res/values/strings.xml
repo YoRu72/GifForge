@@ -783,4 +783,8 @@
     <string name="vt_do_audio">Pick a video</string>
     <string name="vt_audio_saved">Audio saved to Music/MediaForge</string>
     <string name="vt_audio_failed">No AAC audio track in this video</string>
+    <string name="ed_fold">Fold or unfold the tools</string>
+    <string name="sa_menu">Styling assistant…</string>
+    <string name="sa_title">Styling assistant</string>
+    <string name="sa_current">Current style: %1$s</string>
 </resources>

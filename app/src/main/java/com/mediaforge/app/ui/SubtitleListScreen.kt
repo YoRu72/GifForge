@@ -168,6 +168,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
     var propsOpen by remember { mutableStateOf(false) }  // 19.b script properties + 23.d resampler
     var fontsOpen by remember { mutableStateOf(false) }  // 19.c/19.d fonts collector
     var qcOpen by remember { mutableStateOf(false) }     // 23.c quality list
+    var saOpen by remember { mutableStateOf(false) }     // 23.e styling assistant
     var menuSection by remember { mutableStateOf(0) }    // 0 root, 1 lines, 2 timing, 3 tools, 4 file
     var clipboard by remember { mutableStateOf<List<AssEvent>>(emptyList()) } // copied lines (AEGX6 paste over)
     var pasteOverOpen by remember { mutableStateOf(false) }
@@ -206,6 +207,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
         val tg = (if (marked.isNotEmpty()) marked.sorted() else listOf(active)).filter { it in events.indices }
         file = file.copy(events = com.mediaforge.app.subs.PasteOver.applyAll(events, tg, clipboard, fields)); dirty = true; pasteOverOpen = false
     }
+    if (saOpen) StylingAssistantDialog(file, active.coerceAtLeast(0), onDismiss = { saOpen = false }) { i, st -> edit(i) { it.copy(style = st) }; active = i }
     if (qcOpen) QcDialog(file, onDismiss = { qcOpen = false }) { i -> active = i; qcOpen = false }
     if (fontsOpen) FontsCollectorDialog(file, onDismiss = { fontsOpen = false }) { f2 -> if (f2 != file) { file = f2; dirty = true } }
     if (stylesOpen) StylesDialog(file, marked, onDismiss = { stylesOpen = false }) { f2 -> if (f2 != file) { file = f2; dirty = true } }
@@ -437,6 +439,7 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                                         }
                                     }
                                     item(R.string.stl_menu) { stylesOpen = true }
+                                    item(R.string.sa_menu, ed && events.isNotEmpty() && file.styles.size > 1) { saOpen = true }
                                     item(R.string.fc_menu) { fontsOpen = true }
                                     item(R.string.pr_menu) { propsOpen = true }
                                 }

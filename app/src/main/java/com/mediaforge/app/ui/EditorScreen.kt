@@ -49,6 +49,8 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -267,8 +269,11 @@ fun EditorScreen(uri: Uri, onBack: () -> Unit, fpsHint: Int? = null, fullClip: B
             )
         },
     ) { pad ->
-        Column(Modifier.fillMaxSize().padding(pad)) {
-            ForceLtr { Box(Modifier.fillMaxWidth().height(240.dp).background(Color(0xFF101010)).onSizeChanged { boxSize = it }) {
+        // A9b: the preview grows when the tool panel is folded; in landscape the panel sits beside the picture
+        val landscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        var folded by rememberSaveable { mutableStateOf(false) }
+        @Composable fun Preview(modifier: Modifier) {
+            ForceLtr { Box(modifier.background(Color(0xFF101010)).onSizeChanged { boxSize = it }) {
                 val inf = info
                 if (compMode && inf != null && boxSize.width > 0) {
                     val fr = previewFrame(boxSize.width.toFloat(), boxSize.height.toFloat(), inf.width, inf.height, state.crop.rect, topPct, botPct)
@@ -395,6 +400,8 @@ fun EditorScreen(uri: Uri, onBack: () -> Unit, fpsHint: Int? = null, fullClip: B
                     }
                 }
             } }
+        }
+        @Composable fun Panel(modifier: Modifier) = Column(modifier) {
             ForceLtr { TransportBar(player, state.durationMs, state.startMs, state.endMs) }
             if (state.overlays.any { it.blend != LayerBlend.NORMAL } || state.elements.any { it.blend != LayerBlend.NORMAL }) {
                 TextButton(
@@ -425,12 +432,17 @@ fun EditorScreen(uri: Uri, onBack: () -> Unit, fpsHint: Int? = null, fullClip: B
                 )
             }
             status?.let { Text(it, modifier = Modifier.padding(12.dp)) }
-            TabRow(selectedTabIndex = tab) {
-                tabs.forEachIndexed { i, t ->
-                    Tab(selected = tab == i, onClick = { tab = i }, text = { Text(stringResource(t)) })
+            androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                androidx.compose.material3.ScrollableTabRow(selectedTabIndex = tab, modifier = Modifier.weight(1f), edgePadding = 0.dp) {
+                    tabs.forEachIndexed { i, t ->
+                        Tab(selected = tab == i, onClick = { tab = i; folded = false }, text = { Text(stringResource(t)) })
+                    }
+                }
+                if (!landscape) IconButton(onClick = { folded = !folded }) {
+                    Icon(if (folded) androidx.compose.material.icons.Icons.Filled.KeyboardArrowUp else androidx.compose.material.icons.Icons.Filled.KeyboardArrowDown, stringResource(R.string.ed_fold))
                 }
             }
-            Box(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
+            if (!folded || landscape) Box(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
                 when (tab) {
                     0 -> TrimTab(state, info, player)
                     1 -> CropTab(state, info)
@@ -439,6 +451,17 @@ fun EditorScreen(uri: Uri, onBack: () -> Unit, fpsHint: Int? = null, fullClip: B
                     4 -> ElementsTab(state, player)
                     else -> SettingsTab(state, info)
                 }
+            }
+        }
+        if (landscape) {
+            androidx.compose.foundation.layout.Row(Modifier.fillMaxSize().padding(pad)) {
+                Preview(Modifier.weight(0.55f).fillMaxHeight())
+                Panel(Modifier.weight(0.45f).fillMaxHeight())
+            }
+        } else {
+            Column(Modifier.fillMaxSize().padding(pad)) {
+                if (folded) { Preview(Modifier.fillMaxWidth().weight(1f)); Panel(Modifier.fillMaxWidth()) }
+                else { Preview(Modifier.fillMaxWidth().height(240.dp)); Panel(Modifier.fillMaxWidth().weight(1f)) }
             }
         }
     }

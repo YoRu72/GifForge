@@ -796,4 +796,8 @@
     <string name="vt_do_audio">اختيار فيديو</string>
     <string name="vt_audio_saved">حُفظ الصوت في Music/MediaForge</string>
     <string name="vt_audio_failed">لا مسار صوت AAC في هذا الفيديو</string>
+    <string name="ed_fold">طيّ الأدوات أو بسطها</string>
+    <string name="sa_menu">مساعد الأنماط…</string>
+    <string name="sa_title">مساعد الأنماط</string>
+    <string name="sa_current">النمط الحالي: %1$s</string>
 </resources>

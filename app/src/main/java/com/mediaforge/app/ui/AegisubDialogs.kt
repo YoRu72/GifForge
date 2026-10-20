@@ -302,3 +302,36 @@ fun QcDialog(file: SubFile, onDismiss: () -> Unit, onJump: (Int) -> Unit) {
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } },
     )
 }
+
+// ---------------------------------------------------------------- Styling assistant (23.e / AEGX8)
+
+/** Aegisub's styling assistant: the lines one by one, a style per tap; the line advances by itself. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun StylingAssistantDialog(file: SubFile, start: Int, onDismiss: () -> Unit, onStyle: (line: Int, style: String) -> Unit) {
+    var i by remember { mutableStateOf(start.coerceIn(0, (file.events.size - 1).coerceAtLeast(0))) }
+    val e = file.events.getOrNull(i)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.sa_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (e == null) Text(stringResource(R.string.sub_empty)) else {
+                    Text(stringResource(R.string.sub_line_n, i + 1, file.events.size), style = MaterialTheme.typography.labelMedium)
+                    Text(com.mediaforge.app.subs.AssLook.plainText(e.text), style = MaterialTheme.typography.bodyLarge.copy(textDirection = androidx.compose.ui.text.style.TextDirection.Content))
+                    Text(stringResource(R.string.sa_current, e.style), style = MaterialTheme.typography.labelSmall)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        file.styles.forEach { st ->
+                            FilterChip(st.name == e.style, { onStyle(i, st.name); if (i + 1 < file.events.size) i++ }, { Text(st.name) })
+                        }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(enabled = i > 0, onClick = { i-- }) { Text(stringResource(R.string.sub_prev)) }
+                        TextButton(enabled = i + 1 < file.events.size, onClick = { i++ }) { Text(stringResource(R.string.sub_next)) }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } },
+    )
+}
