@@ -170,7 +170,7 @@ fun EditorScreen(uri: Uri, onBack: () -> Unit, fpsHint: Int? = null, fullClip: B
 
     var exportMenu by remember { mutableStateOf(false) }
     fun export(asVideo: Boolean = false) {
-        if (info == null) return
+        val inf = info ?: return
         job = scope.launch {
             player.pause()
             progress = 0f
@@ -180,7 +180,7 @@ fun EditorScreen(uri: Uri, onBack: () -> Unit, fpsHint: Int? = null, fullClip: B
             try {
                 if (asVideo) {
                     // FEAT1: the same edit written as a video (hardware H.264); frame rate follows the source, at least 24
-                    val vopts = state.toOptions().let { o -> o.copy(fps = maxOf(24, minOf(60, (info.fps ?: 30f).toInt()))) }
+                    val vopts = state.toOptions().let { o -> o.copy(fps = maxOf(24, minOf(60, (inf.fps ?: 30f).toInt()))) }
                     com.mediaforge.app.media.VideoEncoder.encode(ctx, uri, tmp, vopts) { progress = it }
                         .onSuccess { o ->
                             val saved = if (Prefs.autoSave.value) com.mediaforge.app.media.saveVideo(ctx, o.file) else null
