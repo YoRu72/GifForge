@@ -708,4 +708,18 @@
     <string name="fc_extracted">Fonts added to the library: %1$d</string>
     <string name="fc_none">The script uses no fonts yet.</string>
     <string name="fc_size">Embedded fonts: %1$d KB</string>
+    <string name="mn_lines">Lines</string>
+    <string name="mn_timing">Timing</string>
+    <string name="mn_tools">Tools</string>
+    <string name="mn_file">File and video</string>
+    <string name="ln_copy">Copy lines</string>
+    <string name="ln_copied">Lines copied: %1$d</string>
+    <string name="ln_paste">Paste lines after</string>
+    <string name="ln_paste_over">Paste over…</string>
+    <string name="ln_swap">Swap the two marked lines</string>
+    <string name="po_note">The copied lines are pasted over the marked lines (or the current one), only in the chosen fields.</string>
+    <string name="po_margins">Margins</string>
+    <string name="fx_ar_tatweel">Remove kashida (ـ)</string>
+    <string name="fx_ar_tashkeel">Remove tashkeel</string>
+    <string name="fx_ar_letters">Unify alef, yeh and kaf forms (for search)</string>
 </resources>

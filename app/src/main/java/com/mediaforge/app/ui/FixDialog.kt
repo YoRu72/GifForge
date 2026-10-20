@@ -55,6 +55,9 @@ private fun ruleLabel(r: FixRule): Int = when (r) {
     FixRule.SHORT -> R.string.fx_short
     FixRule.SPEED -> R.string.fx_speed
     FixRule.LONG -> R.string.fx_long
+    FixRule.AR_TATWEEL -> R.string.fx_ar_tatweel
+    FixRule.AR_TASHKEEL -> R.string.fx_ar_tashkeel
+    FixRule.AR_LETTERS -> R.string.fx_ar_letters
 }
 
 /**
@@ -64,7 +67,7 @@ private fun ruleLabel(r: FixRule): Int = when (r) {
 @Composable
 fun FixDialog(events: List<AssEvent>, onDismiss: () -> Unit, onApply: (List<AssEvent>, Int) -> Unit) {
     // long lines are often intended (songs, signs): that rule starts unticked, like Subtitle Edit
-    var rules by remember { mutableStateOf(FixRule.entries.toSet() - FixRule.LONG) }
+    var rules by remember { mutableStateOf(FixRule.entries.toSet() - FixRule.LONG - FixRule.AR_TASHKEEL - FixRule.AR_LETTERS) }
     var skip by remember { mutableStateOf(setOf<String>()) }
     var minDur by rememberSaveable { mutableStateOf("500") }
     var maxDur by rememberSaveable { mutableStateOf("7000") }
@@ -123,7 +126,7 @@ fun FixDialog(events: List<AssEvent>, onDismiss: () -> Unit, onApply: (List<AssE
 private fun MsField(label: String, value: String, modifier: Modifier, onValue: (String) -> Unit) {
     ForceLtr {
         OutlinedTextField(
-            value, { s -> onValue(s.filter { it.isDigit() }.take(6)) }, modifier, singleLine = true,
+            value, { s -> onValue(westernDigits(s).filter { it in '0'..'9' }.take(6)) }, modifier, singleLine = true,
             label = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         )

@@ -57,7 +57,7 @@ private fun MsBox(label: String, value: Long, modifier: Modifier = Modifier, onV
     var t by remember(value) { mutableStateOf(value.toString()) }
     ForceLtr {
         OutlinedTextField(
-            t, { s -> t = s.filter { it.isDigit() }.take(6); t.toLongOrNull()?.let(onValue) }, modifier, singleLine = true,
+            t, { s -> t = westernDigits(s).filter { it in '0'..'9' }.take(6); t.toLongOrNull()?.let(onValue) }, modifier, singleLine = true,
             label = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         )
@@ -202,9 +202,9 @@ fun PropertiesDialog(file: SubFile, videoW: Int, videoH: Int, onDismiss: () -> U
                 Text(stringResource(R.string.pr_res), style = MaterialTheme.typography.labelLarge)
                 ForceLtr {
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedTextField(resX, { resX = it.filter { c -> c.isDigit() }.take(5) }, Modifier.weight(1f), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                        OutlinedTextField(resX, { resX = westernDigits(it).filter { c -> c in '0'..'9' }.take(5) }, Modifier.weight(1f), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                         Text("×")
-                        OutlinedTextField(resY, { resY = it.filter { c -> c.isDigit() }.take(5) }, Modifier.weight(1f), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                        OutlinedTextField(resY, { resY = westernDigits(it).filter { c -> c in '0'..'9' }.take(5) }, Modifier.weight(1f), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                     }
                 }
                 if (videoW > 0 && videoH > 0) TextButton(onClick = { resX = videoW.toString(); resY = videoH.toString() }) { Text(stringResource(R.string.pr_from_video, videoW, videoH)) }
@@ -233,6 +233,34 @@ fun PropertiesDialog(file: SubFile, videoW: Int, videoH: Int, onDismiss: () -> U
                 onApply(f)
             }) { Text(stringResource(R.string.sh_apply)) }
         },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
+}
+
+// ---------------------------------------------------------------- Paste over (AEGX6)
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun PasteOverDialog(onDismiss: () -> Unit, onApply: (Set<com.mediaforge.app.subs.PasteOver.Field>) -> Unit) {
+    var fields by remember { mutableStateOf(setOf(com.mediaforge.app.subs.PasteOver.Field.TEXT)) }
+    val labels = listOf(
+        com.mediaforge.app.subs.PasteOver.Field.TEXT to R.string.sub_text, com.mediaforge.app.subs.PasteOver.Field.START to R.string.sub_start,
+        com.mediaforge.app.subs.PasteOver.Field.END to R.string.sub_end, com.mediaforge.app.subs.PasteOver.Field.STYLE to R.string.sub_style,
+        com.mediaforge.app.subs.PasteOver.Field.ACTOR to R.string.sub_actor, com.mediaforge.app.subs.PasteOver.Field.EFFECT to R.string.sub_effect,
+        com.mediaforge.app.subs.PasteOver.Field.LAYER to R.string.sub_layer, com.mediaforge.app.subs.PasteOver.Field.MARGINS to R.string.po_margins,
+        com.mediaforge.app.subs.PasteOver.Field.COMMENT to R.string.sub_comment,
+    )
+    AlertDialog(
+        onDismissRequest = onDismiss, title = { Text(stringResource(R.string.ln_paste_over)) },
+        text = {
+            Column {
+                Text(stringResource(R.string.po_note), style = MaterialTheme.typography.bodySmall)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    labels.forEach { (f, l) -> FilterChip(f in fields, { fields = if (f in fields) fields - f else fields + f }, { Text(stringResource(l)) }) }
+                }
+            }
+        },
+        confirmButton = { TextButton(enabled = fields.isNotEmpty(), onClick = { onApply(fields) }) { Text(stringResource(R.string.sh_apply)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }

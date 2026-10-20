@@ -48,7 +48,7 @@ fun ShiftDialog(
                 }
                 ForceLtr {
                     OutlinedTextField(
-                        value = amount, onValueChange = { amount = it }, singleLine = true, isError = delta == null,
+                        value = amount, onValueChange = { amount = westernDigits(it) }, singleLine = true, isError = delta == null,
                         label = { Text(stringResource(R.string.sh_amount)) }, modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                     )

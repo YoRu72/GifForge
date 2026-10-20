@@ -16,6 +16,9 @@ enum class FixRule {
     SHORT,      // shown too briefly
     SPEED,      // more characters per second than the reading-speed profile allows
     LONG,       // shown too long
+    AR_TATWEEL, // kashida (ـ) removed: it stretches words and breaks search
+    AR_TASHKEEL,// harakat removed (off by default: many owners want them kept)
+    AR_LETTERS, // أ إ آ -> ا, ى -> ي, Persian kaf/yeh -> Arabic (off by default)
 }
 
 object FixOps {
@@ -70,6 +73,9 @@ object FixOps {
         textRule(FixRule.AR_PUNCT) { ArabicTools.arabicPunctuation(it) }
         textRule(FixRule.AR_DIGITS) { t -> mapOutsideCodes(t) { westernDigits(it) } }
         textRule(FixRule.LONE_I) { loneI(it) }
+        textRule(FixRule.AR_TATWEEL) { ArabicTools.stripTatweel(it) }
+        textRule(FixRule.AR_TASHKEEL) { ArabicTools.stripTashkeel(it) }
+        textRule(FixRule.AR_LETTERS) { ArabicTools.normalizeLetters(it) }
 
         // timing rules: per layer, in time order (lines of other layers may overlap on purpose)
         fun timeRule(r: FixRule, f: (cur: AssEvent, next: AssEvent?) -> AssEvent) {

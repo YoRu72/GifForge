@@ -166,6 +166,9 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
     var selOpen by remember { mutableStateOf(false) }    // AEGX6 select lines
     var propsOpen by remember { mutableStateOf(false) }  // 19.b script properties + 23.d resampler
     var fontsOpen by remember { mutableStateOf(false) }  // 19.c/19.d fonts collector
+    var menuSection by remember { mutableStateOf(0) }    // 0 root, 1 lines, 2 timing, 3 tools, 4 file
+    var clipboard by remember { mutableStateOf<List<AssEvent>>(emptyList()) } // copied lines (AEGX6 paste over)
+    var pasteOverOpen by remember { mutableStateOf(false) }
     var motionOpen by remember { mutableStateOf(false) } // MOT1/MOT2 motion tracking of the active line
     var karaTap by remember { mutableStateOf(0) }        // karaoke tap timing: index of the syllable the next tap starts (0 = off)
     val vinfo by androidx.compose.runtime.produceState<com.mediaforge.app.media.VideoInfo?>(null, video) {
@@ -196,6 +199,10 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
     if (propsOpen) PropertiesDialog(file, vinfo?.width ?: 0, vinfo?.height ?: 0, onDismiss = { propsOpen = false }) { f2 ->
         if (f2 != file) { file = f2; dirty = true }
         propsOpen = false
+    }
+    if (pasteOverOpen) PasteOverDialog(onDismiss = { pasteOverOpen = false }) { fields ->
+        val tg = (if (marked.isNotEmpty()) marked.sorted() else listOf(active)).filter { it in events.indices }
+        file = file.copy(events = com.mediaforge.app.subs.PasteOver.applyAll(events, tg, clipboard, fields)); dirty = true; pasteOverOpen = false
     }
     if (fontsOpen) FontsCollectorDialog(file, onDismiss = { fontsOpen = false }) { f2 -> if (f2 != file) { file = f2; dirty = true } }
     if (stylesOpen) StylesDialog(file, marked, onDismiss = { stylesOpen = false }) { f2 -> if (f2 != file) { file = f2; dirty = true } }
@@ -322,87 +329,119 @@ fun SubtitleListScreen(doc: SubDoc, onBack: () -> Unit, videoUri: android.net.Ur
                     IconButton(onClick = { saver.launch(cd.name) }) { Icon(Icons.Filled.Save, stringResource(R.string.save)) }
                     Box {
                         IconButton(onClick = { menuOpen = true }) { Icon(Icons.Filled.MoreVert, stringResource(R.string.more)) }
-                        DropdownMenu(menuOpen, { menuOpen = false }) {
+                        DropdownMenu(menuOpen, { menuOpen = false; menuSection = 0 }) {
                             val t = targets()
                             val ed = !translate
                             @Composable fun item(label: Int, enabled: Boolean = true, run: () -> Unit) =
-                                DropdownMenuItem(text = { Text(stringResource(label)) }, enabled = enabled, onClick = { menuOpen = false; run() })
-                            fun put(list: List<AssEvent>, newActive: Int) { file = file.copy(events = list); active = newActive; marked = emptySet(); dirty = true }
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.tr_mode)) },
-                                leadingIcon = { Icon(Icons.Filled.Translate, null, tint = if (translate) MaterialTheme.colorScheme.primary else LocalContentColor.current) },
-                                onClick = { menuOpen = false; translate = !translate; if (translate) originals = file.events.map { it.text } },
+                                DropdownMenuItem(text = { Text(stringResource(label)) }, enabled = enabled, onClick = { menuOpen = false; menuSection = 0; run() })
+                            @Composable fun section(label: Int, id: Int) = DropdownMenuItem(
+                                text = { Text(stringResource(label), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary) },
+                                trailingIcon = { Icon(Icons.Filled.KeyboardArrowDown, null) }, onClick = { menuSection = id },
                             )
-                            item(R.string.sub_add, ed) { addLine() }
-                            item(R.string.sub_insert, ed) {
-                                val at = (active + 1).coerceIn(0, events.size)
-                                val prevEnd = events.getOrNull(at - 1)?.endMs ?: 0L
-                                put(events.take(at) + AssEvent(startMs = prevEnd, endMs = prevEnd + 2000L, style = file.styles.firstOrNull()?.name ?: "Default") + events.drop(at), at)
-                            }
-                            item(R.string.sub_insert_before, ed) {
-                                val at = active.coerceIn(0, events.size)
-                                val nextStart = events.getOrNull(at)?.startMs ?: 0L
-                                val s0 = (nextStart - 2000L).coerceAtLeast(0L)
-                                put(events.take(at) + AssEvent(startMs = s0, endMs = maxOf(nextStart, s0 + 1L), style = file.styles.firstOrNull()?.name ?: "Default") + events.drop(at), at)
-                            }
-                            item(R.string.sub_duplicate, ed && t.isNotEmpty()) {
-                                val dup = events.filterIndexed { i, _ -> i in t }
-                                val at = t.max() + 1
-                                put(events.take(at) + dup + events.drop(at), at)
-                            }
-                            item(R.string.delete, ed && t.isNotEmpty()) {
-                                val left = events.filterIndexed { i, _ -> i !in t }
-                                put(left, if (left.isEmpty()) -1 else t.min().coerceAtMost(left.size - 1))
-                            }
-                            HorizontalDivider()
-                            item(R.string.ln_split, ed && active in events.indices) {
-                                val parts = LineOps.split(events[active], cur[0])
-                                if (parts.size == 2) put(events.take(active) + parts + events.drop(active + 1), active + 1)
-                                else Toast.makeText(ctx, R.string.ln_split_fail, Toast.LENGTH_SHORT).show()
-                            }
-                            item(R.string.ln_join, ed && marked.size >= 2) {
-                                val sel = marked.sorted(); val first = sel.first(); val rest = sel.drop(1).toSet()
-                                val joined = LineOps.join(sel.map { events[it] })
-                                put(events.mapIndexed { i, e -> if (i == first) joined else e }.filterIndexed { i, _ -> i !in rest }, first)
-                            }
-                            item(R.string.ln_up, ed && active > 0) { LineOps.move(events, active, -1)?.let { put(it, active - 1) } }
-                            item(R.string.ln_down, ed && active in 0 until events.size - 1) { LineOps.move(events, active, 1)?.let { put(it, active + 1) } }
-                            HorizontalDivider()
-                            item(R.string.sh_menu, events.isNotEmpty()) { shiftOpen = true }
-                            item(R.string.sy_menu, events.size > 1) { syncOpen = true }
-                            item(R.string.fx_menu, ed && events.isNotEmpty()) { fixOpen = true }
-                            item(R.string.stl_menu) { stylesOpen = true }
-                            item(R.string.pr_menu) { propsOpen = true }
-                            item(R.string.fc_menu) { fontsOpen = true }
-                            item(R.string.sel_menu, events.isNotEmpty()) { selOpen = true }
-                            item(R.string.tpp_menu, events.isNotEmpty()) { tppOpen = true }
-                            item(R.string.mt_menu, ed && video != null && active in events.indices) { motionOpen = true }
-                            item(R.string.ka_split_line, ed && active in events.indices && com.mediaforge.app.subs.Karaoke.hasKaraoke(events[active].text)) {
-                                val parts = com.mediaforge.app.subs.Karaoke.splitLine(events[active])
-                                put(events.take(active) + parts + events.drop(active + 1), active)
-                            }
-                            item(R.string.ka_join_lines, ed && marked.size >= 2) {
-                                val sel = marked.sorted(); val first = sel.first(); val rest = sel.drop(1).toSet()
-                                val joined = com.mediaforge.app.subs.Karaoke.joinLines(sel.map { events[it] })
-                                put(events.mapIndexed { i, ev -> if (i == first) joined else ev }.filterIndexed { i, _ -> i !in rest }, first)
-                            }
-                            item(R.string.ar_repair, ed && events.isNotEmpty()) {
-                                val r = com.mediaforge.app.subs.ArabicTools.guessRepair(events.map { it.text })
-                                if (r == null) Toast.makeText(ctx, R.string.ar_repair_none, Toast.LENGTH_SHORT).show()
-                                else {
-                                    val (f2, n) = com.mediaforge.app.subs.ArabicTools.repairFile(file, r)
-                                    if (n > 0) { file = f2; dirty = true }
-                                    Toast.makeText(ctx, ctx.getString(R.string.ar_repair_done, n, r.real, r.readAs), Toast.LENGTH_LONG).show()
+                            fun put(list: List<AssEvent>, newActive: Int) { file = file.copy(events = list); active = newActive; marked = emptySet(); dirty = true }
+                            when (menuSection) {
+                                0 -> {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.tr_mode)) },
+                                        leadingIcon = { Icon(Icons.Filled.Translate, null, tint = if (translate) MaterialTheme.colorScheme.primary else LocalContentColor.current) },
+                                        onClick = { menuOpen = false; translate = !translate; if (translate) originals = file.events.map { it.text } },
+                                    )
+                                    HorizontalDivider()
+                                    section(R.string.mn_lines, 1)
+                                    section(R.string.mn_timing, 2)
+                                    section(R.string.mn_tools, 3)
+                                    section(R.string.mn_file, 4)
+                                    HorizontalDivider()
+                                    item(R.string.ex_title) { chooser = true }
+                                }
+                                1 -> { // lines
+                                    item(R.string.sub_add, ed) { addLine() }
+                                    item(R.string.sub_insert, ed) {
+                                        val at = (active + 1).coerceIn(0, events.size)
+                                        val prevEnd = events.getOrNull(at - 1)?.endMs ?: 0L
+                                        put(events.take(at) + AssEvent(startMs = prevEnd, endMs = prevEnd + 2000L, style = file.styles.firstOrNull()?.name ?: "Default") + events.drop(at), at)
+                                    }
+                                    item(R.string.sub_insert_before, ed) {
+                                        val at = active.coerceIn(0, events.size)
+                                        val nextStart = events.getOrNull(at)?.startMs ?: 0L
+                                        val s0 = (nextStart - 2000L).coerceAtLeast(0L)
+                                        put(events.take(at) + AssEvent(startMs = s0, endMs = maxOf(nextStart, s0 + 1L), style = file.styles.firstOrNull()?.name ?: "Default") + events.drop(at), at)
+                                    }
+                                    item(R.string.sub_duplicate, ed && t.isNotEmpty()) {
+                                        val dup = events.filterIndexed { i, _ -> i in t }
+                                        val at = t.max() + 1
+                                        put(events.take(at) + dup + events.drop(at), at)
+                                    }
+                                    item(R.string.delete, ed && t.isNotEmpty()) {
+                                        val left = events.filterIndexed { i, _ -> i !in t }
+                                        put(left, if (left.isEmpty()) -1 else t.min().coerceAtMost(left.size - 1))
+                                    }
+                                    item(R.string.ln_copy, t.isNotEmpty()) { clipboard = t.sorted().map { events[it] }; Toast.makeText(ctx, ctx.getString(R.string.ln_copied, clipboard.size), Toast.LENGTH_SHORT).show() }
+                                    item(R.string.ln_paste, ed && clipboard.isNotEmpty()) {
+                                        val at = (active + 1).coerceIn(0, events.size)
+                                        put(events.take(at) + clipboard + events.drop(at), at)
+                                    }
+                                    item(R.string.ln_paste_over, ed && clipboard.isNotEmpty() && t.isNotEmpty()) { pasteOverOpen = true }
+                                    HorizontalDivider()
+                                    item(R.string.ln_split, ed && active in events.indices) {
+                                        val parts = LineOps.split(events[active], cur[0])
+                                        if (parts.size == 2) put(events.take(active) + parts + events.drop(active + 1), active + 1)
+                                        else Toast.makeText(ctx, R.string.ln_split_fail, Toast.LENGTH_SHORT).show()
+                                    }
+                                    item(R.string.ln_join, ed && marked.size >= 2) {
+                                        val sel = marked.sorted(); val first = sel.first(); val rest = sel.drop(1).toSet()
+                                        val joined = LineOps.join(sel.map { events[it] })
+                                        put(events.mapIndexed { i, e -> if (i == first) joined else e }.filterIndexed { i, _ -> i !in rest }, first)
+                                    }
+                                    item(R.string.ka_split_line, ed && active in events.indices && com.mediaforge.app.subs.Karaoke.hasKaraoke(events[active].text)) {
+                                        val parts = com.mediaforge.app.subs.Karaoke.splitLine(events[active])
+                                        put(events.take(active) + parts + events.drop(active + 1), active)
+                                    }
+                                    item(R.string.ka_join_lines, ed && marked.size >= 2) {
+                                        val sel = marked.sorted(); val first = sel.first(); val rest = sel.drop(1).toSet()
+                                        val joined = com.mediaforge.app.subs.Karaoke.joinLines(sel.map { events[it] })
+                                        put(events.mapIndexed { i, ev -> if (i == first) joined else ev }.filterIndexed { i, _ -> i !in rest }, first)
+                                    }
+                                    HorizontalDivider()
+                                    item(R.string.ln_up, ed && active > 0) { LineOps.move(events, active, -1)?.let { put(it, active - 1) } }
+                                    item(R.string.ln_down, ed && active in 0 until events.size - 1) { LineOps.move(events, active, 1)?.let { put(it, active + 1) } }
+                                    item(R.string.ln_swap, ed && marked.size == 2) {
+                                        val (i, j) = marked.sorted()
+                                        put(events.toMutableList().also { val x = it[i]; it[i] = it[j]; it[j] = x }, i)
+                                    }
+                                    item(R.string.ln_sort_start, ed && events.size > 1) { put(LineOps.sort(events, LineOps.SortBy.START), 0) }
+                                    item(R.string.ln_sort_end, ed && events.size > 1) { put(LineOps.sort(events, LineOps.SortBy.END), 0) }
+                                    item(R.string.ln_sort_style, ed && events.size > 1) { put(LineOps.sort(events, LineOps.SortBy.STYLE), 0) }
+                                    item(R.string.sel_menu, events.isNotEmpty()) { selOpen = true }
+                                }
+                                2 -> { // timing
+                                    item(R.string.sh_menu, events.isNotEmpty()) { shiftOpen = true }
+                                    item(R.string.sy_menu, events.size > 1) { syncOpen = true }
+                                    item(R.string.tpp_menu, events.isNotEmpty()) { tppOpen = true }
+                                    item(R.string.mt_menu, ed && video != null && active in events.indices) { motionOpen = true }
+                                }
+                                3 -> { // tools
+                                    item(R.string.fx_menu, ed && events.isNotEmpty()) { fixOpen = true }
+                                    item(R.string.ar_repair, ed && events.isNotEmpty()) {
+                                        val r = com.mediaforge.app.subs.ArabicTools.guessRepair(events.map { it.text })
+                                        if (r == null) Toast.makeText(ctx, R.string.ar_repair_none, Toast.LENGTH_SHORT).show()
+                                        else {
+                                            val (f2, n) = com.mediaforge.app.subs.ArabicTools.repairFile(file, r)
+                                            if (n > 0) { file = f2; dirty = true }
+                                            Toast.makeText(ctx, ctx.getString(R.string.ar_repair_done, n, r.real, r.readAs), Toast.LENGTH_LONG).show()
+                                        }
+                                    }
+                                    item(R.string.stl_menu) { stylesOpen = true }
+                                    item(R.string.fc_menu) { fontsOpen = true }
+                                    item(R.string.pr_menu) { propsOpen = true }
+                                }
+                                else -> { // file
+                                    item(R.string.sub_import) { importer.launch(arrayOf("*/*")) }
+                                    if (video != null) item(R.string.sub_tracks) { tracksOpen = true }
+                                    item(if (video == null) R.string.sv_attach else R.string.sv_detach) { if (video == null) videoPicker.launch(arrayOf("video/*")) else video = null }
+                                    item(R.string.ex_title) { chooser = true }
                                 }
                             }
-                            item(R.string.ln_sort_start, ed && events.size > 1) { put(LineOps.sort(events, LineOps.SortBy.START), 0) }
-                            item(R.string.ln_sort_end, ed && events.size > 1) { put(LineOps.sort(events, LineOps.SortBy.END), 0) }
-                            item(R.string.ln_sort_style, ed && events.size > 1) { put(LineOps.sort(events, LineOps.SortBy.STYLE), 0) }
-                            HorizontalDivider()
-                            item(R.string.sub_import) { importer.launch(arrayOf("*/*")) }
-                            if (video != null) item(R.string.sub_tracks) { tracksOpen = true }
-                            item(if (video == null) R.string.sv_attach else R.string.sv_detach) { if (video == null) videoPicker.launch(arrayOf("video/*")) else video = null }
-                            item(R.string.ex_title) { chooser = true }
                         }
                     }
                 },
@@ -662,7 +701,7 @@ private fun NumField(label: String, value: Int, modifier: Modifier, onValue: (In
     var t by remember { mutableStateOf(value.toString()) }
     LaunchedEffect(value) { if (t.toIntOrNull() != value) t = value.toString() }
     OutlinedTextField(
-        value = t, onValueChange = { s -> t = s; s.toIntOrNull()?.let(onValue) },
+        value = t, onValueChange = { raw -> val s = westernDigits(raw); t = s; s.toIntOrNull()?.let(onValue) },
         label = { Text(label) }, singleLine = true, modifier = modifier,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Start),
@@ -676,7 +715,7 @@ private fun TimeField(label: String, ms: Long, modifier: Modifier, onValue: (Lon
     LaunchedEffect(ms) { if (parseAssTime(t)?.let { formatAssTime(it) } != formatAssTime(ms)) t = formatAssTime(ms) }
     ForceLtr {
         OutlinedTextField(
-            value = t, onValueChange = { s -> t = s; parseAssTime(s)?.let(onValue) },
+            value = t, onValueChange = { raw -> val s = westernDigits(raw); t = s; parseAssTime(s)?.let(onValue) },
             label = { Text(label) }, singleLine = true, modifier = modifier,
         )
     }

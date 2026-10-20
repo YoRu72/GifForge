@@ -132,6 +132,30 @@ object Find {
 }
 
 /** AEG-C / SE3: timing tools. Pure functions, no UI. */
+/** AEGX6 "Paste over": copies the chosen fields of [src] onto [dst] (Aegisub's dialog_paste_over). */
+object PasteOver {
+    enum class Field { LAYER, START, END, STYLE, ACTOR, MARGINS, EFFECT, TEXT, COMMENT }
+    fun apply(dst: AssEvent, src: AssEvent, fields: Set<Field>): AssEvent {
+        var e = dst
+        if (Field.LAYER in fields) e = e.copy(layer = src.layer)
+        if (Field.START in fields) e = e.copy(startMs = src.startMs)
+        if (Field.END in fields) e = e.copy(endMs = src.endMs)
+        if (Field.STYLE in fields) e = e.copy(style = src.style)
+        if (Field.ACTOR in fields) e = e.copy(actor = src.actor)
+        if (Field.MARGINS in fields) e = e.copy(marginL = src.marginL, marginR = src.marginR, marginV = src.marginV)
+        if (Field.EFFECT in fields) e = e.copy(effect = src.effect)
+        if (Field.TEXT in fields) e = e.copy(text = src.text)
+        if (Field.COMMENT in fields) e = e.copy(comment = src.comment)
+        return if (e.endMs < e.startMs) e.copy(endMs = e.startMs) else e
+    }
+    /** Pastes [src] lines over the targets in order; extra targets are left alone (Aegisub pastes the clipboard cyclically; one pass is clearer). */
+    fun applyAll(events: List<AssEvent>, targets: List<Int>, src: List<AssEvent>, fields: Set<Field>): List<AssEvent> {
+        val out = events.toMutableList()
+        for ((k, i) in targets.withIndex()) { val s = src.getOrNull(k) ?: break; if (i in out.indices) out[i] = apply(out[i], s, fields) }
+        return out
+    }
+}
+
 object TimeOps {
     /** Moves the lines in [targets] by [deltaMs]. Duration is kept; nothing goes below 0 (a line that would is stopped at 0). */
     fun shift(events: List<AssEvent>, targets: Set<Int>, deltaMs: Long): List<AssEvent> =

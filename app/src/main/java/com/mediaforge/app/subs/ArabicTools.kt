@@ -83,6 +83,21 @@ object ArabicTools {
         return sb.toString()
     }
 
+    // ---------------------------------------------------------------- normalisation (A23 / AR6)
+
+    private val TASHKEEL = Regex("[\u064B-\u0652\u0670\u0640]") // harakat, shadda, sukun, dagger alef, tatweel
+    private val TATWEEL = Regex("\u0640")
+
+    /** Hamza forms of alef (أ إ آ) -> ا, alef maqsura ى -> ي, Persian ک ی -> Arabic ك ي, ta marbuta kept. Outside tags. */
+    fun normalizeLetters(text: String): String = mapOutsideCodes(text) { s ->
+        s.replace('\u0623', '\u0627').replace('\u0625', '\u0627').replace('\u0622', '\u0627')
+            .replace('\u0649', '\u064A').replace('\u06A9', '\u0643').replace('\u06CC', '\u064A')
+    }
+
+    fun stripTashkeel(text: String): String = mapOutsideCodes(text) { TASHKEEL.replace(it, "") }
+
+    fun stripTatweel(text: String): String = mapOutsideCodes(text) { TATWEEL.replace(it, "") }
+
     // ---------------------------------------------------------------- mojibake repair (A25)
 
     /** One way a file can have been decoded wrongly: its bytes were really [real] but were read as [readAs]. */

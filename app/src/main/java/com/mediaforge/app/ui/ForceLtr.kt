@@ -18,6 +18,18 @@ fun ForceLtr(content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr, content = content)
 }
 
+/** B3: Arabic-Indic and Persian digits typed by the keyboard become 1234567 in numeric fields; the Arabic decimal sign too. */
+fun westernDigits(s: String): String = buildString(s.length) {
+    for (c in s) append(
+        when (c) {
+            in '\u0660'..'\u0669' -> '0' + (c - '\u0660')
+            in '\u06F0'..'\u06F9' -> '0' + (c - '\u06F0')
+            '\u066B' -> '.'
+            else -> c
+        },
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LtrRangeSlider(

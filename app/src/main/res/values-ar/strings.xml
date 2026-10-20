@@ -721,4 +721,18 @@
     <string name="fc_extracted">الخطوط المضافة إلى المكتبة: %1$d</string>
     <string name="fc_none">لا خطوط في الملف بعد.</string>
     <string name="fc_size">حجم الخطوط المضمّنة: %1$d KB</string>
+    <string name="mn_lines">الأسطر</string>
+    <string name="mn_timing">التوقيت</string>
+    <string name="mn_tools">الأدوات</string>
+    <string name="mn_file">الملف والفيديو</string>
+    <string name="ln_copy">نسخ الأسطر</string>
+    <string name="ln_copied">الأسطر المنسوخة: %1$d</string>
+    <string name="ln_paste">لصق الأسطر بعده</string>
+    <string name="ln_paste_over">لصق فوق…</string>
+    <string name="ln_swap">مبادلة السطرين المحدّدين</string>
+    <string name="po_note">تُلصق الأسطر المنسوخة فوق المحدّدة (أو الحالي) في الحقول المختارة وحدها.</string>
+    <string name="po_margins">الهوامش</string>
+    <string name="fx_ar_tatweel">حذف الكشيدة (ـ)</string>
+    <string name="fx_ar_tashkeel">حذف التشكيل</string>
+    <string name="fx_ar_letters">توحيد صور الألف والياء والكاف (للبحث)</string>
 </resources>

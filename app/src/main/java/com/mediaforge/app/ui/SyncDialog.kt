@@ -42,12 +42,12 @@ fun SyncDialog(events: List<AssEvent>, active: Int, onDismiss: () -> Unit, onApp
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.sy_hint), style = MaterialTheme.typography.bodySmall)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(a, { a = it }, Modifier.weight(0.4f), singleLine = true, label = { Text(stringResource(R.string.sy_line_a)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                        OutlinedTextField(ta, { ta = it }, Modifier.weight(0.6f), singleLine = true, isError = pa == null, label = { Text(stringResource(R.string.sy_new_start)) })
+                        OutlinedTextField(a, { a = westernDigits(it) }, Modifier.weight(0.4f), singleLine = true, label = { Text(stringResource(R.string.sy_line_a)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                        OutlinedTextField(ta, { ta = westernDigits(it) }, Modifier.weight(0.6f), singleLine = true, isError = pa == null, label = { Text(stringResource(R.string.sy_new_start)) })
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(b, { b = it }, Modifier.weight(0.4f), singleLine = true, label = { Text(stringResource(R.string.sy_line_b)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                        OutlinedTextField(tb, { tb = it }, Modifier.weight(0.6f), singleLine = true, isError = pb == null, label = { Text(stringResource(R.string.sy_new_start)) })
+                        OutlinedTextField(b, { b = westernDigits(it) }, Modifier.weight(0.4f), singleLine = true, label = { Text(stringResource(R.string.sy_line_b)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                        OutlinedTextField(tb, { tb = westernDigits(it) }, Modifier.weight(0.6f), singleLine = true, isError = pb == null, label = { Text(stringResource(R.string.sy_new_start)) })
                     }
                 }
             }
