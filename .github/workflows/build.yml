@@ -50,24 +50,20 @@ jobs:
         run: |
           set -o pipefail
           gradle testDebugUnitTest --no-daemon --console=plain 2>&1 | tee gradle-test.log
-      - name: Failure report (committed to branch ci-log, readable without artifact storage)
+      - name: Failure report (pushed to branch ci-log, readable without artifact storage)
         if: failure()
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
+          set +e
+          D=$(mktemp -d)
           { echo "run ${{ github.run_id }} commit ${{ github.sha }}"; echo;
-            grep -E "^e: |error:|FAILED|Exception|Error:" gradle-test.log | head -200;
+            grep -E "^e: |error:|FAILED|Exception|Error:|What went wrong" -A2 gradle-test.log | head -300;
             for f in $(find app/build/test-results -name '*.xml' 2>/dev/null); do
               grep -q "<failure" "$f" && { echo "== $f"; grep -A3 "<failure" "$f" | head -40; }
-            done; } > ci-failure.txt || true
-          B=$(base64 -w0 ci-failure.txt)
-          SHA=$(gh api repos/${{ github.repository }}/contents/ci-failure.txt?ref=ci-log -q .sha 2>/dev/null || true)
-          if [ -n "$SHA" ]; then
-            gh api -X PUT repos/${{ github.repository }}/contents/ci-failure.txt -f message="ci failure ${{ github.run_id }}" -f content="$B" -f branch=ci-log -f sha="$SHA" >/dev/null
-          else
-            gh api -X PUT repos/${{ github.repository }}/contents/ci-failure.txt -f message="ci failure ${{ github.run_id }}" -f content="$B" -f branch=ci-log >/dev/null || \
-            { git -c user.name=ci -c user.email=ci@local checkout --orphan ci-log && git rm -rfq --cached . && cp ci-failure.txt /tmp/ && git clean -fdxq && cp /tmp/ci-failure.txt . && git add ci-failure.txt && git -c user.name=ci -c user.email=ci@local commit -qm "ci failure" && git push -f origin ci-log; }
-          fi
+            done; } > "$D/ci-failure.txt"
+          cd "$D" && git init -q && git checkout -q -b ci-log && git add ci-failure.txt
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "ci failure ${{ github.run_id }}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-log
+          echo "report pushed to branch ci-log"
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
