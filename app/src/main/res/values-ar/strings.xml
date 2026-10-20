@@ -770,4 +770,8 @@
     <string name="bp_open">معاينة بلا فيديو</string>
     <string name="bp_close">إخفاء المعاينة</string>
     <string name="bp_note">لوحة فارغة بمقاس الملف</string>
+    <string name="ex_as_gif">صورة GIF</string>
+    <string name="ex_as_video">فيديو (MP4)</string>
+    <string name="rs_with_audio">مع الصوت</string>
+    <string name="rs_no_audio">بلا صوت (غُيّرت السرعة أو الاتجاه)</string>
 </resources>

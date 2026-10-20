@@ -56,3 +56,23 @@ suspend fun savePng(context: Context, bmp: android.graphics.Bitmap): Uri? = with
         }
     } catch (e: Exception) { null }
 }
+
+/** FEAT1: saves an MP4 to Movies/MediaForge (MediaStore on Android 10+, app folder before that). */
+suspend fun saveVideo(context: Context, file: File): Uri? = withContext(Dispatchers.IO) {
+    val name = "${com.mediaforge.app.Prefs.safePrefix()}${System.currentTimeMillis()}.mp4"
+    try {
+        if (Build.VERSION.SDK_INT >= 29) {
+            val values = ContentValues().apply {
+                put(MediaStore.Video.Media.DISPLAY_NAME, name)
+                put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
+                put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/MediaForge")
+            }
+            val uri = context.contentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values) ?: return@withContext null
+            context.contentResolver.openOutputStream(uri)?.use { o -> file.inputStream().use { it.copyTo(o) } }
+            uri
+        } else {
+            val dir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES) ?: return@withContext null
+            val dest = File(dir, name); file.copyTo(dest, overwrite = true); Uri.fromFile(dest)
+        }
+    } catch (e: Exception) { null }
+}

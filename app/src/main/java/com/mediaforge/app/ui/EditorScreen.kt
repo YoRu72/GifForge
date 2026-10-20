@@ -168,16 +168,26 @@ fun EditorScreen(uri: Uri, onBack: () -> Unit, fpsHint: Int? = null, fullClip: B
         }
     }
 
-    fun export() {
+    var exportMenu by remember { mutableStateOf(false) }
+    fun export(asVideo: Boolean = false) {
         if (info == null) return
         job = scope.launch {
             player.pause()
             progress = 0f
             status = null
             ctx.cacheDir.listFiles { f -> f.name.startsWith("mediaforge_") }?.forEach { it.delete() }
-            val tmp = File(ctx.cacheDir, "mediaforge_${System.currentTimeMillis()}.gif")
+            val tmp = File(ctx.cacheDir, "mediaforge_${System.currentTimeMillis()}." + if (asVideo) "mp4" else "gif")
             try {
-                encodeGif(ctx, uri, tmp, state.toOptions()) { progress = it }
+                if (asVideo) {
+                    // FEAT1: the same edit written as a video (hardware H.264); frame rate follows the source, at least 24
+                    val vopts = state.toOptions().let { o -> o.copy(fps = maxOf(24, minOf(60, (info.fps ?: 30f).toInt()))) }
+                    com.mediaforge.app.media.VideoEncoder.encode(ctx, uri, tmp, vopts) { progress = it }
+                        .onSuccess { o ->
+                            val saved = if (Prefs.autoSave.value) com.mediaforge.app.media.saveVideo(ctx, o.file) else null
+                            result = ExportResult(o.file, saved != null, o.width, o.height, video = true, withAudio = o.withAudio)
+                        }
+                        .onFailure { status = ctx.getString(R.string.ed_failed, it.message ?: "") }
+                } else encodeGif(ctx, uri, tmp, state.toOptions()) { progress = it }
                     .onSuccess { f ->
                         val saved = if (Prefs.autoSave.value) saveGif(ctx, f) else null
                         val b = BitmapFactory.Options().apply { inJustDecodeBounds = true }
@@ -236,11 +246,17 @@ fun EditorScreen(uri: Uri, onBack: () -> Unit, fpsHint: Int? = null, fullClip: B
                 },
                 actions = {
                     if (progress == null) {
-                        Button(
-                            onClick = { export() },
-                            enabled = info != null,
-                            modifier = Modifier.padding(end = 8.dp),
-                        ) { Text(stringResource(R.string.export)) }
+                        androidx.compose.foundation.layout.Box {
+                            Button(
+                                onClick = { exportMenu = true },
+                                enabled = info != null,
+                                modifier = Modifier.padding(end = 8.dp),
+                            ) { Text(stringResource(R.string.export)) }
+                            androidx.compose.material3.DropdownMenu(exportMenu, { exportMenu = false }) {
+                                androidx.compose.material3.DropdownMenuItem(text = { Text(stringResource(R.string.ex_as_gif)) }, onClick = { exportMenu = false; export(false) })
+                                androidx.compose.material3.DropdownMenuItem(text = { Text(stringResource(R.string.ex_as_video)) }, onClick = { exportMenu = false; export(true) })
+                            }
+                        }
                     } else {
                         OutlinedButton(
                             onClick = { job?.cancel() },

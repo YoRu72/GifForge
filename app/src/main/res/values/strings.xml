@@ -757,4 +757,8 @@
     <string name="bp_open">Preview without video</string>
     <string name="bp_close">Hide preview</string>
     <string name="bp_note">Blank canvas at the script size</string>
+    <string name="ex_as_gif">As GIF</string>
+    <string name="ex_as_video">As video (MP4)</string>
+    <string name="rs_with_audio">with sound</string>
+    <string name="rs_no_audio">silent (speed or reverse changed)</string>
 </resources>

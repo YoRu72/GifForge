@@ -17,6 +17,23 @@ fun shareGif(ctx: Context, file: File) {
     ctx.startActivity(Intent.createChooser(send, "Share GIF").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 }
 
+fun shareFile(ctx: Context, file: File, mime: String) {
+    val send = Intent(Intent.ACTION_SEND).apply {
+        type = mime
+        putExtra(Intent.EXTRA_STREAM, uriFor(ctx, file))
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    ctx.startActivity(Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+}
+
+fun openFile(ctx: Context, file: File, mime: String) {
+    val view = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(uriFor(ctx, file), mime)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    runCatching { ctx.startActivity(view) }
+}
+
 fun openGif(ctx: Context, file: File) {
     val view = Intent(Intent.ACTION_VIEW).apply {
         setDataAndType(uriFor(ctx, file), "image/gif")
