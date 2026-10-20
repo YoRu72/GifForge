@@ -2,6 +2,8 @@ package com.mediaforge.app.ui
 
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -79,6 +81,13 @@ fun SubVideoPane(
     var safeArea by remember { mutableStateOf(false) }
     var wave by remember { mutableStateOf(true) }
     var snap by remember { mutableStateOf(true) }
+    val ctx = LocalContext.current
+    val player = remember(uri) {
+        ExoPlayer.Builder(ctx).build().apply {
+            setMediaItem(MediaItem.fromUri(uri)); setSeekParameters(SeekParameters.EXACT); prepare()
+        }
+    }
+    DisposableEffect(player) { onDispose { player.release() } }
     var eyedrop by remember { mutableStateOf(false) } // AEGX2: next tap on the picture picks a colour
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     val refsForFrame by androidx.compose.runtime.produceState(emptyMap<String, String>(), ctx) { value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { fontRefMap(ctx) } }
@@ -93,13 +102,6 @@ fun SubVideoPane(
         }
         out
     }
-    val ctx = LocalContext.current
-    val player = remember(uri) {
-        ExoPlayer.Builder(ctx).build().apply {
-            setMediaItem(MediaItem.fromUri(uri)); setSeekParameters(SeekParameters.EXACT); prepare()
-        }
-    }
-    DisposableEffect(player) { onDispose { player.release() } }
 
     var durationMs by remember(uri) { mutableLongStateOf(0L) }
     var frameMs by remember(uri) { mutableStateOf(1000f / 25f) }
@@ -147,7 +149,7 @@ fun SubVideoPane(
                 SubtitleOverlay(file = file, shown = shown, posMs = pos, aspect = asp, modifier = Modifier.fillMaxSize(), videoHeight = videoH)
                 if (safeArea) SafeAreaOverlay(asp)
                 if (eyedrop && onColor != null) Box(Modifier.fillMaxSize().pointerInput(asp) {
-                    androidx.compose.foundation.gestures.detectTapGestures { o ->
+                    detectTapGestures { o ->
                         val vw: Float; val vh: Float
                         if (size.width.toFloat() / size.height > asp) { vh = size.height.toFloat(); vw = vh * asp } else { vw = size.width.toFloat(); vh = vw / asp }
                         val fx = ((o.x - (size.width - vw) / 2f) / vw).coerceIn(0f, 1f); val fy = ((o.y - (size.height - vh) / 2f) / vh).coerceIn(0f, 1f)
@@ -165,7 +167,7 @@ fun SubVideoPane(
                             val vw: Float; val vh: Float
                             if (size.width.toFloat() / size.height > asp) { vh = size.height.toFloat(); vw = vh * asp } else { vw = size.width.toFloat(); vh = vw / asp }
                             val kx = file.playResX / vw; val ky = file.playResY / vh
-                            androidx.compose.foundation.gestures.detectTransformGestures { _, pan, zoom, rot ->
+                            detectTransformGestures { _, pan, zoom, rot ->
                                 onVisual(pan.x * kx, pan.y * ky, zoom, rot)
                             }
                         },
