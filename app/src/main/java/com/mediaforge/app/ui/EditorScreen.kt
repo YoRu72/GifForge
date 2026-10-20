@@ -37,6 +37,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -439,7 +441,7 @@ fun EditorScreen(uri: Uri, onBack: () -> Unit, fpsHint: Int? = null, fullClip: B
                     }
                 }
                 if (!landscape) IconButton(onClick = { folded = !folded }) {
-                    Icon(if (folded) androidx.compose.material.icons.Icons.Filled.KeyboardArrowUp else androidx.compose.material.icons.Icons.Filled.KeyboardArrowDown, stringResource(R.string.ed_fold))
+                    Icon(if (folded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown, stringResource(R.string.ed_fold))
                 }
             }
             if (!folded || landscape) Box(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
