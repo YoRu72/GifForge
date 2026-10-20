@@ -47,7 +47,9 @@ jobs:
         with:
           gradle-version: 8.7
       - name: Unit tests (subtitle formats, encodings, undo, find, effects, tools)
-        run: gradle testDebugUnitTest --no-daemon
+        run: |
+          set -o pipefail
+          gradle testDebugUnitTest --no-daemon --console=plain 2>&1 | tee gradle-test.log
       - name: Test summary (shown in the log)
         if: failure()
         run: |
@@ -59,6 +61,7 @@ jobs:
         with:
           name: test-report
           path: |
+            gradle-test.log
             app/build/reports/tests/
             app/build/test-results/
       - run: gradle assembleDebug --no-daemon
