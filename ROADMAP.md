@@ -122,7 +122,7 @@ Source: github.com/Aegisub/Aegisub (already studied in AEGISUB_NOTES.md) plus th
 - [ ] FX11 Preview and export parity: every effect above must render the same in the live preview, the GIF export, the burned-in video (libass, A21) and the saved ASS in Aegisub; add a test sheet of one line per effect and compare
 
 ### AEG-X - Aegisub features missing from the plan so far
-- [~] AEGX1 (s18x: NOT done (dummy video); timecode files not done) Dummy video and timecodes: create a blank/colour video of a chosen size, length and fps to typeset without a source; import/export timecode files (v1/v2) for variable-frame-rate video; frame/time jump box
+- [~] AEGX1 (s18x: blank canvas "Preview without video": PlayRes aspect, own clock, play/scrub/play line, same overlay as the video; LEFT: timecode files, chosen colour/size/fps as a real video file) Dummy video and timecodes: create a blank/colour video of a chosen size, length and fps to typeset without a source; import/export timecode files (v1/v2) for variable-frame-rate video; frame/time jump box
 - [~] AEGX2 (s18x: eyedropper "Pick colour" in the video pane sets \c of the active/marked lines from the frame; LEFT: full picker with hex entry, script palette) Colour picker with eyedropper from the current video frame, palette of the script's colours, ASS &HBBGGRR& and #RRGGBB entry
 - [x] AEGX3 (s18x: safe-area (90 %, 80 %) and rule-of-thirds overlay toggle) Safe-area / overscan and rule-of-thirds overlays on the preview; zoom and pan of the video pane (with RX5)
 - [x] AEGX4 (s18x: "Save frame" writes the current frame with the subtitles drawn to Pictures/MediaForge as PNG) Save the current frame as an image, with or without the subtitle drawn (also feeds GIF stills and thumbnails)

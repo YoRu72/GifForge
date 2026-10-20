@@ -73,6 +73,11 @@ jobs:
             app/build/reports/tests/
             app/build/test-results/
       - run: gradle assembleDebug --no-daemon
+      - name: Clear the old failure report
+        if: success()
+        run: |
+          D=$(mktemp -d); cd "$D" && git init -q && git checkout -q -b ci-log && echo "last build ${{ github.run_id }} succeeded (commit ${{ github.sha }})" > ci-failure.txt && git add . \
+            && git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm ok && git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-log || true
       - name: APK size report
         run: |
           APK=$(find . -path '*/build/outputs/apk/debug/*.apk' | head -1)
